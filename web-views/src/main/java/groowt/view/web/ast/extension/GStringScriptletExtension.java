@@ -13,9 +13,4 @@ public non-sealed class GStringScriptletExtension extends GStringNodeExtension {
         super(self, allTokens.getRange(rawTokenRange));
     }
 
-    @Override
-    public String getAsValidEmbeddableCode() {
-        return "${" + super.getAsValidEmbeddableCode() + "}";
-    }
-
 }

@@ -3,10 +3,13 @@ package groowt.view.web.transpile;
 import groowt.view.web.antlr.TokenList;
 import groowt.view.web.ast.node.BodyNode;
 import groowt.view.web.ast.node.CompilationUnitNode;
-import groowt.view.web.transpile.PreambleTranspiler.PreambleResult;
+import groowt.view.web.ast.node.PreambleNode;
+import groowt.view.web.transpile.util.GroovyUtil;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilationUnit;
@@ -14,8 +17,11 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.io.ReaderSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 import static groowt.view.web.transpile.TranspilerUtil.*;
@@ -29,6 +35,8 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
  * {@link CompilationUnitNode}.
  */
 public class DefaultGroovyTranspiler implements GroovyTranspiler {
+
+    private static final Logger logger = LoggerFactory.getLogger(DefaultGroovyTranspiler.class);
 
     private final CompilationUnit groovyCompilationUnit;
     private final String defaultPackageName;
@@ -60,6 +68,96 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         }
     }
 
+    protected void checkPreambleClasses(String templateName, List<ClassNode> classNodes) {
+        final ClassNode offending = classNodes.stream()
+                .filter(classNode -> classNode.getName().equals(templateName))
+                .findAny()
+                .orElse(null);
+        if (offending != null) {
+            throw new IllegalArgumentException(
+                    templateName + " cannot define itself in the template. " +
+                            "Remove the class with that name."
+            );
+        }
+    }
+
+    protected List<InnerClassNode> convertPreambleClassesToInnerClasses(ClassNode mainClassNode, List<ClassNode> classNodes) {
+        final List<InnerClassNode> result = new ArrayList<>();
+        for (final var classNode : classNodes) {
+            if (classNode instanceof InnerClassNode innerClassNode) {
+                result.add(innerClassNode);
+            } else {
+                final InnerClassNode icn = new InnerClassNode(
+                        mainClassNode,
+                        mainClassNode.getName() + "." + classNode.getNameWithoutPackage(),
+                        classNode.getModifiers(),
+                        classNode.getSuperClass(),
+                        classNode.getInterfaces(),
+                        classNode.getMixins()
+                );
+                icn.setDeclaringClass(mainClassNode);
+            }
+        }
+        return result;
+    }
+
+    protected void handlePreamble(
+            String templateName,
+            String packageName,
+            PreambleNode preambleNode,
+            ClassNode mainClassNode,
+            WebViewComponentModuleNode moduleNode
+    ) {
+        final GroovyUtil.ConvertResult preambleConvert = GroovyUtil.convert(
+                preambleNode.getGroovyCode().getAsValidGroovyCode()
+        );
+
+        WebViewComponentModuleNode.copyTo(preambleConvert.moduleNode(), moduleNode);
+
+        final BlockStatement preambleBlock = preambleConvert.blockStatement();
+        if (preambleBlock != null) {
+            // Fields
+            final List<Statement> preambleStatements = preambleBlock.getStatements();
+            final List<DeclarationExpression> declarationsWithField = preambleStatements.stream()
+                    .filter(statement -> statement instanceof ExpressionStatement)
+                    .map(ExpressionStatement.class::cast)
+                    .map(ExpressionStatement::getExpression)
+                    .filter(expression -> expression instanceof DeclarationExpression)
+                    .map(DeclarationExpression.class::cast)
+                    .filter(declarationExpression ->
+                            !declarationExpression.getAnnotations(FIELD_ANNOTATION).isEmpty()
+                    )
+                    .toList();
+            if (declarationsWithField.size() != preambleStatements.size()) {
+                logger.warn(
+                        "{} contains script statements which are not supported. " +
+                                "Currently, only classes, methods, and field declarations (marked with @Field) " +
+                                "are supported. The rest will be ignored.",
+                        templateName
+                );
+            }
+            declarationsWithField.forEach(declaration -> {
+                declaration.setDeclaringClass(mainClassNode);
+            });
+        }
+
+        // move methods from script class
+        final ClassNode scriptClass = preambleConvert.scriptClass();
+        if (scriptClass != null) {
+            scriptClass.getMethods().forEach(mainClassNode::addMethod);
+        }
+
+        // handle classes
+        final List<ClassNode> classNodes = preambleConvert.classNodes();
+        this.checkPreambleClasses(templateName, classNodes);
+        final List<ClassNode> toInner = classNodes.stream()
+                .filter(classNode -> classNode != preambleConvert.scriptClass())
+                .filter(classNode -> !classNode.isScript())
+                .toList();
+        final List<InnerClassNode> innerClassNodes = this.convertPreambleClassesToInnerClasses(mainClassNode, toInner);
+        innerClassNodes.forEach(moduleNode::addClass);
+    }
+
     // Cases:
     // - no preamble -> create our own class
     // - some preamble, but no script -> create our own class but use imports/packageName from preamble
@@ -85,34 +183,26 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         final var moduleNode = new WebViewComponentModuleNode(sourceUnit);
         sourceUnit.setModuleNode(moduleNode);
 
-        ClassNode mainClassNode;
+        final String packageName = this.getPackageName(moduleNode);
+        moduleNode.setPackageName(packageName);
 
-        final PreambleResult preambleResult = configuration.getPreambleTranspiler().getPreambleResult(
-                compilationUnitNode.getPreambleNode(),
-                templateName,
-                tokens
+        final ClassNode mainClassNode = new ClassNode(
+                packageName + "." + templateName,
+                ACC_PUBLIC,
+                ClassHelper.OBJECT_TYPE
         );
-        if (preambleResult.moduleNode() != null) {
-            WebViewComponentModuleNode.copyTo(preambleResult.moduleNode(), moduleNode);
-        }
-        if (preambleResult.scriptClass() != null) {
-            mainClassNode = preambleResult.scriptClass();
-            // do not add it to moduleNode because it's already there
-        } else {
-            final String packageName = this.getPackageName(moduleNode);
-            final String templateClassName = packageName + "." + templateName;
+        mainClassNode.setScript(true);
+        mainClassNode.addInterface(TranspilerUtil.COMPONENT_TEMPLATE);
 
-            mainClassNode = new ClassNode(
-                    templateClassName,
-                    ACC_PUBLIC,
-                    ClassHelper.OBJECT_TYPE
-            );
-            mainClassNode.setScript(true);
-            mainClassNode.addInterface(TranspilerUtil.COMPONENT_TEMPLATE);
+        moduleNode.addClass(mainClassNode);
 
-            moduleNode.addClass(mainClassNode);
+        // preamble
+        final PreambleNode preambleNode = compilationUnitNode.getPreambleNode();
+        if (preambleNode != null) {
+            this.handlePreamble(templateName, packageName, preambleNode, mainClassNode, moduleNode);
         }
 
+        // renderer
         final var renderBlock = new BlockStatement();
 
         final TranspilerState state = TranspilerState.withDefaultRootScope();
@@ -138,6 +228,8 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                 },
                 renderBlock
         );
+
+        // getRenderer()
         final Statement returnRendererStmt = new ReturnStatement(renderer);
 
         final var voidClosure = ClassHelper.CLOSURE_TYPE.getPlainNodeReference();

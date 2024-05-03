@@ -1,9 +1,10 @@
 ---
-import groowt.view.component.ComponentContext
-
-class Helper {
-    String greeting
+void consume(out) {
+    out << 'World'
 }
+
+@groovy.transform.Field
+String greeting = 'Hello'
 ---
-Hello, $target!
+$greeting, ${consume(out)}!
 What a nice day.

@@ -24,16 +24,12 @@ public class WebViewComponentWriter {
     }
 
     public void append(GString gString) {
-        final String content;
         try {
-            content = gString.toString();
-        } catch (Exception exception) {
-            throw new ComponentRenderException(exception);
-        }
-        try {
-            this.delegate.append(content);
+            gString.writeTo(this.delegate);
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
+        } catch (Exception exception) {
+            throw new ComponentRenderException(exception);
         }
     }
 
@@ -76,6 +72,15 @@ public class WebViewComponentWriter {
             this.delegate.append(object.toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void leftShift(Object object) {
+        switch (object) {
+            case String s -> this.append(s);
+            case GString gs -> this.append(gs);
+            case ViewComponent viewComponent -> this.append(viewComponent);
+            default -> this.append(object);
         }
     }
 

@@ -5,7 +5,6 @@ import jakarta.inject.Inject;
 public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
 
     private final OutStatementFactory outStatementFactory = new SimpleOutStatementFactory();
-    private final PreambleTranspiler preambleTranspiler = new DefaultPreambleTranspiler();
     private final BodyTranspiler bodyTranspiler;
 
     @Inject
@@ -18,11 +17,6 @@ public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
         componentTranspiler.setBodyTranspiler(this.bodyTranspiler);
         final var valueNodeTranspiler = new DefaultValueNodeTranspiler(componentTranspiler);
         componentTranspiler.setValueNodeTranspiler(valueNodeTranspiler);
-    }
-
-    @Override
-    public PreambleTranspiler getPreambleTranspiler() {
-        return this.preambleTranspiler;
     }
 
     @Override

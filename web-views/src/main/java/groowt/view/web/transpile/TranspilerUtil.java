@@ -1,6 +1,7 @@
 package groowt.view.web.transpile;
 
 import groovy.lang.Tuple2;
+import groovy.transform.Field;
 import groowt.view.component.ComponentContext;
 import groowt.view.component.ComponentTemplate;
 import groowt.view.web.runtime.WebViewComponentWriter;
@@ -18,6 +19,7 @@ public final class TranspilerUtil {
     public static final ClassNode COMPONENT_TEMPLATE = ClassHelper.make(ComponentTemplate.class);
     public static final ClassNode OUT_TYPE = ClassHelper.make(WebViewComponentWriter.class);
     public static final ClassNode CONTEXT_CLASSNODE = ClassHelper.make(ComponentContext.class);
+    public static final ClassNode FIELD_ANNOTATION = ClassHelper.make(Field.class);
 
     public static final String GROOWT_VIEW_WEB = "groowt.view.web";
     public static final String OUT = "out";

@@ -14,16 +14,10 @@ import java.util.stream.Collectors;
 public class WebViewComponentModuleNode extends ModuleNode {
 
     public static void copyTo(ModuleNode from, WebViewComponentModuleNode to) {
-        to.setDescription(from.getDescription());
-        to.setPackage(from.getPackage());
-        to.setPackageName(from.getPackageName());
-        to.setImportsResolved(from.hasImportsResolved());
-        to.setMetaDataMap(from.getMetaDataMap());
         from.getImports().forEach(to::addImport);
         from.getStarImports().forEach(to::addStarImport);
         from.getStaticImports().forEach(to::addStaticImport);
         from.getStaticStarImports().forEach(to::addStaticStarImport);
-        from.getClasses().forEach(to::addClass);
     }
 
     protected final List<ImportNode> imports = new ArrayList<>();

@@ -8,6 +8,7 @@ import groowt.view.web.ast.extension.GStringScriptletExtension;
 import groowt.view.web.ast.node.GStringBodyTextNode;
 import groowt.view.web.ast.node.JStringBodyTextNode;
 import groowt.view.web.ast.node.Node;
+import groowt.view.web.transpile.util.GroovyUtil;
 import groowt.view.web.util.FilteringIterable;
 import groowt.view.web.util.Option;
 import groowt.view.web.util.TokenRange;
@@ -15,6 +16,9 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.antlr.v4.runtime.Token;
 import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -70,7 +74,8 @@ public class DefaultGStringTranspiler implements GStringTranspiler {
     }
 
     protected record PathResult(
-            Expression result, Option<ConstantExpression> before,
+            Expression result,
+            Option<ConstantExpression> before,
             Option<ConstantExpression> after
     ) {}
 
@@ -124,6 +129,23 @@ public class DefaultGStringTranspiler implements GStringTranspiler {
         }
     }
 
+    protected ClosureExpression handleScriptlet(GStringScriptletExtension gStringScriptletExtension) {
+        final GroovyUtil.ConvertResult convertResult = GroovyUtil.convert(
+                "def cl = {" + gStringScriptletExtension.getAsValidEmbeddableCode() + "}"
+        );
+        final BlockStatement convertBlock = convertResult.blockStatement();
+        if (convertBlock == null) {
+            throw new NullPointerException("Did not except convertBlock to be null");
+        }
+        final List<Statement> convertStatements = convertBlock.getStatements();
+        if (convertStatements.size() != 1) {
+            throw new IllegalStateException("Did not expect convertStatements.size() to not equal 1");
+        }
+        final ExpressionStatement convertExpressionStatement = (ExpressionStatement) convertStatements.getFirst();
+        final BinaryExpression assignment = (BinaryExpression) convertExpressionStatement.getExpression();
+        return (ClosureExpression) assignment.getRightExpression();
+    }
+
     @Override
     public GStringExpression createGStringExpression(GStringBodyTextNode gStringBodyTextNode) {
         final var children = gStringBodyTextNode.getChildren();
@@ -136,7 +158,10 @@ public class DefaultGStringTranspiler implements GStringTranspiler {
                 return jStringBodyTextNode.getContent();
             } else if (node.hasExtension(GStringNodeExtension.class)) {
                 final var gString = node.getExtension(GStringNodeExtension.class);
-                return gString.getAsValidEmbeddableCode();
+                return switch (gString) {
+                    case GStringPathExtension ignored -> gString.getAsValidEmbeddableCode();
+                    case GStringScriptletExtension ignored -> "${" + gString.getAsValidEmbeddableCode() + "}";
+                };
             } else {
                 throw new IllegalArgumentException(
                         "Cannot get verbatim text when one of the given parts has "
@@ -165,7 +190,7 @@ public class DefaultGStringTranspiler implements GStringTranspiler {
                     }
                     case GStringScriptletExtension scriptlet -> {
                         checkPrevBeforeDollar(prev, current).ifPresent(texts::add);
-                        // TODO
+                        values.add(this.handleScriptlet(scriptlet));
                         checkNextAfterDollar(current, next).ifPresent(texts::add);
                     }
                 }

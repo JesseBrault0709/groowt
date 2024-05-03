@@ -36,6 +36,9 @@ class ConvertToGroovy implements Callable<Integer> {
     @CommandLine.Option(names = ['-o', '--out'], description = 'Write source files to disk instead of printing them.')
     boolean writeOut
 
+    @CommandLine.Option(names = ['-q', '--quiet'], description = 'Do not print the class source to the console.')
+    boolean quiet
+
     // Default is Phases.CLASS_GENERATION (7)
     @CommandLine.Option(
             names = ['-t', '--compilePhase'],
@@ -43,6 +46,12 @@ class ConvertToGroovy implements Callable<Integer> {
             description = 'The groovy compile phase to target.'
     )
     int compilePhase
+
+    @CommandLine.Option(
+            names = ['-c', '--classes'],
+            description = 'Whether to output the class files, if the compile phase is late enough. If this is false, any generated classes will be thrown out.'
+    )
+    boolean doClasses
 
     @CommandLine.Option(
             names = ['-d', '--classesDir'],
@@ -60,7 +69,9 @@ class ConvertToGroovy implements Callable<Integer> {
                 def astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList))
                 def cuNode = astBuilder.build(parseResult.compilationUnitContext) as CompilationUnitNode
                 def config = new CompilerConfiguration().tap {
-                    it.targetDirectory = this.classesDir ?: new File(target.parentFile, 'classes')
+                    it.targetDirectory = this.doClasses
+                            ? this.classesDir ?: new File(target.parentFile, 'classes')
+                            : File.createTempDir()
                 }
                 def gcu = new CompilationUnit(config)
 
@@ -84,7 +95,8 @@ class ConvertToGroovy implements Callable<Integer> {
                 if (this.writeOut) {
                     def outFile = new File(target.parentFile, name + '.groovy')
                     outFile.write(w.toString())
-                } else {
+                }
+                if (!this.quiet) {
                     println w.toString()
                 }
                 return true
