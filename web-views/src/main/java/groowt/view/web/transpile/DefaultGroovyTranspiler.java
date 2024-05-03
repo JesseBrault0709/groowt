@@ -103,7 +103,6 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
     protected void handlePreamble(
             String templateName,
-            String packageName,
             PreambleNode preambleNode,
             ClassNode mainClassNode,
             WebViewComponentModuleNode moduleNode
@@ -131,7 +130,8 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
             if (declarationsWithField.size() != preambleStatements.size()) {
                 logger.warn(
                         "{} contains script statements which are not supported. " +
-                                "Currently, only classes, methods, and field declarations (marked with @Field) " +
+                                "Currently, only classes, methods, and field declarations " +
+                                "(marked with @groovy.transform.Field) " +
                                 "are supported. The rest will be ignored.",
                         templateName
                 );
@@ -199,7 +199,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         // preamble
         final PreambleNode preambleNode = compilationUnitNode.getPreambleNode();
         if (preambleNode != null) {
-            this.handlePreamble(templateName, packageName, preambleNode, mainClassNode, moduleNode);
+            this.handlePreamble(templateName, preambleNode, mainClassNode, moduleNode);
         }
 
         // renderer

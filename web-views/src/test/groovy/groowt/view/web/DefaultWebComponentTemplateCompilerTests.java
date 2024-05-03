@@ -1,11 +1,14 @@
 package groowt.view.web;
 
+import groovy.lang.Closure;
 import groowt.view.component.*;
+import groowt.view.web.runtime.WebViewComponentWriter;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,6 +69,30 @@ public class DefaultWebComponentTemplateCompilerTests {
 
         final UsingGreeter usingGreeter = new UsingGreeter(context);
         assertEquals("Hello, World!", usingGreeter.render());
+    }
+
+    @Test
+    public void withPreambleImport() {
+        final ComponentTemplate template = doCompile(DefaultWebViewComponent.class,
+            """
+            ---
+            import groovy.transform.Field
+            
+            @Field
+            String greeting = 'Hello, World!'
+            ---
+            $greeting
+            """.stripIndent()
+        );
+        final var context = new DefaultComponentContext();
+        context.pushDefaultScope();
+
+        final var sw = new StringWriter();
+        final var out = new WebViewComponentWriter(sw);
+        final Closure<?> renderer = template.getRenderer();
+        renderer.call(context, out);
+
+        assertEquals("Hello, World!", sw.toString());
     }
 
 }
