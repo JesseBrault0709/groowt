@@ -1,0 +1,12 @@
+pluginManagement {
+    plugins {
+        id 'org.jetbrains.kotlin.jvm' version '1.9.23'
+    }
+}
+
+rootProject.name = 'groowt'
+include 'views', 'view-components', 'web-views'
+file('util').eachDir {
+    include it.name
+    project(":$it.name").projectDir = it
+}

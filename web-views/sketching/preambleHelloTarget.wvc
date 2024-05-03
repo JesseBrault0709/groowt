@@ -1,0 +1,9 @@
+---
+import groowt.view.component.ComponentContext
+
+class Helper {
+    String greeting
+}
+---
+Hello, $target!
+What a nice day.

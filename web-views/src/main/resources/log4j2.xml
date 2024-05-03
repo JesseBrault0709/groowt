@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
+    <Appenders>
+        <Console name="root">
+            <PatternLayout>
+                <LevelPatternSelector defaultPattern="[%t] %-5level %logger{1.} %msg%n">
+                    <PatternMatch key="DEBUG" pattern="[%t] %-5level %logger{1.}.%M() %msg%n"/>
+                </LevelPatternSelector>
+            </PatternLayout>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="root"/>
+        </Root>
+    </Loggers>
+</Configuration>

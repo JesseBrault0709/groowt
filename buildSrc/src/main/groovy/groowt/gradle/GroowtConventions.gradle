@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation libs.junit.jupiter.api
+    testRuntimeOnly libs.log4j.slf4jBinding
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+// TODO: hook into testResources and add a default log4j2.xml config for testing
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+        }
+    }
+}

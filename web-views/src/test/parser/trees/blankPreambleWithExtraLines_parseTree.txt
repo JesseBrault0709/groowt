@@ -1,0 +1,6 @@
+compilationUnit[1,1..8,1]
+  preamble[1,1..6,1]
+    PreambleBreak[1,1](---\n)
+    GroovyCode[2,1](\n\n\n\n)
+    PreambleBreak[6,1](\n---\n)
+  EOF[8,1](<EOF>)

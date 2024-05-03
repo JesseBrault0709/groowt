@@ -1,0 +1,196 @@
+import groovy.transform.NullCheck
+import groowt.gradle.antlr.GroowtAntlrTask
+
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'groovy'
+    id 'antlr'
+    id 'GroowtAntlrPlugin'
+    id 'org.jetbrains.kotlin.jvm'
+    id 'java-test-fixtures'
+}
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    groovyConsole
+    toolsImplementation {
+        extendsFrom(apiElements, runtimeElements)
+    }
+}
+
+sourceSets {
+    tools {
+        java {
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
+        }
+    }
+}
+
+dependencies {
+    api(
+            libs.groovy,
+            libs.groovy.templates,
+            libs.antlr.runtime,
+            project(':view-components'),
+            project(':views')
+    )
+    compileOnlyApi libs.jetbrains.anotations
+    implementation(
+            libs.slf4j.api,
+            libs.kotlin.stdlib,
+            libs.log4j.core,
+            libs.jansi,
+            libs.asm,
+            project(':di'),
+            project(':extensible')
+    )
+    antlr libs.antlr
+    runtimeOnly libs.log4j.slf4jBinding
+
+    def testLibs = [
+            libs.junit.jupiter.api, libs.mockito.core, libs.mockito.junit
+    ]
+
+    testLibs.each {
+        testApi it
+        testFixturesApi it
+    }
+
+    groovyConsole libs.groovy.console
+    toolsApi libs.picocli
+    toolsImplementation libs.groovy.console
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+ext {
+    antlrPackageName = 'groowt.view.web.antlr'
+    toolsPackageName = 'groowt.view.web.tools'
+}
+
+groowtAntlr {
+    packageName = project.ext.get('antlrPackageName')
+    visitor = true
+}
+
+// Must be temporarily afterEvaluate unless we switch the GroowtAntlr plugin
+// to eagerly create the tasks upon plugin application
+afterEvaluate {
+    tasks.named('generateWebViewComponentsLexerBase', GroowtAntlrTask) { task ->
+        doLast {
+            def pattern = ~/public class WebViewComponentsLexerBase(.*)/
+            def lexerSource = new File(task.outputDirectory, 'WebViewComponentsLexerBase.java')
+            def outLines = lexerSource.readLines().collect {
+                def matcher = pattern.matcher(it)
+                if (matcher.matches()) {
+                    return 'public abstract class WebViewComponentsLexerBase' + matcher.group(1)
+                } else {
+                    return it
+                }
+            }
+            lexerSource.write(outLines.join('\n'))
+        }
+    }
+}
+
+tasks.register('groovyConsole', JavaExec) {
+    group = 'groovy'
+    classpath += sourceSets.main.runtimeClasspath + configurations.groovyConsole
+    mainClass = 'groovy.console.ui.Console'
+}
+
+tasks.register('toolsJar', Jar) {
+    group 'tools'
+    archiveBaseName = 'web-tools'
+    exclude { FileTreeElement element ->
+        element.file in sourceSets.main.output
+    }
+    from sourceSets.tools.output
+    from sourceSets.tools.runtimeClasspath.filter(File.&exists).collect { it.isDirectory() ? it : zipTree(it) }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn tasks.named('jar')
+}
+
+@NullCheck
+class ToolSpec {
+
+    final String name
+    final String mainClass
+    final String mainClassPackage
+
+    ToolSpec(String name, String mainClass, String mainClassPackage) {
+        this.name = name
+        this.mainClass = mainClass
+        this.mainClassPackage = mainClassPackage
+    }
+
+    String getFullMainClass() {
+        this.mainClassPackage + '.' + this.mainClass
+    }
+
+}
+
+def toolSpec = { String name, String mainClass ->
+    new ToolSpec(name, mainClass, project.ext.get('toolsPackageName') as String)
+}
+
+final List<ToolSpec> toolSpecs = [
+        toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli'),
+        toolSpec('astFileMaker', 'AstFileMakerCli'),
+        toolSpec('convertToGroovy', 'ConvertToGroovy'),
+        toolSpec('lexer', 'LexerTool'),
+        toolSpec('parser', 'ParserTool')
+]
+
+toolSpecs.each { spec ->
+    tasks.register("create${spec.name.capitalize()}StartScripts", CreateStartScripts) {
+        group = 'tools'
+        outputDir = file('bin')
+        applicationName = spec.name
+        mainClass = spec.fullMainClass
+        unixStartScriptGenerator.template = resources.text.fromFile('src/tools/binTemplate.gst')
+        dependsOn tasks.named('toolsJar')
+    }
+}
+
+tasks.register('createToolsStartScripts') {
+    group 'tools'
+    dependsOn tasks.matching { Task task ->
+        task != it
+                && task.name.startsWith('create')
+                && task.name.endsWith('StartScripts')
+                && task.group == 'tools'
+    }
+}
+
+tasks.register('cleanBin', Delete) {
+    group = 'tools'
+    delete file('bin')
+}
+
+// Hacky
+tasks.named('compileKotlin').configure {
+    dependsOn 'generateLexerFragments', 'generateWebViewComponentsLexerBase', 'generateWebViewComponentsParser'
+}
+
+test {
+    jvmArgs '-XX:+EnableDynamicAgentLoading' // for mockito/bytebuddy
+    testLogging.showStandardStreams = true
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+        }
+    }
+}

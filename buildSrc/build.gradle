@@ -1,0 +1,30 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'groovy-gradle-plugin'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation libs.junit.jupiter.api
+}
+
+gradlePlugin {
+    plugins {
+        create('GroowtAntlrPlugin') {
+            id = 'GroowtAntlrPlugin'
+            implementationClass = 'groowt.gradle.antlr.GroowtAntlrPlugin'
+        }
+
+    }
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+        }
+    }
+}

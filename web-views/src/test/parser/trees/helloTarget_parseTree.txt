@@ -1,0 +1,13 @@
+compilationUnit[1,1..1,16]
+  body[1,1..1,15]
+    bodyText[1,1..1,15]
+      gStringBodyText[1,1..1,15]
+        jStringBodyText[1,1..1,1]
+          RawText[1,1](Hello, )
+        gStringBodyTextGroovyElement[1,8..1,9]
+          dollarReference[1,8..1,9]
+            DollarReferenceStart[1,8]($)
+            GroovyCode[1,9](target)
+        jStringBodyText[1,15..1,15]
+          RawText[1,15](!)
+  EOF[1,16](<EOF>)

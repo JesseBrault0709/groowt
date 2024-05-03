@@ -1,0 +1,10 @@
+plugins {
+    id 'GroowtConventions'
+    id 'java-library'
+}
+
+dependencies {
+    api libs.jakarta.inject
+    compileOnlyApi libs.jetbrains.anotations
+    implementation libs.slf4j.api, libs.groovy
+}

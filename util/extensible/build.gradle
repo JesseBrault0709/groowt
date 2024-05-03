@@ -1,0 +1,8 @@
+plugins {
+    id 'GroowtConventions'
+    id 'java-library'
+}
+
+dependencies {
+    compileOnlyApi libs.jetbrains.anotations
+}

@@ -1,0 +1,6 @@
+compilationUnit[1,1..6,1]
+  preamble[1,1..4,2]
+    PreambleBreak[1,1](---\n)
+    GroovyCode[2,1](class Greeting {\n    String myGreeting\n})
+    PreambleBreak[4,2](\n---\n)
+  EOF[6,1](<EOF>)
