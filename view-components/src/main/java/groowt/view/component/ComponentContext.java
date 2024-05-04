@@ -10,20 +10,36 @@ import java.util.function.Predicate;
 
 public interface ComponentContext {
 
+    /**
+     * For use only by compiled templates.
+     */
     @ApiStatus.Internal
     interface Resolved {
         String getTypeName();
         ComponentFactory<?> getComponentFactory();
     }
 
+    /**
+     * For use only by compiled templates.
+     */
     @ApiStatus.Internal
     Resolved resolve(String component);
 
+    /**
+     * For use only by compiled templates.
+     */
     @ApiStatus.Internal
     ViewComponent create(Resolved resolved, Object... args);
 
+    /**
+     * For use only by compiled templates.
+     */
+    @ApiStatus.Internal
     void beforeComponentRender(ViewComponent component);
 
+    /**
+     * For use only by compiled templates.
+     */
     @ApiStatus.Internal
     void afterComponentRender(ViewComponent component);
 

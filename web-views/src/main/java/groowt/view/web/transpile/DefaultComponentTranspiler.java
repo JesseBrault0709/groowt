@@ -341,11 +341,22 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
         final Parameter exceptionParam = new Parameter(EXCEPTION, exceptionName);
         final VariableExpression exceptionVar = new VariableExpression(exceptionName);
 
+        final ConstantExpression componentTypeExpression = switch (componentNode) {
+            case TypedComponentNode typedComponentNode -> switch (typedComponentNode.getArgs().getType()) {
+                case StringComponentTypeNode stringComponentTypeNode ->
+                        makeStringLiteral(stringComponentTypeNode.getIdentifier());
+                case ClassComponentTypeNode classComponentTypeNode ->
+                        makeStringLiteral(classComponentTypeNode.getFullyQualifiedName());
+            };
+            case FragmentComponentNode ignored -> makeStringLiteral(FRAGMENT_FQN);
+        };
+
         final var lineAndColumn = lineAndColumn(componentNode.getTokenRange().getStartPosition());
 
         final ConstructorCallExpression cce = new ConstructorCallExpression(
                 COMPONENT_CREATE,
                 new ArgumentListExpression(List.of(
+                        componentTypeExpression,
                         VariableExpression.THIS_EXPRESSION,
                         lineAndColumn.getV1(),
                         lineAndColumn.getV2(),

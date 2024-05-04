@@ -2,7 +2,6 @@ package groowt.view.web.lib
 
 import groowt.view.StandardGStringTemplateView
 import groowt.view.View
-import groowt.view.component.AbstractComponentFactory
 import groowt.view.component.ComponentContext
 import groowt.view.component.ComponentFactory
 import groowt.view.web.WebViewChildComponentRenderer
@@ -34,10 +33,7 @@ class Echo extends DelegatingWebViewComponent {
         }
 
         @Override
-        Echo create(Object type, ComponentContext componentContext, Object... args) {
-            if (!type instanceof String) {
-                throw new IllegalArgumentException('<Echo> can only be used with String types.')
-            }
+        Echo create(String type, ComponentContext componentContext, Object... args) {
             if (args == null || args.length < 1) {
                 throw new IllegalArgumentException(
                         '<Echo> must have at least one attribute. ' +
@@ -45,6 +41,11 @@ class Echo extends DelegatingWebViewComponent {
                 )
             }
             this.invokeMethod('doCreate', type as String, componentContext, *args) as Echo
+        }
+
+        @Override
+        Echo create(Class<?> type, ComponentContext componentContext, Object... args) {
+            throw new UnsupportedOperationException('<Echo> can only be used with String types.')
         }
 
     }

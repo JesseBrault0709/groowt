@@ -43,7 +43,7 @@ public class DefaultWebComponentTemplateCompilerTests {
 
     }
 
-    private static final class GreeterFactory extends AbstractComponentFactory<Greeter> {
+    private static final class GreeterFactory extends ComponentFactoryBase<Greeter> {
 
         public Greeter doCreate(Map<String, Object> attr) {
             return new Greeter(attr);

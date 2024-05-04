@@ -1,5 +1,8 @@
 package groowt.view.component;
 
+/**
+ * An exception which represents an error during rendering of a component.
+ */
 public class ComponentRenderException extends RuntimeException {
 
     private static String formatMessage(int line, int column) {

@@ -1,5 +1,9 @@
 package groowt.view.component;
 
+/**
+ * An exception which represents that a component type could not be
+ * found by the {@link ComponentContext}.
+ */
 public abstract class MissingComponentException extends RuntimeException {
 
     private final ComponentTemplate template;

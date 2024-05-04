@@ -2,6 +2,9 @@ package groowt.view.component;
 
 import java.io.Reader;
 
+/**
+ * Represents an exception thrown while attempting to instantiate a ComponentTemplate during compilation.
+ */
 public class ComponentTemplateCreateException extends RuntimeException {
 
     private final Class<? extends ViewComponent> forClass;

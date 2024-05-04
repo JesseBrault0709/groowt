@@ -1,19 +1,53 @@
 package groowt.view.component;
 
 import groovy.lang.GroovyObjectSupport;
+import groovy.lang.MetaClass;
 import groovy.lang.MetaMethod;
 import groovy.lang.MissingMethodException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-public abstract class AbstractComponentFactory<T extends ViewComponent> extends GroovyObjectSupport
+/**
+ * This class can be used to create custom implementations {@link ComponentFactory}.
+ *
+ * @implSpec All implementations must simply provide one or more {@code doCreate()} methods,
+ * which will be found by this class via the Groovy meta object protocol. The method(s) may
+ * have any of the following signatures:
+ * <ul>
+ *     <li>{@code String | Class, ComponentContext, ... -> T}</li>
+ *     <li>{@code ComponentContext, ... -> T}</li>
+ *     <li>{@code String | Class, ... -> T}</li>
+ *     <li>{@code ... -> }</li>
+ * </ul>
+ * where '{@code ...}' represents zero or more additional arguments.
+ *
+ * @implNote In most cases, the implementation does not need to consume the
+ * {@link ComponentContext} argument, as the compiled template is required to contain
+ * {@code component.setContext(context)} statements following the component
+ * creation call. However, if the component <strong>needs</strong> the context
+ * (for example, to do custom scope logic), then it is more than okay to consume it.
+ *
+ * @implNote In the case Web View Components, the first additional argument will be
+ * a {@link Map} containing the attributes of the component, followed by any additional
+ * component constructor args.
+ *
+ * @param <T> The type of the ViewComponent produced by this factory.
+ */
+public abstract class ComponentFactoryBase<T extends ViewComponent> extends GroovyObjectSupport
         implements ComponentFactory<T> {
+
+    protected static final String DO_CREATE = "doCreate";
+
+    protected static MetaMethod findDoCreateMethod(MetaClass metaClass, Class<?>[] types) {
+        return metaClass.getMetaMethod(DO_CREATE, types);
+    }
 
     protected final Map<Class<?>[], MetaMethod> cache = new HashMap<>();
 
     protected MetaMethod findDoCreateMethod(Object[] allArgs) {
         return this.cache.computeIfAbsent(ComponentFactoryUtil.asTypes(allArgs), types ->
-                ComponentFactoryUtil.findDoCreateMethod(this.getMetaClass(), types)
+                findDoCreateMethod(this.getMetaClass(), types)
         );
     }
 
@@ -54,15 +88,16 @@ public abstract class AbstractComponentFactory<T extends ViewComponent> extends 
             return (T) argsOnlyMethod.invoke(this, args);
         }
 
-        throw new MissingMethodException(
-                ComponentFactoryUtil.DO_CREATE,
-                this.getClass(),
-                args
-        );
+        throw new MissingMethodException(DO_CREATE, this.getClass(), args);
     }
 
     @Override
-    public T create(Object type, ComponentContext componentContext, Object... args) {
+    public T create(String type, ComponentContext componentContext, Object... args) {
+        return this.findAndDoCreate(type, componentContext, args);
+    }
+
+    @Override
+    public T create(Class<?> type, ComponentContext componentContext, Object... args) {
         return this.findAndDoCreate(type, componentContext, args);
     }
 

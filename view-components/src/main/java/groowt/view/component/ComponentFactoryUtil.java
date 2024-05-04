@@ -1,7 +1,9 @@
 package groowt.view.component;
 
+import groovy.lang.GroovyObject;
 import groovy.lang.MetaClass;
 import groovy.lang.MetaMethod;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +11,6 @@ import java.util.List;
 
 public final class ComponentFactoryUtil {
 
-    public static final String DO_CREATE = "doCreate";
     public static final Class<?>[] EMPTY_CLASSES = new Class[0];
 
     public static Object[] flatten(Object... args) {
@@ -18,7 +19,7 @@ public final class ComponentFactoryUtil {
         } else {
             final List<Object> result = new ArrayList<>(args.length);
             for (final var arg : args) {
-                if (arg instanceof Object[] arr) {
+                if (arg instanceof Object[] arr && arr.length > 0) {
                     result.addAll(Arrays.asList(arr));
                 } else {
                     result.add(arg);
@@ -42,10 +43,6 @@ public final class ComponentFactoryUtil {
             }
         }
         return result;
-    }
-
-    public static MetaMethod findDoCreateMethod(MetaClass metaClass, Class<?>[] types) {
-        return metaClass.getMetaMethod(DO_CREATE, types);
     }
 
     private ComponentFactoryUtil() {}

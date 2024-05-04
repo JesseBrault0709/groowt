@@ -2,7 +2,7 @@ package groowt.view.component;
 
 import java.util.function.Supplier;
 
-final class SupplierComponentFactory<T extends ViewComponent> extends AbstractComponentFactory<T> {
+final class SupplierComponentFactory<T extends ViewComponent> extends ComponentFactoryBase<T> {
 
     private final Supplier<T> tSupplier;
 
