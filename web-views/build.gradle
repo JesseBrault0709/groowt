@@ -1,11 +1,10 @@
 import groovy.transform.NullCheck
-import groowt.gradle.antlr.GroowtAntlrTask
+import groowt.gradle.antlr.GroowtAntlrExecTask
 
 plugins {
     id 'java'
     id 'java-library'
     id 'groovy'
-    id 'antlr'
     id 'GroowtAntlrPlugin'
     id 'org.jetbrains.kotlin.jvm'
     id 'java-test-fixtures'
@@ -49,7 +48,7 @@ dependencies {
             project(':di'),
             project(':extensible')
     )
-    antlr libs.antlr
+    groowtAntlr libs.antlr
     runtimeOnly libs.log4j.slf4jBinding
 
     def testLibs = [
@@ -82,23 +81,19 @@ groowtAntlr {
     visitor = true
 }
 
-// Must be temporarily afterEvaluate unless we switch the GroowtAntlr plugin
-// to eagerly create the tasks upon plugin application
-afterEvaluate {
-    tasks.named('generateWebViewComponentsLexerBase', GroowtAntlrTask) { task ->
-        doLast {
-            def pattern = ~/public class WebViewComponentsLexerBase(.*)/
-            def lexerSource = new File(task.outputDirectory, 'WebViewComponentsLexerBase.java')
-            def outLines = lexerSource.readLines().collect {
-                def matcher = pattern.matcher(it)
-                if (matcher.matches()) {
-                    return 'public abstract class WebViewComponentsLexerBase' + matcher.group(1)
-                } else {
-                    return it
-                }
+tasks.named('generateWebViewComponentsLexerBase', GroowtAntlrExecTask) { task ->
+    doLast {
+        def pattern = ~/public class WebViewComponentsLexerBase(.*)/
+        def lexerSource = task.resolveOutputFile 'WebViewComponentsLexerBase.java'
+        def outLines = lexerSource.readLines().collect {
+            def matcher = pattern.matcher(it)
+            if (matcher.matches()) {
+                return 'public abstract class WebViewComponentsLexerBase' + matcher.group(1)
+            } else {
+                return it
             }
-            lexerSource.write(outLines.join('\n'))
         }
+        lexerSource.write(outLines.join('\n'))
     }
 }
 
@@ -176,11 +171,6 @@ tasks.register('createToolsStartScripts') {
 tasks.register('cleanBin', Delete) {
     group = 'tools'
     delete file('bin')
-}
-
-// Hacky
-tasks.named('compileKotlin').configure {
-    dependsOn 'generateLexerFragments', 'generateWebViewComponentsLexerBase', 'generateWebViewComponentsParser'
 }
 
 test {
