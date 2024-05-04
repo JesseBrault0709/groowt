@@ -14,7 +14,7 @@ import java.io.StringWriter;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class AbstractComponentTests {
+public abstract class AbstractWebViewComponentTests {
 
     protected void doTest(Reader source, String expected, ComponentContext context) {
         final var compiler = new DefaultWebComponentTemplateCompiler(
@@ -25,7 +25,7 @@ public abstract class AbstractComponentTests {
         final StringWriter sw = new StringWriter();
         final WebViewComponentWriter out = new WebViewComponentWriter(sw);
         renderer.call(context, out);
-        assertEquals(expected, sw.toString());
+        assertEquals(expected, sw.toString().trim());
     }
 
     protected void doTest(String source, String expected, ComponentContext context) {

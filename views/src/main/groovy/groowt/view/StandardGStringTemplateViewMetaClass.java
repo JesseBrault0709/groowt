@@ -14,12 +14,15 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
 
     private static final Logger logger = LoggerFactory.getLogger(StandardGStringTemplateViewMetaClass.class);
 
-    private static StandardGStringTemplateView asView(Object object) {
+    private static StandardGStringTemplateView asStandardGStringTemplateView(Object object) {
         return object instanceof StandardGStringTemplateView view ? view : null;
     }
 
     private static Object[] asArgsArray(Object object) {
-        return object instanceof Object[] objects ? objects : new Object[] { object };
+        return object instanceof Object[] objects
+                ? objects
+                : new Object[] { object }
+                ;
     }
 
     private static MetaMethod findMetaMethod(MetaClass metaClass, String methodName, Object[] argsArray) {
@@ -57,9 +60,9 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
 
     @Override
     public Object invokeMethod(Object object, String methodName, Object arguments) {
-        final StandardGStringTemplateView view = asView(object);
+        final StandardGStringTemplateView view = asStandardGStringTemplateView(object);
         if (view == null) {
-            logger.warn("StandardGStringTemplateViewMetaClass should only be used as a MetaClass of StandardGStringTemplateViewMetaClass.");
+            warnWrongType(object);
             return super.invokeMethod(object, methodName, arguments);
         }
 
@@ -76,7 +79,7 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
         final Object[] argsArray = asArgsArray(arguments);
 
         // self
-        final MetaMethod selfMethod = findMetaMethod(this, methodName, argsArray);
+        final MetaMethod selfMethod = this.getMetaMethod(methodName, argsArray);
         if (selfMethod != null) {
             return selfMethod.invoke(view, argsArray);
         }
@@ -84,11 +87,12 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
         // parent hierarchy
         View parent = view.getParent();
         while (parent != null) {
-            final var parentMetaMethod = findMetaMethod(findMetaClass(parent), methodName, argsArray);
+            final var parentMetaClass = findMetaClass(parent);
+            final var parentMetaMethod = parentMetaClass.getMetaMethod(methodName, argsArray);
             if (parentMetaMethod != null) {
                 return parentMetaMethod.invoke(parent, argsArray);
-            } else if (parent instanceof StandardGStringTemplateView) {
-                parent = ((StandardGStringTemplateView) parent).getParent();
+            } else if (parent instanceof StandardGStringTemplateView standardGStringTemplateView) {
+                parent = standardGStringTemplateView.getParent();
             } else {
                 parent = null;
             }
@@ -99,7 +103,7 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
 
     @Override
     public Object getProperty(Object object, String name) {
-        final StandardGStringTemplateView view = asView(object);
+        final StandardGStringTemplateView view = asStandardGStringTemplateView(object);
         if (view == null) {
             warnWrongType(object);
             return super.getProperty(object, name);
@@ -136,7 +140,7 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
 
     @Override
     public void setProperty(Object object, String name, Object value) {
-        final StandardGStringTemplateView view = asView(object);
+        final StandardGStringTemplateView view = asStandardGStringTemplateView(object);
         if (view == null) {
             warnWrongType(object);
             super.setProperty(object, name, value);

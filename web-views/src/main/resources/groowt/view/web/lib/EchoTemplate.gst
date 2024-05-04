@@ -1,1 +1,1 @@
-<$typeName ${renderAttr()}${selfClose ? ' /' : ''}>${renderChildren()}${!selfClose ? "</$typeName>" : ''}
+<$name ${formatAttr()}${selfClose ? '/' : ''}>${hasChildren() ? renderChildren() : ''}${hasChildren() || !selfClose ? "</$name>" : ''}

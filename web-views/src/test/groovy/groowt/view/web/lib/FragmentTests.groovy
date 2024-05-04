@@ -7,7 +7,7 @@ import groowt.view.web.DefaultWebViewComponentContext
 import groowt.view.web.WebViewTemplateComponentSource
 import org.junit.jupiter.api.Test
 
-class FragmentTests extends AbstractComponentTests {
+class FragmentTests extends AbstractWebViewComponentTests {
 
     static class Greeter extends DefaultWebViewComponent {
 
