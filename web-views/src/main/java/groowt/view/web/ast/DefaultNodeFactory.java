@@ -125,7 +125,7 @@ public class DefaultNodeFactory implements NodeFactory {
     }
 
     @Override
-    public FragmentComponentNode fragmentComponentNode(TokenRange tokenRange, @Nullable BodyNode bodyNode) {
+    public FragmentComponentNode fragmentComponentNode(TokenRange tokenRange, BodyNode bodyNode) {
         return this.objectFactory.get(FragmentComponentNode.class, tokenRange, bodyNode);
     }
 

@@ -101,11 +101,6 @@ public abstract class NodeFactoryTests {
     }
 
     @Test
-    public void fragmentComponentNodeBodyNull() {
-        assertNotNull(this.nodeFactory.fragmentComponentNode(this.getTokenRange(), null));
-    }
-
-    @Test
     public void componentArgsNodeWithClassComponentType(
             @Mock ClassComponentTypeNode componentTypeNode,
             @Mock ComponentConstructorNode componentConstructorNode

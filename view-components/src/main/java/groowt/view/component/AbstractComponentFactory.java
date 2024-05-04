@@ -9,50 +9,38 @@ import java.util.*;
 public abstract class AbstractComponentFactory<T extends ViewComponent> extends GroovyObjectSupport
         implements ComponentFactory<T> {
 
-    private static final String DO_CREATE = "doCreate";
-    private static final Class<?>[] EMPTY_CLASSES = new Class[0];
+    protected final Map<Class<?>[], MetaMethod> cache = new HashMap<>();
 
-    private static Object[] flatten(Object... args) {
-        if (args.length == 0) {
-            return args;
-        } else {
-            final List<Object> result = new ArrayList<>(args.length);
-            for (final var arg : args) {
-                if (arg instanceof Object[] arr) {
-                    result.addAll(Arrays.asList(arr));
-                } else {
-                    result.add(arg);
-                }
-            }
-            return result.toArray(Object[]::new);
-        }
-    }
-
-    private static Class<?>[] asTypes(Object[] args) {
-        if (args.length == 0) {
-            return EMPTY_CLASSES;
-        }
-        final Class<?>[] result = new Class[args.length];
-        for (int i = 0; i < args.length; i++) {
-            result[i] = args[i].getClass();
-        }
-        return result;
-    }
-
-    private final Map<Class<?>[], MetaMethod> cache = new HashMap<>();
-
-    private MetaMethod findDoCreateMethod(Object[] allArgs) {
-        return this.cache.computeIfAbsent(asTypes(allArgs), types ->
-                this.getMetaClass().getMetaMethod(DO_CREATE, types)
+    protected MetaMethod findDoCreateMethod(Object[] allArgs) {
+        return this.cache.computeIfAbsent(ComponentFactoryUtil.asTypes(allArgs), types ->
+                ComponentFactoryUtil.findDoCreateMethod(this.getMetaClass(), types)
         );
     }
 
     @SuppressWarnings("unchecked")
-    private T findAndDoCreate(ComponentContext componentContext, Object[] args) {
-        final Object[] contextsAndArgs = flatten(componentContext, args);
-        final MetaMethod contextsAndArgsMethod = this.findDoCreateMethod(contextsAndArgs);
-        if (contextsAndArgsMethod != null) {
-            return (T) contextsAndArgsMethod.invoke(this, contextsAndArgs);
+    protected T findAndDoCreate(Object type, ComponentContext componentContext, Object[] args) {
+        final Object[] typeContextAndArgs = ComponentFactoryUtil.flatten(type, componentContext, args);
+        final MetaMethod typeContextAndArgsMethod = this.findDoCreateMethod(typeContextAndArgs);
+        if (typeContextAndArgsMethod != null) {
+            return (T) typeContextAndArgsMethod.invoke(this, typeContextAndArgs);
+        }
+
+        final Object[] typeAndContext = new Object[] { type, componentContext };
+        final MetaMethod typeAndContextMethod = this.findDoCreateMethod(typeAndContext);
+        if (typeAndContextMethod != null) {
+            return (T) typeAndContextMethod.invoke(this, typeAndContext);
+        }
+
+        final Object[] typeAndArgs = ComponentFactoryUtil.flatten(type, args);
+        final MetaMethod typeAndArgsMethod = this.findDoCreateMethod(typeAndArgs);
+        if (typeAndArgsMethod != null) {
+            return (T) typeAndArgsMethod.invoke(this, typeAndArgs);
+        }
+
+        final Object[] typeOnly = new Object[] { type };
+        final MetaMethod typeOnlyMethod = this.findDoCreateMethod(typeOnly);
+        if (typeOnlyMethod != null) {
+            return (T) typeOnlyMethod.invoke(this, typeOnly);
         }
 
         final Object[] contextOnly = new Object[] { componentContext };
@@ -67,15 +55,15 @@ public abstract class AbstractComponentFactory<T extends ViewComponent> extends 
         }
 
         throw new MissingMethodException(
-                DO_CREATE,
+                ComponentFactoryUtil.DO_CREATE,
                 this.getClass(),
                 args
         );
     }
 
     @Override
-    public T create(ComponentContext componentContext, Object... args) {
-        return this.findAndDoCreate(componentContext, args);
+    public T create(Object type, ComponentContext componentContext, Object... args) {
+        return this.findAndDoCreate(type, componentContext, args);
     }
 
 }

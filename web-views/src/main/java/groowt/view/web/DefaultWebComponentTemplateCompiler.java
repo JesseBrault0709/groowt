@@ -1,7 +1,6 @@
 package groowt.view.web;
 
 import groovy.lang.GroovyClassLoader;
-import groowt.util.di.RegistryObjectFactory;
 import groowt.view.component.CachingComponentTemplateCompiler;
 import groowt.view.component.ComponentTemplate;
 import groowt.view.component.ComponentTemplateCreateException;
@@ -14,9 +13,7 @@ import groowt.view.web.ast.DefaultNodeFactory;
 import groowt.view.web.ast.node.CompilationUnitNode;
 import groowt.view.web.transpile.DefaultGroovyTranspiler;
 import groowt.view.web.transpile.DefaultTranspilerConfiguration;
-import groowt.view.web.transpile.TranspilerConfiguration;
 import org.codehaus.groovy.control.CompilationUnit;
-import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.io.AbstractReaderSource;
@@ -31,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplateCompiler {
 
@@ -74,11 +70,11 @@ public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplat
         this.groovyClassLoader = null;
     }
 
-    protected ComponentTemplate doCompile(Class<? extends ViewComponent> forClass, Reader reader) {
+    protected ComponentTemplate doCompile(@Nullable Class<? extends ViewComponent> forClass, Reader reader) {
         return this.doCompile(forClass, reader, null);
     }
 
-    protected ComponentTemplate doCompile(Class<? extends ViewComponent> forClass, Reader reader, @Nullable URI uri) {
+    protected ComponentTemplate doCompile(@Nullable Class<? extends ViewComponent> forClass, Reader reader, @Nullable URI uri) {
         final CompilationUnitParseResult parseResult = ParserUtil.parseCompilationUnit(reader);
 
         // TODO: analysis
@@ -94,7 +90,7 @@ public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplat
                 DefaultTranspilerConfiguration::new
         );
 
-        final var ownerComponentName = forClass.getSimpleName();
+        final var ownerComponentName = forClass != null ? forClass.getSimpleName() : "AnonymousComponent";
         final var templateClassName = ownerComponentName + "Template";
         final var fqn = this.defaultPackageName + "." + templateClassName;
 
@@ -203,6 +199,10 @@ public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplat
     @Override
     public ComponentTemplate compile(Class<? extends ViewComponent> forClass, Reader reader) {
         return this.getFromCacheOrElse(forClass, () -> this.doCompile(forClass, reader));
+    }
+
+    public ComponentTemplate compileAnonymous(Reader reader) {
+        return this.doCompile(null, reader);
     }
 
 }

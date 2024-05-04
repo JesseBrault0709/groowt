@@ -28,7 +28,7 @@ public interface NodeFactory {
             @Nullable BodyNode body
     );
 
-    FragmentComponentNode fragmentComponentNode(TokenRange tokenRange, @Nullable BodyNode bodyNode);
+    FragmentComponentNode fragmentComponentNode(TokenRange tokenRange, BodyNode bodyNode);
 
     ComponentArgsNode componentArgsNode(
             TokenRange tokenRange,

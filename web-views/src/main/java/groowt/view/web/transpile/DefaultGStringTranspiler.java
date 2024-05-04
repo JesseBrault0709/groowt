@@ -12,8 +12,6 @@ import groowt.view.web.transpile.util.GroovyUtil;
 import groowt.view.web.util.FilteringIterable;
 import groowt.view.web.util.Option;
 import groowt.view.web.util.TokenRange;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import org.antlr.v4.runtime.Token;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
@@ -26,13 +24,11 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
-@Singleton
 public class DefaultGStringTranspiler implements GStringTranspiler {
 
     private final PositionSetter positionSetter;
     private final JStringTranspiler jStringTranspiler;
 
-    @Inject
     public DefaultGStringTranspiler(PositionSetter positionSetter, JStringTranspiler jStringTranspiler) {
         this.positionSetter = positionSetter;
         this.jStringTranspiler = jStringTranspiler;

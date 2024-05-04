@@ -3,15 +3,9 @@ package groowt.view.web.transpile;
 import groowt.view.web.ast.node.*;
 import groowt.view.web.transpile.TranspilerUtil.TranspilerState;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@Singleton
 public class DefaultBodyTranspiler implements BodyTranspiler {
 
     private final GStringTranspiler gStringTranspiler;
@@ -32,7 +26,7 @@ public class DefaultBodyTranspiler implements BodyTranspiler {
     @Override
     public BlockStatement transpileBody(
             BodyNode bodyNode,
-            ExpressionStatementConverter converter,
+            AddOrAppendCallback addOrAppendCallback,
             TranspilerState state
     ) {
         final BlockStatement block = new BlockStatement();
@@ -43,22 +37,19 @@ public class DefaultBodyTranspiler implements BodyTranspiler {
                     final GStringExpression gString = this.gStringTranspiler.createGStringExpression(
                             gStringBodyTextNode
                     );
-                    block.addStatement(converter.createStatement(gStringBodyTextNode, gString));
+                    block.addStatement(addOrAppendCallback.createStatement(gStringBodyTextNode, gString));
                 }
                 case JStringBodyTextNode jStringBodyTextNode -> {
                     block.addStatement(
-                            converter.createStatement(
+                            addOrAppendCallback.createStatement(
                                     jStringBodyTextNode,
                                     this.jStringTranspiler.createStringLiteral(jStringBodyTextNode)
                             )
                     );
                 }
                 case ComponentNode componentNode -> {
-                    final BlockStatement componentBlock = this.componentTranspiler.createComponentStatements(
-                            componentNode,
-                            state
-                    );
-                    block.addStatement(componentBlock);
+                    // DO NOT add/append this, because the component transpiler does it already
+                    block.addStatement(this.componentTranspiler.createComponentStatements(componentNode, state));
                 }
                 case PlainScriptletNode plainScriptletNode -> {
                     throw new UnsupportedOperationException("TODO");

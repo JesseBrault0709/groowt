@@ -1,10 +1,9 @@
 package groowt.view.web.transpile;
 
+import groovy.lang.Tuple2;
 import groowt.view.component.*;
 import groowt.view.web.ast.node.*;
-import groowt.view.web.lib.FragmentComponent;
 import groowt.view.web.runtime.WebViewComponentChildCollector;
-import groowt.view.web.transpile.TranspilerUtil.TranspilerState;
 import groowt.view.web.transpile.util.GroovyUtil;
 import groowt.view.web.transpile.util.GroovyUtil.ConvertResult;
 import org.codehaus.groovy.ast.*;
@@ -16,9 +15,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import static groowt.view.web.transpile.TranspilerUtil.lineAndColumn;
-import static groowt.view.web.transpile.TranspilerUtil.makeStringLiteral;
+import static groowt.view.web.transpile.TranspilerUtil.*;
 
 public class DefaultComponentTranspiler implements ComponentTranspiler {
 
@@ -33,16 +32,19 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     private static final ClassNode MISSING_COMPONENT_EXCEPTION = ClassHelper.make(MissingComponentException.class);
     private static final ClassNode MISSING_CLASS_TYPE_EXCEPTION = ClassHelper.make(MissingClassTypeException.class);
     private static final ClassNode MISSING_STRING_TYPE_EXCEPTION = ClassHelper.make(MissingStringTypeException.class);
-    private static final ClassNode MISSING_FRAGMENT_TYPE_EXCEPTION = ClassHelper.make(MissingFragmentTypeException.class);
+    private static final ClassNode MISSING_FRAGMENT_TYPE_EXCEPTION =
+            ClassHelper.make(MissingFragmentTypeException.class);
 
     private static final String CREATE = "create";
+    private static final String CREATE_FRAGMENT = "createFragment";
     private static final String RESOLVE = "resolve";
     private static final String ADD = "add";
     private static final String APPEND = "append";
-    private static final String FRAGMENT_FQN = FragmentComponent.class.getCanonicalName();
+    private static final String FRAGMENT_FQN = GROOWT_VIEW_WEB + ".lib.Fragment";
 
     private ValueNodeTranspiler valueNodeTranspiler;
     private BodyTranspiler bodyTranspiler;
+    private AppendOrAddStatementFactory appendOrAddStatementFactory;
 
     public void setValueNodeTranspiler(ValueNodeTranspiler valueNodeTranspiler) {
         this.valueNodeTranspiler = valueNodeTranspiler;
@@ -50,6 +52,10 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
 
     public void setBodyTranspiler(BodyTranspiler bodyTranspiler) {
         this.bodyTranspiler = bodyTranspiler;
+    }
+
+    public void setAppendOrAddStatementFactory(AppendOrAddStatementFactory appendOrAddStatementFactory) {
+        this.appendOrAddStatementFactory = Objects.requireNonNull(appendOrAddStatementFactory);
     }
 
     // ViewComponent c0
@@ -82,9 +88,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     }
 
     // key: value
-    protected MapEntryExpression getAttrExpression(
-            AttrNode attrNode, TranspilerState state
-    ) {
+    protected MapEntryExpression getAttrExpression(AttrNode attrNode, TranspilerState state) {
         final var keyExpr = makeStringLiteral(attrNode.getKeyNode().getKey());
         final Expression valueExpr = switch (attrNode) {
             case BooleanValueAttrNode ignored -> ConstantExpression.PRIM_TRUE;
@@ -129,13 +133,13 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
         args.addExpression(lineAndColumn.getV2());
     }
 
-    protected MethodCallExpression getOutCall(Node sourceNode, TranspilerState state, Expression toOutput) {
+    protected MethodCallExpression getOutCall(BodyChildNode sourceNode, TranspilerState state, Expression toOutput) {
         final VariableExpression outVariableExpr = new VariableExpression(state.out());
         final ArgumentListExpression args = new ArgumentListExpression();
         args.addExpression(toOutput);
         switch (sourceNode) {
-            case GStringBodyTextNode ignored -> this.addLineAndColumn(sourceNode, args);
-            case ComponentNode ignored -> this.addLineAndColumn(sourceNode, args);
+            case GStringBodyTextNode ignored -> this.addLineAndColumn(sourceNode.asNode(), args);
+            case ComponentNode ignored -> this.addLineAndColumn(sourceNode.asNode(), args);
             default -> {
             }
         }
@@ -143,7 +147,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     }
 
     // { out << jString | gString | component }
-    protected ClosureExpression getOutClosure(Node sourceNode, TranspilerState state, Expression toRender) {
+    protected ClosureExpression getOutClosure(BodyChildNode sourceNode, TranspilerState state, Expression toRender) {
         if (toRender instanceof VariableExpression variableExpression) {
             variableExpression.setClosureSharedVariable(true);
         }
@@ -153,7 +157,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
 
     // c0_childCollector.add (jString | gString | component) { out << ... }
     protected Statement getChildCollectorAdd(
-            Node sourceNode,
+            BodyChildNode sourceNode,
             TranspilerState state,
             Variable childCollector,
             Expression toAdd
@@ -168,8 +172,15 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
         return new ExpressionStatement(methodCall);
     }
 
+    /**
+     * @return Tuple containing 1. body ClosureExpression, and 2. childCollector Variable
+     */
     // { WebViewComponentChildCollector c0_childCollector -> ... }
-    protected ClosureExpression getBodyClosure(BodyNode bodyNode, TranspilerState state, String componentVariableName) {
+    protected Tuple2<ClosureExpression, Variable> getBodyClosure(
+            BodyNode bodyNode,
+            TranspilerState state,
+            String componentVariableName
+    ) {
         final Parameter childCollectorParam = new Parameter(
                 CHILD_COLLECTOR,
                 componentVariableName + "_childCollector"
@@ -177,26 +188,40 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
 
         final var scope = state.pushScope();
         scope.putDeclaredVariable(childCollectorParam);
+        state.pushChildCollector(childCollectorParam);
         final BlockStatement bodyStatements = this.bodyTranspiler.transpileBody(
                 bodyNode,
                 (sourceNode, expr) -> this.getChildCollectorAdd(sourceNode, state, childCollectorParam, expr),
                 state
         );
+        state.popChildCollector();
         state.popScope();
 
-        return new ClosureExpression(new Parameter[]{childCollectorParam}, bodyStatements);
+        final ClosureExpression bodyClosure = new ClosureExpression(
+                new Parameter[] { childCollectorParam },
+                bodyStatements
+        );
+        return new Tuple2<>(bodyClosure, childCollectorParam);
     }
 
+    /**
+     * @return Tuple containing 1. create Expression,
+     * and 2. childCollector Variable, possibly {@code null}.
+     */
     // context.create(...) {...}
-    protected MethodCallExpression getCreateExpression(
-            ComponentNode componentNode, TranspilerState state, String componentVariableName
+    protected Tuple2<MethodCallExpression, @Nullable Variable> getCreateExpression(
+            ComponentNode componentNode,
+            TranspilerState state,
+            String componentVariableName
     ) {
         final var createArgs = new ArgumentListExpression();
-
-        final var contextResolve = this.getContextResolveExpr(componentNode, state.context());
-        createArgs.addExpression(contextResolve);
-
+        final String createName;
+        Variable childCollector = null;
         if (componentNode instanceof TypedComponentNode typedComponentNode) {
+            createName = CREATE;
+            final var contextResolve = this.getContextResolveExpr(componentNode, state.context());
+            createArgs.addExpression(contextResolve);
+
             final List<AttrNode> attributeNodes = typedComponentNode.getArgs().getAttributes();
             if (!attributeNodes.isEmpty()) {
                 createArgs.addExpression(this.getAttrMap(attributeNodes, state));
@@ -205,35 +230,62 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
             if (constructorNode != null) {
                 this.getConstructorArgs(constructorNode).forEach(createArgs::addExpression);
             }
+
+            final @Nullable BodyNode bodyNode = componentNode.getBody();
+            if (bodyNode != null) {
+                final var bodyResult = this.getBodyClosure(bodyNode, state, componentVariableName);
+                childCollector = bodyResult.getV2();
+                createArgs.addExpression(bodyResult.getV1());
+            }
+        } else if (componentNode instanceof FragmentComponentNode fragmentComponentNode) {
+            createName = CREATE_FRAGMENT;
+            final BodyNode bodyNode = Objects.requireNonNull(
+                    fragmentComponentNode.getBody(),
+                    "FragmentComponentNode cannot have a null body."
+            );
+            final var bodyResult = this.getBodyClosure(bodyNode, state, componentVariableName);
+            childCollector = bodyResult.getV2();
+            createArgs.addExpression(bodyResult.getV1());
+        } else {
+            throw new IllegalArgumentException("Unsupported ComponentNode type: " + componentNode.getClass().getName());
         }
 
-        final @Nullable BodyNode bodyNode = componentNode.getBody();
-        if (bodyNode != null) {
-            createArgs.addExpression(this.getBodyClosure(bodyNode, state, componentVariableName));
-        }
+        final var createCall = new MethodCallExpression(
+                new VariableExpression(state.context()),
+                createName,
+                createArgs
+        );
 
-        return new MethodCallExpression(new VariableExpression(state.context()), CREATE, createArgs);
+        return new Tuple2<>(createCall, childCollector);
     }
 
+    /**
+     * @return Tuple containing 1. assignment ExpressionStatement,
+     * and 2. childCollector Variable, possibly {@code null}.
+     */
     // c0 = context.create(context.resolve(''), [:], ...) {...}
-    protected ExpressionStatement getCreateAssignStatement(
-            ComponentNode componentNode, TranspilerState state, String componentVariableName
+    protected Tuple2<ExpressionStatement, @Nullable Variable> getCreateAssignStatement(
+            ComponentNode componentNode,
+            TranspilerState state,
+            String componentVariableName,
+            Variable component
     ) {
-        final var componentAssignLeft = new VariableExpression(state.getDeclaredVariable(componentVariableName));
-        final var createExpr = this.getCreateExpression(componentNode, state, componentVariableName);
+        final var componentAssignLeft = new VariableExpression(component);
+        final var createExprResult = this.getCreateExpression(componentNode, state, componentVariableName);
         final var componentAssignExpr = new BinaryExpression(
                 componentAssignLeft,
                 new Token(Types.ASSIGN, "=", -1, -1),
-                createExpr
+                createExprResult.getV1()
         );
-        return new ExpressionStatement(componentAssignExpr);
+        return new Tuple2<>(new ExpressionStatement(componentAssignExpr), createExprResult.getV2());
     }
 
     // catch (NoFactoryMissingException c0nfme) {
     //     throw new MissingClassComponentException(this, 'ComponentType', c0nfme)
     // }
     protected CatchStatement getNoMissingFactoryExceptionCatch(
-            ComponentNode componentNode, String componentVariableName
+            ComponentNode componentNode,
+            String componentVariableName
     ) {
         final String exceptionName = componentVariableName + "nfme";
         final Parameter fmeParam = new Parameter(NO_FACTORY_MISSING_EXCEPTION, exceptionName);
@@ -281,7 +333,10 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     }
 
     // catch (Exception c0ce) { throw new ComponentCreateException(c0ce) }
-    protected CatchStatement getGeneralCreateExceptionCatch(ComponentNode componentNode, String componentVariableName) {
+    protected CatchStatement getGeneralCreateExceptionCatch(
+            ComponentNode componentNode,
+            String componentVariableName
+    ) {
         final String exceptionName = componentVariableName + "ce";
         final Parameter exceptionParam = new Parameter(EXCEPTION, exceptionName);
         final VariableExpression exceptionVar = new VariableExpression(exceptionName);
@@ -317,53 +372,68 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
         return new ExpressionStatement(setContext);
     }
 
-    protected Statement createComponentOutCall(
-            ComponentNode componentNode,
-            TranspilerState state,
-            Variable component
-    ) {
-        // out << c0
-        final VariableExpression toOutput = new VariableExpression(component);
-        final Expression outCallExpr = this.getOutCall(componentNode, state, toOutput);
-        return new ExpressionStatement(outCallExpr);
-    }
-
     protected String getComponentVariableName(int componentNumber) {
         return "c" + componentNumber;
     }
 
     @Override
-    public BlockStatement createComponentStatements(
-            ComponentNode componentNode,
-            TranspilerState state
-    ) {
+    public BlockStatement createComponentStatements(ComponentNode componentNode, TranspilerState state) {
         final var componentVariableName = this.getComponentVariableName(state.newComponentNumber());
-        final Variable component = new VariableExpression(componentVariableName, VIEW_COMPONENT);
+        final VariableExpression component = new VariableExpression(componentVariableName, VIEW_COMPONENT);
 
         final BlockStatement result = new BlockStatement();
-        final VariableScope scope = state.pushScope();
+        final VariableScope scope = state.currentScope();
         result.setVariableScope(scope);
         scope.putDeclaredVariable(component);
 
         // ViewComponent c0;
         result.addStatement(this.getComponentDeclaration(component));
 
-        // try { context.create(...) } catch { ... }
-        final var tryCreateStatement = new TryCatchStatement(this.getCreateAssignStatement(
+        // c0 = context.create(...) { ... }
+        final var createAssignStatementResult = this.getCreateAssignStatement(
                 componentNode,
                 state,
-                componentVariableName
-        ), EmptyStatement.INSTANCE);
+                componentVariableName,
+                component
+        );
+
+        // try { ... } catch { ... }
+        final var tryCreateStatement = new TryCatchStatement(
+                createAssignStatementResult.getV1(),
+                EmptyStatement.INSTANCE
+        );
         this.getCreateCatches(componentNode, componentVariableName).forEach(tryCreateStatement::addCatch);
         result.addStatement(tryCreateStatement);
 
         // component.setContext(context)
         result.addStatement(this.createSetContext(state, component));
 
-        // out << component
-        result.addStatement(this.createComponentOutCall(componentNode, state, component));
-
-        state.popScope();
+        // out or collect
+        final var addOrAppend = this.appendOrAddStatementFactory.addOrAppend(
+                componentNode,
+                state,
+                action -> switch (action) {
+                    case ADD -> {
+                        final var args = new ArgumentListExpression();
+                        args.addExpression(component);
+                        final var outComponent = new VariableExpression(component);
+                        outComponent.setClosureSharedVariable(true);
+                        final Statement renderStatement = this.appendOrAddStatementFactory.appendOnly(
+                                componentNode,
+                                state,
+                                outComponent
+                        );
+                        final ClosureExpression renderArg = new ClosureExpression(
+                                Parameter.EMPTY_ARRAY,
+                                renderStatement
+                        );
+                        args.addExpression(renderArg);
+                        yield args;
+                    }
+                    case APPEND -> new VariableExpression(component);
+                }
+        );
+        result.addStatement(addOrAppend);
 
         return result;
     }

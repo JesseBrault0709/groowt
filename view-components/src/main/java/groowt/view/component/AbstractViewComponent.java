@@ -32,10 +32,12 @@ public abstract class AbstractViewComponent implements ViewComponent {
         this.template = Objects.requireNonNull(template);
     }
 
-    protected void beforeRender() {}
+    protected void beforeRender() {
+        this.getContext().beforeComponentRender(this);
+    }
 
     protected void afterRender() {
-        this.getContext().afterComponent(this);
+        this.getContext().afterComponentRender(this);
     }
 
     @Override

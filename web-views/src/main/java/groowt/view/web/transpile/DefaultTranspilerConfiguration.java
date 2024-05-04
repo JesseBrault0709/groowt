@@ -4,7 +4,7 @@ import jakarta.inject.Inject;
 
 public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
 
-    private final OutStatementFactory outStatementFactory = new SimpleOutStatementFactory();
+    private final AppendOrAddStatementFactory appendOrAddStatementFactory = new DefaultAppendOrAddStatementFactory();
     private final BodyTranspiler bodyTranspiler;
 
     @Inject
@@ -13,10 +13,13 @@ public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
         final var jStringTranspiler = new DefaultJStringTranspiler(positionSetter);
         final var gStringTranspiler = new DefaultGStringTranspiler(positionSetter, jStringTranspiler);
         final var componentTranspiler = new DefaultComponentTranspiler();
-        this.bodyTranspiler = new DefaultBodyTranspiler(gStringTranspiler, jStringTranspiler, componentTranspiler);
-        componentTranspiler.setBodyTranspiler(this.bodyTranspiler);
         final var valueNodeTranspiler = new DefaultValueNodeTranspiler(componentTranspiler);
+        
+        this.bodyTranspiler = new DefaultBodyTranspiler(gStringTranspiler, jStringTranspiler, componentTranspiler);
+
+        componentTranspiler.setBodyTranspiler(this.bodyTranspiler);
         componentTranspiler.setValueNodeTranspiler(valueNodeTranspiler);
+        componentTranspiler.setAppendOrAddStatementFactory(this.appendOrAddStatementFactory);
     }
 
     @Override
@@ -25,8 +28,8 @@ public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
     }
 
     @Override
-    public OutStatementFactory getOutStatementFactory() {
-        return this.outStatementFactory;
+    public AppendOrAddStatementFactory getAppendOrAddStatementFactory() {
+        return this.appendOrAddStatementFactory;
     }
 
 }

@@ -10,11 +10,33 @@ import java.util.function.Predicate;
 
 public class DefaultComponentContext implements ComponentContext {
 
+    protected static class DefaultResolved implements ComponentContext.Resolved {
+
+        private final String typeName;
+        private final ComponentFactory<?> factory;
+
+        public DefaultResolved(String typeName, ComponentFactory<?> factory) {
+            this.typeName = typeName;
+            this.factory = factory;
+        }
+
+        @Override
+        public String getTypeName() {
+            return this.typeName;
+        }
+
+        @Override
+        public ComponentFactory<?> getComponentFactory() {
+            return this.factory;
+        }
+
+    }
+
     private final Deque<ComponentScope> scopeStack = new LinkedList<>();
     private final Deque<ViewComponent> componentStack = new LinkedList<>();
 
     @Override
-    public ComponentFactory<?> resolve(String component) {
+    public Resolved resolve(String component) {
         if (scopeStack.isEmpty()) {
             throw new IllegalStateException("There are no scopes on the scopeStack.");
         }
@@ -23,7 +45,7 @@ public class DefaultComponentContext implements ComponentContext {
         while (!getStack.isEmpty()) {
             final ComponentScope scope = getStack.pop();
             if (scope.contains(component)) {
-                return scope.get(component);
+                return new DefaultResolved(component, scope.get(component));
             }
         }
 
@@ -32,7 +54,7 @@ public class DefaultComponentContext implements ComponentContext {
         while (!missingStack.isEmpty()) {
             final ComponentScope scope = getStack.pop();
             try {
-                return scope.factoryMissing(component);
+                return new DefaultResolved(component, scope.factoryMissing(component));
             } catch (NoFactoryMissingException e) {
                 if (first == null) {
                     first = e;
@@ -48,14 +70,19 @@ public class DefaultComponentContext implements ComponentContext {
     }
 
     @Override
-    public ViewComponent create(ComponentFactory<?> factory, Object... args) {
-        final ViewComponent component = factory.create(this, args);
-        this.componentStack.push(component);
-        return component;
+    public ViewComponent create(Resolved resolved, Object... args) {
+        return resolved.getComponentFactory().create(
+                resolved.getTypeName(), this, args
+        );
     }
 
     @Override
-    public void afterComponent(ViewComponent component) {
+    public void beforeComponentRender(ViewComponent component) {
+        this.componentStack.push(component);
+    }
+
+    @Override
+    public void afterComponentRender(ViewComponent component) {
         final var popped = this.componentStack.pop();
         if (!popped.equals(component)) {
             throw new IllegalStateException("Popped component does not equal arg to afterComponent()");

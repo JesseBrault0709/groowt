@@ -7,7 +7,7 @@ import groowt.view.web.ast.DefaultNodeFactory;
 import groowt.view.web.ast.node.BodyNode;
 import groowt.view.web.ast.node.CompilationUnitNode;
 import groowt.view.web.transpile.BodyTranspiler;
-import groowt.view.web.transpile.OutStatementFactory;
+import groowt.view.web.transpile.TranspilerConfiguration;
 import groowt.view.web.transpile.TranspilerUtil;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -20,8 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class BodyTranspilerTests {
 
-    protected abstract BodyTranspiler getBodyTranspiler();
-    protected abstract OutStatementFactory getOutStatementFactory();
+    protected abstract TranspilerConfiguration getConfiguration();
 
     protected record BuildResult(BodyNode bodyNode, TokenList tokenList) {}
 
@@ -37,10 +36,14 @@ public abstract class BodyTranspilerTests {
         return new BuildResult(bodyNode, tokenList);
     }
 
+    protected BodyTranspiler getBodyTranspiler() {
+        return this.getConfiguration().getBodyTranspiler();
+    }
+
     @Test
     public void smokeScreen() {
         assertDoesNotThrow(() -> {
-            getBodyTranspiler();
+            this.getBodyTranspiler();
         });
     }
 
@@ -49,10 +52,11 @@ public abstract class BodyTranspilerTests {
         final var source = "Hello, $target!";
         final var buildResult = this.build(source);
         final var transpiler = this.getBodyTranspiler();
-        final var outStatementFactory = this.getOutStatementFactory();
+        final var state = TranspilerUtil.TranspilerState.withDefaultRootScope();
+        final var addOrAppend = this.getConfiguration().getAppendOrAddStatementFactory();
         final BlockStatement blockStatement = transpiler.transpileBody(
                 buildResult.bodyNode(),
-                (ignored, expression) -> outStatementFactory.create(expression),
+                (node, expression) -> addOrAppend.addOrAppend(node, state, ignored -> expression),
                 TranspilerUtil.TranspilerState.withDefaultRootScope()
         );
         assertEquals(1, blockStatement.getStatements().size());
@@ -63,10 +67,11 @@ public abstract class BodyTranspilerTests {
         final var source = "Hello, World!";
         final var buildResult = this.build(source);
         final var transpiler = this.getBodyTranspiler();
-        final var outStatementFactory = this.getOutStatementFactory();
+        final var state = TranspilerUtil.TranspilerState.withDefaultRootScope();
+        final var addOrAppend = this.getConfiguration().getAppendOrAddStatementFactory();
         final BlockStatement blockStatement = transpiler.transpileBody(
                 buildResult.bodyNode(),
-                (ignored, expression) -> outStatementFactory.create(expression),
+                (node, expression) -> addOrAppend.addOrAppend(node, state, ignored -> expression),
                 TranspilerUtil.TranspilerState.withDefaultRootScope()
         );
         assertEquals(1, blockStatement.getStatements().size());

@@ -56,7 +56,7 @@ closingComponent
 
 fragmentComponent
     :   ComponentOpen ComponentClose
-        body?
+        body
         ClosingComponentOpen ComponentClose
     ;
 

@@ -25,6 +25,8 @@ public final class TranspilerUtil {
     public static final String OUT = "out";
     public static final String CONTEXT = "context";
     public static final String GET_RENDERER = "getRenderer";
+    public static final String APPEND = "append";
+    public static final String ADD = "add";
 
     public static Tuple2<ConstantExpression, ConstantExpression> lineAndColumn(SourcePosition sourcePosition) {
         return new Tuple2<>(
@@ -58,6 +60,7 @@ public final class TranspilerUtil {
 
         private final AtomicInteger componentCounter = new AtomicInteger();
         private final Deque<VariableScope> scopeStack = new LinkedList<>();
+        private final Deque<Variable> childCollectorStack = new LinkedList<>();
 
         private TranspilerState(VariableScope rootScope) {
             this.scopeStack.push(rootScope);
@@ -101,6 +104,22 @@ public final class TranspilerUtil {
                 }
             }
             throw new NullPointerException("Cannot find variable: " + name);
+        }
+
+        public void popChildCollector() {
+            this.childCollectorStack.pop();
+        }
+
+        public void pushChildCollector(Variable childCollector) {
+            this.childCollectorStack.push(childCollector);
+        }
+
+        public Variable getCurrentChildCollector() {
+            return Objects.requireNonNull(this.childCollectorStack.peek());
+        }
+
+        public boolean hasCurrentChildCollector() {
+            return this.childCollectorStack.peek() != null;
         }
 
     }

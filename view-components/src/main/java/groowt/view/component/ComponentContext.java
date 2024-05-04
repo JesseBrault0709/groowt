@@ -11,13 +11,21 @@ import java.util.function.Predicate;
 public interface ComponentContext {
 
     @ApiStatus.Internal
-    ComponentFactory<?> resolve(String component);
+    interface Resolved {
+        String getTypeName();
+        ComponentFactory<?> getComponentFactory();
+    }
 
     @ApiStatus.Internal
-    ViewComponent create(ComponentFactory<?> factory, Object... args);
+    Resolved resolve(String component);
 
     @ApiStatus.Internal
-    void afterComponent(ViewComponent component);
+    ViewComponent create(Resolved resolved, Object... args);
+
+    void beforeComponentRender(ViewComponent component);
+
+    @ApiStatus.Internal
+    void afterComponentRender(ViewComponent component);
 
     Deque<ComponentScope> getScopeStack();
 

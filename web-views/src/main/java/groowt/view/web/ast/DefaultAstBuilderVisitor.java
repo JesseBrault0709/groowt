@@ -189,7 +189,7 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
     public Node visitFragmentComponent(WebViewComponentsParser.FragmentComponentContext ctx) {
         return this.nodeFactory.fragmentComponentNode(
                 this.getTokenRange(ctx),
-                this.getSingleAs(ctx.body(), BodyNode.class)
+                this.getSingleAsNonNull(ctx.body(), BodyNode.class)
         );
     }
 

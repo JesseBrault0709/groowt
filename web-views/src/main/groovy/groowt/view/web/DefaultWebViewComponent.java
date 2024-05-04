@@ -2,13 +2,11 @@ package groowt.view.web;
 
 import groovy.lang.Closure;
 import groovy.lang.GroovyClassLoader;
-import groowt.util.di.DefaultRegistryObjectFactory;
 import groowt.view.component.AbstractViewComponent;
 import groowt.view.component.ComponentContext;
 import groowt.view.component.ComponentTemplate;
 import groowt.view.web.WebViewTemplateComponentSource.*;
 import groowt.view.web.runtime.WebViewComponentWriter;
-import groowt.view.web.transpile.DefaultTranspilerConfiguration;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,25 +75,36 @@ public class DefaultWebViewComponent extends AbstractViewComponent implements We
     }
 
     @Override
-    public List<WebViewChildRenderer> getChildren() {
-        return Objects.requireNonNullElseGet(this.children, ArrayList::new);
+    public List<WebViewChildRenderer> getChildRenderers() {
+        if (this.children == null) {
+            this.children = new ArrayList<>();
+        }
+        return this.children;
     }
 
     @Override
-    public void setChildren(List<WebViewChildRenderer> children) {
+    public boolean hasChildren() {
+        return !this.getChildRenderers().isEmpty();
+    }
+
+    @Override
+    public void setChildRenderers(List<WebViewChildRenderer> children) {
         this.children = children;
     }
 
     @Override
     public void renderChildren() {
-        for (final var childRenderer : this.getChildren()) {
+        for (final var childRenderer : this.getChildRenderers()) {
             try {
+                if (childRenderer instanceof WebViewChildComponentRenderer childComponentRenderer) {
+                    this.getContext().beforeComponentRender(childComponentRenderer.getComponent());
+                }
                 childRenderer.render(this);
             } catch (Exception e) {
                 throw new ChildRenderException(e);
             } finally {
                 if (childRenderer instanceof WebViewChildComponentRenderer childComponentRenderer) {
-                    this.getContext().afterComponent(childComponentRenderer.getComponent());
+                    this.getContext().afterComponentRender(childComponentRenderer.getComponent());
                 }
             }
         }

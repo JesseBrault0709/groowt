@@ -210,12 +210,17 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
         final BodyNode bodyNode = compilationUnitNode.getBodyNode();
         if (bodyNode != null) {
-            final var outStatementFactory = configuration.getOutStatementFactory();
+            final var appendOrAddStatementFactory = configuration.getAppendOrAddStatementFactory();
             renderBlock.addStatement(
                     configuration.getBodyTranspiler()
                             .transpileBody(
                                     compilationUnitNode.getBodyNode(),
-                                    (ignored, expr) -> outStatementFactory.create(expr),
+                                    (source, expr) -> appendOrAddStatementFactory.addOrAppend(source, state, action -> {
+                                        if (action == AppendOrAddStatementFactory.Action.ADD) {
+                                            throw new IllegalStateException("Should not be adding here!");
+                                        }
+                                        return expr;
+                                    }),
                                     state
                             )
             );
@@ -223,8 +228,8 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
         final ClosureExpression renderer = new ClosureExpression(
                 new Parameter[] {
-                        (Parameter) state.getDeclaredVariable(CONTEXT),
-                        (Parameter) state.getDeclaredVariable(OUT)
+                        (Parameter) state.context(),
+                        (Parameter) state.out()
                 },
                 renderBlock
         );
