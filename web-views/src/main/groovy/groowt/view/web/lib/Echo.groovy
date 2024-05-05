@@ -1,14 +1,20 @@
 package groowt.view.web.lib
 
-import groowt.view.StandardGStringTemplateView
 import groowt.view.View
 import groowt.view.component.ComponentContext
 import groowt.view.component.ComponentFactory
+import groowt.view.component.ComponentRenderException
 import groowt.view.web.WebViewChildComponentRenderer
 
 class Echo extends DelegatingWebViewComponent {
 
-    static final class EchoFactory implements ComponentFactory<Echo> {
+    static final ComponentFactory<Echo> FACTORY = new EchoFactory()
+
+    private static final class EchoFactory implements ComponentFactory<Echo> {
+
+        Echo doCreate(String typeName) {
+            doCreate(typeName, [:], true)
+        }
 
         Echo doCreate(String typeName, boolean selfClose) {
             doCreate(typeName, [:], selfClose)
@@ -19,8 +25,7 @@ class Echo extends DelegatingWebViewComponent {
         }
 
         Echo doCreate(String typeName, Map<String, Object> attr, boolean selfClose) {
-            def echo = new Echo(attr, typeName, selfClose)
-            echo
+            new Echo(attr, typeName, selfClose)
         }
 
         Echo doCreate(
@@ -56,26 +61,43 @@ class Echo extends DelegatingWebViewComponent {
 
     @Override
     protected View getDelegate() {
-        return new StandardGStringTemplateView(
-                src: Echo.getResource('EchoTemplate.gst'),
-                parent: this
-        )
+        if (this.selfClose && this.hasChildren()) {
+            throw new ComponentRenderException('Cannot have selfClose set to true and have children.')
+        }
+        return {
+            it << '<'
+            it << this.name
+            if (!this.attr.isEmpty()) {
+                it << ' '
+                formatAttr(it)
+            }
+            if (this.selfClose) {
+                it << ' /'
+            }
+            it << '>'
+            if (this.hasChildren()) {
+                this.renderChildren() // TODO: fix this
+            }
+            if (this.hasChildren() || !this.selfClose) {
+                it << '</'
+                it << this.name
+                it << '>'
+            }
+        }
     }
 
-    String formatAttr() {
-        def sb = new StringBuilder()
+    protected void formatAttr(Writer writer) {
         def iter = this.attr.iterator()
         while (iter.hasNext()) {
             def entry = iter.next()
-            sb << entry.key
-            sb << '="'
-            sb << entry.value
-            sb << '"'
+            writer << entry.key
+            writer << '="'
+            writer << entry.value
+            writer << '"'
             if (iter.hasNext()) {
-                sb << ' '
+                writer << ' '
             }
         }
-        sb.toString()
     }
 
 }

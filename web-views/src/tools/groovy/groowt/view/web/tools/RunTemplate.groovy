@@ -1,11 +1,7 @@
 package groowt.view.web.tools
 
 import groowt.view.component.DefaultComponentContext
-import groowt.view.web.DefaultWebComponentTemplateCompiler
 import groowt.view.web.DefaultWebViewComponent
-import groowt.view.web.WebViewTemplateComponentSource
-import groowt.view.web.runtime.WebViewComponentWriter
-import org.codehaus.groovy.control.CompilerConfiguration
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -30,7 +26,7 @@ class RunTemplate implements Callable<Integer> {
 
     @Override
     Integer call() throws Exception {
-        def component = new DefaultWebViewComponent(WebViewTemplateComponentSource.of(this.template))
+        def component = new DefaultWebViewComponent(this.template)
 
         def context = new DefaultComponentContext()
         context.pushDefaultScope()

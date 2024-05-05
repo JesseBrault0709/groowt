@@ -22,8 +22,10 @@ public abstract class DelegatingWebViewComponent extends DefaultWebViewComponent
     protected abstract View getDelegate();
 
     @Override
-    public void renderTo(Writer out) throws IOException {
+    public final void renderTo(Writer out) throws IOException {
+        this.beforeRender();
         this.getDelegate().renderTo(out);
+        this.afterRender();
     }
 
 }

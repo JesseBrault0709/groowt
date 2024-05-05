@@ -1,10 +1,7 @@
 package groowt.view.web;
 
 import groovy.lang.GroovyClassLoader;
-import groowt.view.component.CachingComponentTemplateCompiler;
-import groowt.view.component.ComponentTemplate;
-import groowt.view.component.ComponentTemplateCreateException;
-import groowt.view.component.ViewComponent;
+import groowt.view.component.*;
 import groowt.view.web.antlr.CompilationUnitParseResult;
 import groowt.view.web.antlr.ParserUtil;
 import groowt.view.web.antlr.TokenList;
@@ -21,15 +18,14 @@ import org.codehaus.groovy.tools.GroovyClass;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.Reader;
 import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.net.URISyntaxException;
 import java.util.Objects;
 
-public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplateCompiler {
+public class DefaultWebViewComponentTemplateCompiler extends CachingComponentTemplateCompiler
+        implements WebViewComponentTemplateCompiler {
 
     private final CompilerConfiguration configuration;
     private final String defaultPackageName;
@@ -37,15 +33,12 @@ public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplat
 
     private GroovyClassLoader groovyClassLoader;
 
-    public DefaultWebComponentTemplateCompiler(
-            CompilerConfiguration configuration,
-            String defaultPackageName
-    ) {
+    public DefaultWebViewComponentTemplateCompiler(CompilerConfiguration configuration, String defaultPackageName) {
         this(configuration, defaultPackageName, Phases.CLASS_GENERATION);
     }
 
     @ApiStatus.Internal
-    public DefaultWebComponentTemplateCompiler(
+    public DefaultWebViewComponentTemplateCompiler(
             CompilerConfiguration configuration,
             String defaultPackageName,
             int phase
@@ -70,11 +63,30 @@ public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplat
         this.groovyClassLoader = null;
     }
 
-    protected ComponentTemplate doCompile(@Nullable Class<? extends ViewComponent> forClass, Reader reader) {
-        return this.doCompile(forClass, reader, null);
+    @Override
+    protected ComponentTemplate doCompile(
+            @Nullable TemplateSource source,
+            @Nullable Class<? extends ViewComponent> forClass,
+            Reader sourceReader
+    ) {
+        if (source instanceof TemplateSource.URISource uriSource) {
+            return this.doCompile(forClass, sourceReader, uriSource.templateURI());
+        } else if (source instanceof TemplateSource.URLSource urlSource) {
+            try {
+                return this.doCompile(forClass, sourceReader, urlSource.templateURL().toURI());
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            return this.doCompile(forClass, sourceReader, null);
+        }
     }
 
-    protected ComponentTemplate doCompile(@Nullable Class<? extends ViewComponent> forClass, Reader reader, @Nullable URI uri) {
+    protected ComponentTemplate doCompile(
+            @Nullable Class<? extends ViewComponent> forClass,
+            Reader reader,
+            @Nullable URI uri
+    ) {
         final CompilationUnitParseResult parseResult = ParserUtil.parseCompilationUnit(reader);
 
         // TODO: analysis
@@ -153,56 +165,8 @@ public class DefaultWebComponentTemplateCompiler extends CachingComponentTemplat
     }
 
     @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, File templateFile) {
-        return this.getFromCacheOrElse(forClass, () -> {
-            try {
-                return this.doCompile(forClass, new FileReader(templateFile));
-            } catch (FileNotFoundException e) {
-                throw new ComponentTemplateCreateException(e, forClass, templateFile);
-            }
-        });
-    }
-
-    @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, String template) {
-        return this.getFromCacheOrElse(forClass, () -> this.doCompile(forClass, new StringReader(template)));
-    }
-
-    @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, URI templateURI) {
-        return this.getFromCacheOrElse(forClass, () -> {
-            final Path path = Paths.get(templateURI);
-            try {
-                return this.doCompile(forClass, Files.newBufferedReader(path), templateURI);
-            } catch (IOException e) {
-                throw new ComponentTemplateCreateException(e, forClass, templateURI);
-            }
-        });
-    }
-
-    @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, URL templateURL) {
-        return this.getFromCacheOrElse(forClass, () -> {
-            try {
-                return this.doCompile(forClass, new InputStreamReader(templateURL.openStream()), templateURL.toURI());
-            } catch (Exception e) {
-                throw new ComponentTemplateCreateException(e, forClass, templateURL);
-            }
-        });
-    }
-
-    @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, InputStream inputStream) {
-        return this.getFromCacheOrElse(forClass, () -> this.doCompile(forClass, new InputStreamReader(inputStream)));
-    }
-
-    @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, Reader reader) {
-        return this.getFromCacheOrElse(forClass, () -> this.doCompile(forClass, reader));
-    }
-
     public ComponentTemplate compileAnonymous(Reader reader) {
-        return this.doCompile(null, reader);
+        return this.doCompile(null, null, reader);
     }
 
 }

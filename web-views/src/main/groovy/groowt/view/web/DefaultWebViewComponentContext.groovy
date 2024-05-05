@@ -4,22 +4,23 @@ import groowt.view.component.ComponentScope
 import groowt.view.component.DefaultComponentContext
 import groowt.view.component.ViewComponent
 import groowt.view.web.lib.Fragment
-import groowt.view.web.runtime.WebViewComponentChildCollector
+import groowt.view.web.runtime.DefaultWebViewComponentChildCollection
 import org.jetbrains.annotations.ApiStatus
 
-class DefaultWebViewComponentContext extends DefaultComponentContext {
+class DefaultWebViewComponentContext extends DefaultComponentContext implements WebViewComponentContext {
 
     @Override
     protected ComponentScope getNewDefaultScope() {
         new WebViewScope()
     }
 
+    @Override
     @ApiStatus.Internal
     ViewComponent createFragment(Closure<?> childCollector) {
-        def collector = new WebViewComponentChildCollector()
-        childCollector.call(collector)
+        def childCollection = new DefaultWebViewComponentChildCollection()
+        childCollector.call(childCollection)
         def fragment = new Fragment()
-        fragment.childRenderers = collector.children
+        fragment.childRenderers = childCollection.children
         fragment
     }
 

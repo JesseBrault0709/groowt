@@ -4,8 +4,10 @@ import groowt.view.component.ComponentContext
 import groowt.view.component.ComponentFactory
 import groowt.view.web.DefaultWebViewComponent
 import groowt.view.web.DefaultWebViewComponentContext
-import groowt.view.web.WebViewTemplateComponentSource
+import groowt.view.component.TemplateSource
 import org.junit.jupiter.api.Test
+
+import static groowt.view.web.WebViewComponentFactories.withAttr
 
 class FragmentTests extends AbstractWebViewComponentTests {
 
@@ -14,7 +16,7 @@ class FragmentTests extends AbstractWebViewComponentTests {
         String greeting
 
         Greeter(Map<String, Object> attr) {
-            super(WebViewTemplateComponentSource.of('$greeting'))
+            super(TemplateSource.of('$greeting'))
             greeting = attr.greeting
         }
 
@@ -22,9 +24,7 @@ class FragmentTests extends AbstractWebViewComponentTests {
 
     private final ComponentContext greeterContext = new DefaultWebViewComponentContext().tap {
         pushDefaultScope()
-        def greeterFactory = ComponentFactory.ofClosure { type, componentContext, attr ->
-            new Greeter(attr)
-        }
+        def greeterFactory = withAttr(Greeter.&new)
         currentScope.add('Greeter', greeterFactory)
     }
 

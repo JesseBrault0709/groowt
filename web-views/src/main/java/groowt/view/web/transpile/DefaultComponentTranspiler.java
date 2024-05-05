@@ -3,7 +3,7 @@ package groowt.view.web.transpile;
 import groovy.lang.Tuple2;
 import groowt.view.component.*;
 import groowt.view.web.ast.node.*;
-import groowt.view.web.runtime.WebViewComponentChildCollector;
+import groowt.view.web.runtime.WebViewComponentChildCollection;
 import groowt.view.web.transpile.util.GroovyUtil;
 import groowt.view.web.transpile.util.GroovyUtil.ConvertResult;
 import org.codehaus.groovy.ast.*;
@@ -22,7 +22,7 @@ import static groowt.view.web.transpile.TranspilerUtil.*;
 public class DefaultComponentTranspiler implements ComponentTranspiler {
 
     private static final ClassNode VIEW_COMPONENT = ClassHelper.make(ViewComponent.class);
-    private static final ClassNode CHILD_COLLECTOR = ClassHelper.make(WebViewComponentChildCollector.class);
+    private static final ClassNode CHILD_COLLECTION = ClassHelper.make(WebViewComponentChildCollection.class);
 
     private static final ClassNode EXCEPTION = ClassHelper.make(Exception.class);
     private static final ClassNode COMPONENT_CREATE = ClassHelper.make(ComponentCreateException.class);
@@ -182,7 +182,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
             String componentVariableName
     ) {
         final Parameter childCollectorParam = new Parameter(
-                CHILD_COLLECTOR,
+                CHILD_COLLECTION,
                 componentVariableName + "_childCollector"
         );
 

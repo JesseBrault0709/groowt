@@ -27,8 +27,9 @@ public class ComponentCreateException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return "Exception in " +  this.template.getClass() + " while creating " + this.componentType.getClass() +
-                " at line " + this.line + ", column " + this.column + ".";
+        return "Exception in " +  this.template.getClass().getName() + " while creating "
+                + this.componentType.getClass().getName() + " at line " + this.line
+                + ", column " + this.column + ".";
     }
 
 }
