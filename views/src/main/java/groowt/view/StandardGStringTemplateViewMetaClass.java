@@ -1,13 +1,9 @@
 package groowt.view;
 
 import groovy.lang.*;
-import org.codehaus.groovy.runtime.metaclass.MethodSelectionException;
-import org.codehaus.groovy.util.FastArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
@@ -25,21 +21,6 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
                 ;
     }
 
-    private static MetaMethod findMetaMethod(MetaClass metaClass, String methodName, Object[] argsArray) {
-        final List<MetaMethod> metaMethods = metaClass.getMetaMethods().stream().filter(metaMethod ->
-                metaMethod.getName().equals(methodName) && metaMethod.isValidMethod(argsArray)
-        ).toList();
-        if (metaMethods.size() > 1) {
-            @SuppressWarnings("rawtypes")
-            final Class[] argTypes = Arrays.stream(argsArray).map(Object::getClass).toArray(Class[]::new);
-            throw new MethodSelectionException(methodName, new FastArray(metaMethods), argTypes);
-        } else if (metaMethods.size() == 1) {
-            return metaMethods.getFirst();
-        } else {
-            return null;
-        }
-    }
-
     private static void warnWrongType(Object object) {
         logger.warn(
                 "StandardGStringTemplateViewMetaClass should only be used as a MetaClass of StandardGStringTemplateViewMetaClass or a subclass thereof; given "
@@ -48,10 +29,11 @@ public class StandardGStringTemplateViewMetaClass extends ExpandoMetaClass {
     }
 
     private static MetaClass findMetaClass(Object object) {
-        return switch (object) {
-            case GroovyObject groovyObject -> groovyObject.getMetaClass();
-            default -> GroovySystem.getMetaClassRegistry().getMetaClass(object.getClass());
-        };
+        if (object instanceof GroovyObject groovyObject) {
+            return groovyObject.getMetaClass();
+        } else {
+            return GroovySystem.getMetaClassRegistry().getMetaClass(object.getClass());
+        }
     }
 
     public StandardGStringTemplateViewMetaClass() {
