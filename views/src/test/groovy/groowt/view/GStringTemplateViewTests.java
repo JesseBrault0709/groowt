@@ -14,8 +14,6 @@ public class GStringTemplateViewTests {
 
     private static final class GreetingView extends GStringTemplateView {
 
-        private final String greeting = "Hello, world!";
-
         public GreetingView(GStringTemplateEngine engine) {
             super(Map.of(
                     "engine", engine,
@@ -24,7 +22,7 @@ public class GStringTemplateViewTests {
         }
 
         public String getGreeting() {
-            return this.greeting;
+            return "Hello, world!";
         }
 
     }
@@ -58,17 +56,8 @@ public class GStringTemplateViewTests {
         final var view = new GreetingView(this.engine);
         final var writable = view.asWritable();
         final var w = new StringWriter();
-        writable.writeTo(w);
+        writable.call(w);
         assertEquals("Hello, world!", w.toString());
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void coerceToMap() {
-        final var view = new GreetingView(this.engine);
-        final Map<String, Object> map = view.asType(Map.class);
-        assertTrue(map.containsKey("greeting"));
-        assertEquals("Hello, world!", map.get("greeting"));
     }
 
     @Test

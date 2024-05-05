@@ -2,6 +2,7 @@ package groowt.view;
 
 import groovy.lang.Closure;
 import groovy.lang.Writable;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -9,28 +10,6 @@ import java.io.Writer;
 
 @FunctionalInterface
 public interface View {
-
-    /**
-     * TODO: consider making this a (package private?) separate class, perhaps with support for GStringTemplateViews, etc.?
-     */
-    final class ClosureView extends Closure<Object> {
-
-        private final View view;
-
-        public ClosureView(View view) {
-            super(view, view);
-            this.view = view;
-        }
-
-        public void doCall(Writer writer) throws IOException {
-            this.view.renderTo(writer);
-        }
-
-        public String doCall() {
-            return this.view.render();
-        }
-
-    }
 
     void renderTo(Writer writer) throws IOException;
 
@@ -44,15 +23,37 @@ public interface View {
         }
     }
 
-    default Writable asWritable() {
-        return writer -> {
-            this.renderTo(writer);
-            return writer;
-        };
+    @SuppressWarnings("rawtypes")
+    default Closure asWritable() {
+        if (this instanceof Closure) {
+            return (Closure) this;
+        } else {
+            return new WritableClosureView(this);
+        }
     }
 
-    default Closure<Object> asClosure() {
-        return new ClosureView(this);
+    @SuppressWarnings("rawtypes")
+    default Closure asClosure() {
+        if (this instanceof Closure) {
+            return (Closure) this;
+        } else {
+            return new WritableClosureView(this);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    default <T> T asType(Class<T> clazz) {
+        if (clazz.isInstance(this)) {
+            return clazz.cast(this);
+        } else if (clazz.equals(Writable.class)) {
+            return (T) this.asWritable();
+        } else if (clazz.equals(Closure.class)) {
+            return (T) this.asClosure();
+        } else if (clazz.equals(String.class)) {
+            return (T) this.render();
+        } else {
+            return DefaultGroovyMethods.asType(this, clazz);
+        }
     }
 
 }

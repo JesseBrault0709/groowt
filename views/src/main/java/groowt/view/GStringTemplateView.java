@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * Delegates to self.
  */
-public class GStringTemplateView extends AbstractView {
+public class GStringTemplateView implements View {
 
     private final GStringTemplateEngine engine;
     private final Object src;
