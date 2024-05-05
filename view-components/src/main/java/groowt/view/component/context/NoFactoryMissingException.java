@@ -1,4 +1,4 @@
-package groowt.view.component;
+package groowt.view.component.context;
 
 public class NoFactoryMissingException extends UnsupportedOperationException {
 

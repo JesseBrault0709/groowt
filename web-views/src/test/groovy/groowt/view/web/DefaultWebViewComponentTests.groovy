@@ -1,6 +1,6 @@
 package groowt.view.web
 
-import groowt.view.component.ComponentFactoryBase
+import groowt.view.component.factory.ComponentFactoryBase
 import groowt.view.web.lib.WithContext
 import org.junit.jupiter.api.Test
 

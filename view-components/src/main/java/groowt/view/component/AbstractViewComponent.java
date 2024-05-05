@@ -1,6 +1,9 @@
 package groowt.view.component;
 
 import groovy.lang.Closure;
+import groowt.view.component.compiler.ComponentTemplateCompiler;
+import groowt.view.component.context.ComponentContext;
+import groowt.view.component.factory.ComponentTemplateSource;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -26,12 +29,12 @@ public abstract class AbstractViewComponent implements ViewComponent {
         }
     }
 
-    protected AbstractViewComponent(TemplateSource source, Function<String, ComponentTemplateCompiler> getCompiler) {
+    protected AbstractViewComponent(ComponentTemplateSource source, Function<String, ComponentTemplateCompiler> getCompiler) {
         final Class<? extends AbstractViewComponent> selfClass = this.getSelfClass();
         this.template = getCompiler.apply(selfClass.getPackageName()).compile(selfClass, source);
     }
 
-    protected AbstractViewComponent(TemplateSource source, ComponentTemplateCompiler compiler) {
+    protected AbstractViewComponent(ComponentTemplateSource source, ComponentTemplateCompiler compiler) {
         this.template = compiler.compile(this.getSelfClass(), source);
     }
 

@@ -1,9 +1,11 @@
-package groowt.view.component;
+package groowt.view.component.factory;
 
 import groovy.lang.GroovyObjectSupport;
 import groovy.lang.MetaClass;
 import groovy.lang.MetaMethod;
 import groovy.lang.MissingMethodException;
+import groowt.view.component.context.ComponentContext;
+import groowt.view.component.ViewComponent;
 
 import java.util.HashMap;
 import java.util.Map;

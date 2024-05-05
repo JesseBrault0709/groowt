@@ -1,7 +1,7 @@
 package groowt.view.web.transpiler;
 
 import groovy.lang.Tuple2;
-import groowt.view.component.ComponentContext;
+import groowt.view.component.context.ComponentContext;
 import groowt.view.web.antlr.ParserUtil;
 import groowt.view.web.antlr.TokenList;
 import groowt.view.web.ast.DefaultAstBuilder;

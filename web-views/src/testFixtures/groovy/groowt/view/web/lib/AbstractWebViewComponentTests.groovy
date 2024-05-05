@@ -1,7 +1,7 @@
 package groowt.view.web.lib
 
 
-import groowt.view.component.ComponentContext
+import groowt.view.component.context.ComponentContext
 import groowt.view.web.DefaultWebViewComponentTemplateCompiler
 import groowt.view.web.WebViewComponentTemplateCompiler
 import groowt.view.web.runtime.DefaultWebViewComponentWriter

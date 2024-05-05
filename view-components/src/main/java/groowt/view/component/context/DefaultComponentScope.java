@@ -1,4 +1,6 @@
-package groowt.view.component;
+package groowt.view.component.context;
+
+import groowt.view.component.factory.ComponentFactory;
 
 import java.util.HashMap;
 import java.util.Map;

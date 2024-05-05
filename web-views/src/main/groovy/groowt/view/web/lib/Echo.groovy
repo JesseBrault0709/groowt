@@ -1,8 +1,8 @@
 package groowt.view.web.lib
 
 import groowt.view.View
-import groowt.view.component.ComponentContext
-import groowt.view.component.ComponentFactory
+import groowt.view.component.context.ComponentContext
+import groowt.view.component.factory.ComponentFactory
 import groowt.view.component.ComponentRenderException
 import groowt.view.web.WebViewChildComponentRenderer
 

@@ -1,6 +1,6 @@
 package groowt.view.web.tools
 
-import groowt.view.component.DefaultComponentContext
+import groowt.view.component.context.DefaultComponentContext
 import groowt.view.web.DefaultWebViewComponent
 import picocli.CommandLine
 import picocli.CommandLine.Command

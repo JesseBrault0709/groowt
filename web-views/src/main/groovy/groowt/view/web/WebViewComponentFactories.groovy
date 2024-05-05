@@ -2,7 +2,7 @@ package groowt.view.web
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.FromString
-import groowt.view.component.ComponentFactory
+import groowt.view.component.factory.ComponentFactory
 
 import java.util.function.Function
 

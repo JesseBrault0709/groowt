@@ -2,6 +2,7 @@ package groowt.view.web.transpile;
 
 import groovy.lang.Tuple2;
 import groowt.view.component.*;
+import groowt.view.component.context.*;
 import groowt.view.web.ast.node.*;
 import groowt.view.web.runtime.WebViewComponentChildCollection;
 import groowt.view.web.transpile.util.GroovyUtil;

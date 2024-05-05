@@ -1,4 +1,7 @@
-package groowt.view.component;
+package groowt.view.component.context;
+
+import groowt.view.component.ComponentTemplate;
+import groowt.view.component.context.ComponentContext;
 
 /**
  * An exception which represents that a component type could not be
@@ -21,7 +24,8 @@ public abstract class MissingComponentException extends RuntimeException {
 
     @Override
     public String getMessage() {
-        return "Missing " + this.getMissingKeyName() + " on line " + this.line +  ", column " + this.col + ".";
+        return "In " + this.template + " missing " + this.getMissingKeyName()
+                + " on line " + this.line +  ", column " + this.col + ".";
     }
 
 }

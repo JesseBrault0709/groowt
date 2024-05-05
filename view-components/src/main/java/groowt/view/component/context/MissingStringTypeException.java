@@ -1,4 +1,6 @@
-package groowt.view.component;
+package groowt.view.component.context;
+
+import groowt.view.component.ComponentTemplate;
 
 public abstract class MissingStringTypeException extends MissingComponentException {
 

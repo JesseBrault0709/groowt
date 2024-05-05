@@ -1,7 +1,7 @@
 package groowt.view.web
 
-import groowt.view.component.ComponentScope
-import groowt.view.component.DefaultComponentContext
+import groowt.view.component.context.ComponentScope
+import groowt.view.component.context.DefaultComponentContext
 import groowt.view.component.ViewComponent
 import groowt.view.web.lib.Fragment
 import groowt.view.web.runtime.DefaultWebViewComponentChildCollection

@@ -2,7 +2,7 @@ package groowt.view.web
 
 import groowt.view.component.AbstractViewComponent
 import groowt.view.component.ComponentTemplate
-import groowt.view.component.TemplateSource
+import groowt.view.component.factory.ComponentTemplateSource
 
 class DefaultWebViewComponent extends AbstractWebViewComponent {
 
@@ -16,26 +16,26 @@ class DefaultWebViewComponent extends AbstractWebViewComponent {
         super(templateType)
     }
 
-    DefaultWebViewComponent(TemplateSource source) {
+    DefaultWebViewComponent(ComponentTemplateSource source) {
         super(source)
     }
 
-    DefaultWebViewComponent(TemplateSource source, WebViewComponentTemplateCompiler compiler) {
+    DefaultWebViewComponent(ComponentTemplateSource source, WebViewComponentTemplateCompiler compiler) {
         super(source, compiler)
     }
 
     /**
-     * A convenience constructor which creates a {@link TemplateSource}
+     * A convenience constructor which creates a {@link ComponentTemplateSource}
      * from the given {@code source} parameter and passes it to super. See
-     * {@link TemplateSource} for possible types.
+     * {@link ComponentTemplateSource} for possible types.
      *
-     * @param source the object passed to {@link TemplateSource#of}
+     * @param source the object passed to {@link ComponentTemplateSource#of}
      *
-     * @see TemplateSource
+     * @see ComponentTemplateSource
      */
     @SuppressWarnings('GroovyAssignabilityCheck')
     DefaultWebViewComponent(Object source) {
-        super(TemplateSource.of(source))
+        super(ComponentTemplateSource.of(source))
     }
 
     @Override

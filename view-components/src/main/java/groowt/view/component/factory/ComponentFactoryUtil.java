@@ -1,9 +1,4 @@
-package groowt.view.component;
-
-import groovy.lang.GroovyObject;
-import groovy.lang.MetaClass;
-import groovy.lang.MetaMethod;
-import org.jetbrains.annotations.Nullable;
+package groowt.view.component.factory;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -3,7 +3,7 @@ package groowt.view.web;
 import groovy.lang.Closure;
 import groowt.view.component.AbstractViewComponent;
 import groowt.view.component.ComponentTemplate;
-import groowt.view.component.TemplateSource;
+import groowt.view.component.factory.ComponentTemplateSource;
 import groowt.view.web.runtime.DefaultWebViewComponentWriter;
 import groowt.view.web.runtime.WebViewComponentWriter;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -27,14 +27,14 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
         super(templateClass);
     }
 
-    protected AbstractWebViewComponent(TemplateSource source) {
+    protected AbstractWebViewComponent(ComponentTemplateSource source) {
         super(source, packageName -> new DefaultWebViewComponentTemplateCompiler(
                 CompilerConfiguration.DEFAULT,
                 packageName
         ));
     }
 
-    protected AbstractWebViewComponent(TemplateSource source, WebViewComponentTemplateCompiler compiler) {
+    protected AbstractWebViewComponent(ComponentTemplateSource source, WebViewComponentTemplateCompiler compiler) {
         super(source, compiler);
     }
 

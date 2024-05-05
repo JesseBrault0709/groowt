@@ -1,4 +1,8 @@
-package groowt.view.component;
+package groowt.view.component.compiler;
+
+import groowt.view.component.ComponentTemplate;
+import groowt.view.component.ViewComponent;
+import groowt.view.component.factory.ComponentTemplateSource;
 
 import java.io.Reader;
 import java.util.HashMap;
@@ -10,7 +14,7 @@ public abstract class CachingComponentTemplateCompiler extends AbstractComponent
 
     @Override
     protected final ComponentTemplate compile(
-            TemplateSource source,
+            ComponentTemplateSource source,
             Class<? extends ViewComponent> forClass,
             Reader sourceReader
     ) {
@@ -18,7 +22,7 @@ public abstract class CachingComponentTemplateCompiler extends AbstractComponent
     }
 
     protected abstract ComponentTemplate doCompile(
-            TemplateSource source,
+            ComponentTemplateSource source,
             Class<? extends ViewComponent> forClass,
             Reader sourceReader
     );

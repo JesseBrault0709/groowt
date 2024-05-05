@@ -2,6 +2,9 @@ package groowt.view.web;
 
 import groovy.lang.GroovyClassLoader;
 import groowt.view.component.*;
+import groowt.view.component.compiler.CachingComponentTemplateCompiler;
+import groowt.view.component.compiler.ComponentTemplateCompileException;
+import groowt.view.component.factory.ComponentTemplateSource;
 import groowt.view.web.antlr.CompilationUnitParseResult;
 import groowt.view.web.antlr.ParserUtil;
 import groowt.view.web.antlr.TokenList;
@@ -65,13 +68,13 @@ public class DefaultWebViewComponentTemplateCompiler extends CachingComponentTem
 
     @Override
     protected ComponentTemplate doCompile(
-            @Nullable TemplateSource source,
+            @Nullable ComponentTemplateSource source,
             @Nullable Class<? extends ViewComponent> forClass,
             Reader sourceReader
     ) {
-        if (source instanceof TemplateSource.URISource uriSource) {
+        if (source instanceof ComponentTemplateSource.URISource uriSource) {
             return this.doCompile(forClass, sourceReader, uriSource.templateURI());
-        } else if (source instanceof TemplateSource.URLSource urlSource) {
+        } else if (source instanceof ComponentTemplateSource.URLSource urlSource) {
             try {
                 return this.doCompile(forClass, sourceReader, urlSource.templateURL().toURI());
             } catch (URISyntaxException e) {
@@ -160,7 +163,7 @@ public class DefaultWebViewComponentTemplateCompiler extends CachingComponentTem
         try {
             return (ComponentTemplate) templateClass.getConstructor().newInstance();
         } catch (Exception e) {
-            throw new ComponentTemplateCreateException(e, forClass, reader);
+            throw new ComponentTemplateCompileException(e, forClass, reader);
         }
     }
 

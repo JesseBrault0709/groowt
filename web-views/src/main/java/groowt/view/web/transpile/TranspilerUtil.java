@@ -2,7 +2,7 @@ package groowt.view.web.transpile;
 
 import groovy.lang.Tuple2;
 import groovy.transform.Field;
-import groowt.view.component.ComponentContext;
+import groowt.view.component.context.ComponentContext;
 import groowt.view.component.ComponentTemplate;
 import groowt.view.web.runtime.WebViewComponentWriter;
 import groowt.view.web.util.SourcePosition;

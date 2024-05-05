@@ -1,5 +1,7 @@
-package groowt.view.component;
+package groowt.view.component.context;
 
+import groowt.view.component.ViewComponent;
+import groowt.view.component.factory.ComponentFactory;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 

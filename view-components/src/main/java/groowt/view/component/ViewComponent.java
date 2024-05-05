@@ -1,7 +1,7 @@
 package groowt.view.component;
 
 import groowt.view.View;
-import org.jetbrains.annotations.ApiStatus;
+import groowt.view.component.context.ComponentContext;
 
 public interface ViewComponent extends View {
 

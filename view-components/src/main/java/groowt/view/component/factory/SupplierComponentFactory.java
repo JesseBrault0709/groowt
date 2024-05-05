@@ -1,4 +1,7 @@
-package groowt.view.component;
+package groowt.view.component.factory;
+
+import groowt.view.component.context.ComponentContext;
+import groowt.view.component.ViewComponent;
 
 import java.util.function.Supplier;
 

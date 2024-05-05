@@ -1,6 +1,8 @@
-package groowt.view.component;
+package groowt.view.component.context;
 
 import groovy.lang.Closure;
+import groowt.view.component.ViewComponent;
+import groowt.view.component.factory.ComponentFactory;
 
 public interface ComponentScope {
 

@@ -1,6 +1,9 @@
-package groowt.view.component;
+package groowt.view.component.compiler;
 
-import groowt.view.component.TemplateSource.*;
+import groowt.view.component.ComponentTemplate;
+import groowt.view.component.ViewComponent;
+import groowt.view.component.factory.ComponentTemplateSource;
+import groowt.view.component.factory.ComponentTemplateSource.*;
 
 import java.io.*;
 import java.net.URI;
@@ -9,13 +12,13 @@ import java.net.URL;
 public abstract class AbstractComponentTemplateCompiler implements ComponentTemplateCompiler {
 
     protected abstract ComponentTemplate compile(
-            TemplateSource templateSource,
+            ComponentTemplateSource componentTemplateSource,
             Class<? extends ViewComponent> forClass,
             Reader actualSource
     );
 
     @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, TemplateSource source) {
+    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, ComponentTemplateSource source) {
         return switch (source) {
             case FileSource(File file) -> {
                 try {

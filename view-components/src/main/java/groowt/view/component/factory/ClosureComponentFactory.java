@@ -1,8 +1,10 @@
-package groowt.view.component;
+package groowt.view.component.factory;
 
 import groovy.lang.Closure;
+import groowt.view.component.context.ComponentContext;
+import groowt.view.component.ViewComponent;
 
-import static groowt.view.component.ComponentFactoryUtil.flatten;
+import static groowt.view.component.factory.ComponentFactoryUtil.flatten;
 
 final class ClosureComponentFactory<T extends ViewComponent> implements ComponentFactory<T> {
 

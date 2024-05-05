@@ -1,16 +1,16 @@
-package groowt.view.component;
+package groowt.view.component.compiler;
 
-import java.io.Reader;
+import groowt.view.component.ViewComponent;
 
 /**
  * Represents an exception thrown while attempting to instantiate a ComponentTemplate during compilation.
  */
-public class ComponentTemplateCreateException extends RuntimeException {
+public class ComponentTemplateCompileException extends RuntimeException {
 
     private final Class<? extends ViewComponent> forClass;
     private final Object templateSource;
 
-    public ComponentTemplateCreateException(
+    public ComponentTemplateCompileException(
             String message,
             Class<? extends ViewComponent> forClass,
             Object templateSource
@@ -20,7 +20,7 @@ public class ComponentTemplateCreateException extends RuntimeException {
         this.templateSource = templateSource;
     }
 
-    public ComponentTemplateCreateException(
+    public ComponentTemplateCompileException(
             String message,
             Throwable cause,
             Class<? extends ViewComponent> forClass,
@@ -31,7 +31,7 @@ public class ComponentTemplateCreateException extends RuntimeException {
         this.templateSource = templateSource;
     }
 
-    public ComponentTemplateCreateException(
+    public ComponentTemplateCompileException(
             Throwable cause,
             Class<? extends ViewComponent> forClass,
             Object templateSource
