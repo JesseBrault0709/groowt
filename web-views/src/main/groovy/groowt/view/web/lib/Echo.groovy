@@ -10,7 +10,7 @@ class Echo extends DelegatingWebViewComponent {
 
     static final ComponentFactory<Echo> FACTORY = new EchoFactory()
 
-    private static final class EchoFactory implements ComponentFactory<Echo> {
+    protected static class EchoFactory implements ComponentFactory<Echo> {
 
         Echo doCreate(String typeName) {
             doCreate(typeName, [:], true)
@@ -91,9 +91,14 @@ class Echo extends DelegatingWebViewComponent {
         while (iter.hasNext()) {
             def entry = iter.next()
             writer << entry.key
-            writer << '="'
-            writer << entry.value
-            writer << '"'
+            def value = entry.value
+            if (value instanceof Boolean) {
+                // no-op, because we already wrote the key
+            } else {
+                writer << '="'
+                writer << value
+                writer << '"'
+            }
             if (iter.hasNext()) {
                 writer << ' '
             }
