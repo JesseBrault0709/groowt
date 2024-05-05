@@ -7,11 +7,11 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Map;
 
-public class TemplateView extends AbstractView {
+public class GroovyTemplateView extends AbstractView {
 
     private final Template template;
 
-    public TemplateView(Template template) {
+    public GroovyTemplateView(Template template) {
         this.template = template;
     }
 
