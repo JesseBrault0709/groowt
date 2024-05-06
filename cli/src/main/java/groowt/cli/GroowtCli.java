@@ -1,5 +1,7 @@
 package groowt.cli;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -12,6 +14,8 @@ import java.io.File;
         subcommands = { Generate.class }
 )
 public class GroowtCli {
+
+    private static final Logger logger = LoggerFactory.getLogger(GroowtCli.class);
 
     @CommandLine.Option(
             names = { "-v", "--verbose" },
@@ -27,7 +31,7 @@ public class GroowtCli {
     private File projectDir;
 
     public static void main(String[] args) {
-        System.out.println("Hello from Groowt!");
+        logger.info("Hello from Groowt! Version 0.1.0");
         System.exit(new CommandLine(new GroowtCli()).execute(args));
     }
 

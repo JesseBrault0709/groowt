@@ -1,3 +1,4 @@
+//file:noinspection GrPackage
 plugins {
     id 'java'
 }
@@ -8,7 +9,6 @@ repositories {
 
 dependencies {
     testImplementation libs.junit.jupiter.api
-    testRuntimeOnly libs.log4j.slf4jBinding
 }
 
 java {
@@ -16,8 +16,6 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
-
-// TODO: hook into testResources and add a default log4j2.xml config for testing
 
 testing {
     suites {

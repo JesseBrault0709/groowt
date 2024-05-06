@@ -17,6 +17,10 @@ gradlePlugin {
             id = 'GroowtAntlrPlugin'
             implementationClass = 'groowt.gradle.antlr.GroowtAntlrPlugin'
         }
+        create('groowtLogging') {
+            id = 'groowt-logging'
+            implementationClass = 'groowt.gradle.logging.GroowtLoggingPlugin'
+        }
     }
 }
 

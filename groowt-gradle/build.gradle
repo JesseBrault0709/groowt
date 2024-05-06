@@ -10,13 +10,13 @@ version = '0.1.0'
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://repo.gradle.org/gradle/libs-releases'
-    }
+//    maven {
+//        url 'https://repo.gradle.org/gradle/libs-releases'
+//    }
 }
 
 dependencies {
-    implementation libs.groovy, libs.gradle.tooling, project(':groowt-gradle-model')
+    implementation libs.groovy, project(':groowt-gradle-model')
 }
 
 gradlePlugin {
@@ -34,6 +34,5 @@ publishing {
             artifactId = 'groowt-gradle'
             from components.java
         }
-
     }
 }

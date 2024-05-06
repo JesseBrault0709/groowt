@@ -1,5 +1,6 @@
 plugins {
     id 'GroowtConventions'
+    id 'groowt-logging'
     id 'com.jessebrault.jbarchiva' version '0.1.0'
     id 'maven-publish'
 }
@@ -14,7 +15,15 @@ repositories {
 }
 
 dependencies {
-    implementation libs.gradle.tooling, libs.picocli, project(':groowt-gradle-model')
+    [
+            libs.gradle.tooling,
+            libs.picocli,
+            libs.slf4j.api,
+            libs.log4j.core,
+            project(':groowt-gradle-model')
+    ].each { implementation it }
+
+    runtimeOnly libs.log4j.slf4jBinding
 }
 
 tasks.named('jar', Jar) {

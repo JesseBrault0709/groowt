@@ -1,6 +1,5 @@
 package groowt.cli;
 
-import groowt.gradle.model.GroowtGradleModel;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -39,13 +38,13 @@ public class Generate implements Callable<Integer> {
     @Override
     public Integer call() {
         if (this.componentName != null) {
-            GradleUtil.doWith(this.cli.getProjectDir(), project -> {
-                final var model = project.getModel(GroowtGradleModel.class);
-                if (sourceDir == null) {
+            GradleUtil.doWithGroowtGradleModel(this.cli.getProjectDir(), model -> {
+                if (this.sourceDir == null) {
                     this.sourceDir = new File(String.join(File.separator, "src", this.sourceSet, "groovy"));
                 }
-                final File packageDir = new File(
-                        this.sourceDir, model.getBasePackage().replace(".", File.separator)
+                final File packageDir = FileAndPathUtil.resolve(
+                        this.sourceDir,
+                        FileAndPathUtil.packageNameToFile(model.getBasePackage())
                 );
                 packageDir.mkdirs();
                 final File componentFile = new File(packageDir, this.componentName + ".txt");
