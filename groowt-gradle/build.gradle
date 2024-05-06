@@ -1,0 +1,34 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'com.jessebrault.jbarchiva' version '0.1.0'
+    id 'maven-publish'
+}
+
+group = 'groowt'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation libs.groovy
+}
+
+gradlePlugin {
+    plugins {
+        groowtGradle {
+            id = 'groowt-gradle'
+            implementationClass = 'groowt.gradle.GroowtGradlePlugin'
+        }
+    }
+}
+
+publishing {
+    publications {
+        groowtGradlePlugin(MavenPublication) {
+            artifactId = 'groowt-gradle'
+            from components.java
+        }
+    }
+}

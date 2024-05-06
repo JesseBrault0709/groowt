@@ -17,7 +17,6 @@ gradlePlugin {
             id = 'GroowtAntlrPlugin'
             implementationClass = 'groowt.gradle.antlr.GroowtAntlrPlugin'
         }
-
     }
 }
 

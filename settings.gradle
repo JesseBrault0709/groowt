@@ -2,10 +2,32 @@ pluginManagement {
     plugins {
         id 'org.jetbrains.kotlin.jvm' version '1.9.23'
     }
+
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://archiva.jessebrault.com/repository/internal/'
+
+            credentials {
+                username System.getenv('JBARCHIVA_USERNAME')
+                password System.getenv('JBARCHIVA_PASSWORD')
+            }
+        }
+        maven {
+            url 'https://archiva.jessebrault.com/repository/snapshots/'
+
+            credentials {
+                username System.getenv('JBARCHIVA_USERNAME')
+                password System.getenv('JBARCHIVA_PASSWORD')
+            }
+        }
+    }
 }
 
 rootProject.name = 'groowt'
-include 'views', 'view-components', 'web-views'
+
+include 'cli', 'groowt-gradle', 'views', 'view-components', 'web-views'
+
 file('util').eachDir {
     include it.name
     project(":$it.name").projectDir = it

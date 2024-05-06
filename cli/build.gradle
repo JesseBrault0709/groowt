@@ -1,0 +1,28 @@
+plugins {
+    id 'GroowtConventions'
+    id 'application'
+    id 'com.jessebrault.jbarchiva' version '0.1.0'
+    id 'maven-publish'
+}
+
+group = 'groowt'
+version = '0.1.0'
+
+application {
+    mainClass = 'groowt.cli.GroowtCli'
+}
+
+tasks.named('jar', Jar) {
+    manifest {
+        attributes('Main-Class': 'groowt.cli.GroowtCli')
+    }
+}
+
+publishing {
+    publications {
+        create('groowtCli', MavenPublication) {
+            artifactId = 'groowt-cli'
+            from components.java
+        }
+    }
+}
