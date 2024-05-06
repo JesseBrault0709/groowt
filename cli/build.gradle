@@ -1,6 +1,5 @@
 plugins {
     id 'GroowtConventions'
-    id 'application'
     id 'com.jessebrault.jbarchiva' version '0.1.0'
     id 'maven-publish'
 }
@@ -8,14 +7,27 @@ plugins {
 group = 'groowt'
 version = '0.1.0'
 
-application {
-    mainClass = 'groowt.cli.GroowtCli'
+repositories {
+    maven {
+        url 'https://repo.gradle.org/gradle/libs-releases'
+    }
+}
+
+dependencies {
+    implementation libs.gradle.tooling, libs.picocli, project(':groowt-gradle-model')
 }
 
 tasks.named('jar', Jar) {
     manifest {
         attributes('Main-Class': 'groowt.cli.GroowtCli')
     }
+    from sourceSets.main.runtimeClasspath.filter(File.&exists).collect { it.isDirectory() ? it : zipTree(it) }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn ':groowt-gradle-model:jar'
+}
+
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
 }
 
 publishing {
@@ -23,6 +35,13 @@ publishing {
         create('groowtCli', MavenPublication) {
             artifactId = 'groowt-cli'
             from components.java
+            pom {
+                withXml {
+                    def rootNode = asNode()
+                    def dependenciesNode = rootNode.get('dependencies')
+                    rootNode.remove(dependenciesNode)
+                }
+            }
         }
     }
 }

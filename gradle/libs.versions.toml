@@ -14,6 +14,7 @@ slf4j = '2.0.12'
 antlr = { module = 'org.antlr:antlr4', version.ref = 'antlr' }
 antlr-runtime = { module = 'org.antlr:antlr4-runtime', version.ref = 'antlr' }
 asm = 'org.ow2.asm:asm:9.7'
+gradle-tooling = 'org.gradle:gradle-tooling-api:8.6'
 groovy = { module = 'org.apache.groovy:groovy', version.ref = 'groovy' }
 groovy-all = { module = 'org.apache.groovy:groovy-all', version.ref = 'groovy' }
 groovy-console = { module = 'org.apache.groovy:groovy-console', version.ref = 'groovy' }

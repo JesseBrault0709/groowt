@@ -1,5 +1,6 @@
 package groowt.gradle;
 
+import groowt.gradle.model.GroowtGradleModelBuilder;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -10,10 +11,20 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+
+import javax.inject.Inject;
 
 import static org.gradle.api.internal.lambdas.SerializableLambdas.spec;
 
 public class GroowtGradlePlugin implements Plugin<Project> {
+
+    private final ToolingModelBuilderRegistry modelBuilderRegistry;
+
+    @Inject
+    public GroowtGradlePlugin(ToolingModelBuilderRegistry modelBuilderRegistry) {
+        this.modelBuilderRegistry = modelBuilderRegistry;
+    }
 
     @Override
     public void apply(Project project) {
@@ -35,6 +46,7 @@ public class GroowtGradlePlugin implements Plugin<Project> {
                 "groowt",
                 DefaultGroowtExtension.class
         );
+        groowtExtension.getBasePackage().convention("");
 
         final JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
         final SourceSetContainer javaSourceSets = javaExtension.getSourceSets();
@@ -71,6 +83,9 @@ public class GroowtGradlePlugin implements Plugin<Project> {
 
         // create init task
         project.getTasks().create("groowtInit", GroowtInitTask.class, groowtConfigurationProvider);
+
+        // tooling models for cli
+        this.modelBuilderRegistry.register(new GroowtGradleModelBuilder());
     }
 
 }

@@ -1,0 +1,23 @@
+plugins {
+    id 'GroowtConventions'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group = 'groowt'
+version = '0.1.0'
+
+repositories {
+    maven {
+        url 'https://repo.gradle.org/gradle/libs-releases'
+    }
+}
+
+publishing {
+    publications {
+        create('groowtGradleModel', MavenPublication) {
+            artifactId = 'groowt-gradle-model'
+            from components.java
+        }
+    }
+}

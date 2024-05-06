@@ -1,7 +1,7 @@
 package groowt.gradle;
 
-import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.provider.Property;
 
 public interface GroowtExtension {
-    SourceSetContainer getSourceSets();
+    Property<String> getBasePackage();
 }
