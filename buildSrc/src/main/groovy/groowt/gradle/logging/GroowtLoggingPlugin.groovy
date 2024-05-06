@@ -25,9 +25,10 @@ class GroowtLoggingPlugin implements Plugin<Project> {
 
         javaExtension.sourceSets.each { sourceSet ->
             project.tasks.register(
-                    sourceSet.getTaskName('copy', 'LoggingConfig'),
+                    sourceSet.getTaskName('copyLoggingConfigTo', 'Resources'),
                     GroowtCopyLoggerConfigTask
             ) { task ->
+                task.group = 'logging'
                 task.from(tmpLog4j2Xml)
                 task.rename { 'log4j2.xml' }
                 task.into(['src', sourceSet.name, 'resources'].join(File.separator))
@@ -45,10 +46,6 @@ class GroowtLoggingPlugin implements Plugin<Project> {
         project.dependencies.addProvider(
                 'runtimeOnly', libs.findLibrary('log4j-slf4jBinding').orElseThrow()
         )
-
-        project.tasks.named('build') {
-            it.dependsOn project.tasks.withType(GroowtCopyLoggerConfigTask)
-        }
     }
 
 }
