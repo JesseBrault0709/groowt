@@ -5,21 +5,34 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        name 'jbarchiva'
+        url 'https://archiva.jessebrault.com/repository/internal/'
+        credentials {
+            username System.getenv('JBARCHIVA_USERNAME')
+            password System.getenv('JBARCHIVA_PASSWORD')
+        }
+    }
 }
 
 dependencies {
+    api libs.jbarchiva
     testImplementation libs.junit.jupiter.api
 }
 
 gradlePlugin {
     plugins {
         create('GroowtAntlrPlugin') {
-            id = 'GroowtAntlrPlugin'
+            id = 'groowt-antlr-plugin'
             implementationClass = 'groowt.gradle.antlr.GroowtAntlrPlugin'
         }
         create('groowtLogging') {
             id = 'groowt-logging'
             implementationClass = 'groowt.gradle.logging.GroowtLoggingPlugin'
+        }
+        create('groowtPublish') {
+            id = 'groowt-publish'
+            implementationClass = 'groowt.gradle.publish.GroowtPublishPlugin'
         }
     }
 }

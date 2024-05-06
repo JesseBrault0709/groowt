@@ -22,7 +22,10 @@ public class DefaultTemplateSourceSet implements TemplateSourceSet, HasPublicTyp
                 objectFactory.sourceDirectorySet(name, displayName + " ComponentTemplate sources")
         );
         this.templateSourceDirectorySet.getFilter().include("**/*.wvc", "**/*.gst");
-        this.allTemplates = objectFactory.sourceDirectorySet("all" + name, displayName + " ComponentTemplate sources");
+        this.allTemplates = objectFactory.sourceDirectorySet(
+                "all" + name,
+                displayName + " ComponentTemplate sources"
+        );
         this.allTemplates.source(this.templateSourceDirectorySet);
         this.allTemplates.getFilter().include("**/*.wvc", "**/*.gst");
     }

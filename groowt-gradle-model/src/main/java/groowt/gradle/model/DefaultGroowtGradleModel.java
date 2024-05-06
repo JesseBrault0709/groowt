@@ -29,6 +29,4 @@ public class DefaultGroowtGradleModel implements GroowtGradleModel, Serializable
         this.sourceSetToTemplatesDirs = sourceSetToTemplateDir;
     }
 
-
-
 }

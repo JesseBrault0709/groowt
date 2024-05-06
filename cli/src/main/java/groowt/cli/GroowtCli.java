@@ -13,7 +13,7 @@ import java.io.File;
         version = "0.1.0",
         subcommands = { Generate.class }
 )
-public class GroowtCli {
+public final class GroowtCli {
 
     private static final Logger logger = LoggerFactory.getLogger(GroowtCli.class);
 

@@ -1,5 +1,5 @@
 plugins {
-    id 'GroowtConventions'
+    id 'groowt-conventions'
     id 'java-library'
 }
 

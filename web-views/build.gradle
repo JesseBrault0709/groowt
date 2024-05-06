@@ -2,10 +2,10 @@ import groovy.transform.NullCheck
 import groowt.gradle.antlr.GroowtAntlrExecTask
 
 plugins {
-    id 'java'
+    id 'groowt-conventions'
+    id 'groowt-antlr-plugin'
     id 'java-library'
     id 'groovy'
-    id 'GroowtAntlrPlugin'
     id 'org.jetbrains.kotlin.jvm'
     id 'java-test-fixtures'
 }

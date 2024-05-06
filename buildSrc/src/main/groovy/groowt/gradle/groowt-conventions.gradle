@@ -3,6 +3,9 @@ plugins {
     id 'java'
 }
 
+group = 'groowt'
+version = '0.1.0'
+
 repositories {
     mavenCentral()
 }

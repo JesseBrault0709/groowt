@@ -10,7 +10,7 @@ import java.io.OutputStream;
 import java.util.concurrent.Callable;
 
 @Command(name = "generate", aliases = "gen", description = "Generate a component, template, model, etc.")
-public class Generate implements Callable<Integer> {
+public final class Generate implements Callable<Integer> {
 
     @CommandLine.ParentCommand
     private GroowtCli cli;
