@@ -2,26 +2,58 @@ package groowt.view.web
 
 import groowt.view.component.AbstractViewComponent
 import groowt.view.component.ComponentTemplate
+import groowt.view.component.compiler.ComponentTemplateCompiler
 import groowt.view.component.factory.ComponentTemplateSource
+import groowt.view.web.compiler.DefaultWebViewComponentTemplateCompiler
+import groowt.view.web.compiler.WebViewComponentTemplateCompiler
+import org.codehaus.groovy.control.CompilerConfiguration
 
-class DefaultWebViewComponent extends AbstractWebViewComponent {
+import java.util.function.Function
 
-    DefaultWebViewComponent() {}
+abstract class DefaultWebViewComponent extends AbstractWebViewComponent {
 
-    DefaultWebViewComponent(ComponentTemplate template) {
+    private static final GroovyClassLoader groovyClassLoader =
+            new GroovyClassLoader(DefaultWebViewComponent.classLoader)
+
+    private static final Function<Class, ComponentTemplateCompiler> compilerFunction = { Class givenSelfClass ->
+        new DefaultWebViewComponentTemplateCompiler(
+                groovyClassLoader,
+                CompilerConfiguration.DEFAULT,
+                givenSelfClass.packageName
+        )
+    }
+
+    protected DefaultWebViewComponent() {}
+
+    protected DefaultWebViewComponent(ComponentTemplate template) {
         super(template)
     }
 
-    DefaultWebViewComponent(Class<? extends ComponentTemplate> templateType) {
+    protected DefaultWebViewComponent(Class<? extends ComponentTemplate> templateType) {
         super(templateType)
     }
 
-    DefaultWebViewComponent(ComponentTemplateSource source) {
-        super(source)
+    protected DefaultWebViewComponent(ComponentTemplateSource source) {
+        super(source, compilerFunction)
     }
 
-    DefaultWebViewComponent(ComponentTemplateSource source, WebViewComponentTemplateCompiler compiler) {
+    protected DefaultWebViewComponent(ComponentTemplateSource source, WebViewComponentTemplateCompiler compiler) {
         super(source, compiler)
+    }
+
+    /**
+     * A convenience constructor which creates a {@link ComponentTemplateSource}
+     * from the given {@code source} parameter and passes it to super. See
+     * {@link ComponentTemplateSource} for possible types.
+     *
+     * @param source the object passed to {@link ComponentTemplateSource#of}
+     * @param compiler the compiler to use
+     *
+     * @see ComponentTemplateSource
+     */
+    @SuppressWarnings('GroovyAssignabilityCheck')
+    protected DefaultWebViewComponent(Object source, WebViewComponentTemplateCompiler compiler) {
+        super(ComponentTemplateSource.of(source), compiler)
     }
 
     /**
@@ -34,8 +66,8 @@ class DefaultWebViewComponent extends AbstractWebViewComponent {
      * @see ComponentTemplateSource
      */
     @SuppressWarnings('GroovyAssignabilityCheck')
-    DefaultWebViewComponent(Object source) {
-        super(ComponentTemplateSource.of(source))
+    protected DefaultWebViewComponent(Object source) {
+        super(ComponentTemplateSource.of(source), compilerFunction)
     }
 
     @Override

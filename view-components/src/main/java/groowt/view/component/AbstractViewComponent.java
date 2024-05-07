@@ -1,6 +1,7 @@
 package groowt.view.component;
 
 import groovy.lang.Closure;
+import groowt.view.component.compiler.ComponentTemplateCompileErrorException;
 import groowt.view.component.compiler.ComponentTemplateCompiler;
 import groowt.view.component.context.ComponentContext;
 import groowt.view.component.factory.ComponentTemplateSource;
@@ -29,13 +30,24 @@ public abstract class AbstractViewComponent implements ViewComponent {
         }
     }
 
-    protected AbstractViewComponent(ComponentTemplateSource source, Function<String, ComponentTemplateCompiler> getCompiler) {
-        final Class<? extends AbstractViewComponent> selfClass = this.getSelfClass();
-        this.template = getCompiler.apply(selfClass.getPackageName()).compile(selfClass, source);
+    protected AbstractViewComponent(ComponentTemplateSource source, ComponentTemplateCompiler compiler) {
+        try {
+            this.template = compiler.compileAndGet(this.getSelfClass(), source);
+        } catch (ComponentTemplateCompileErrorException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    protected AbstractViewComponent(ComponentTemplateSource source, ComponentTemplateCompiler compiler) {
-        this.template = compiler.compile(this.getSelfClass(), source);
+    protected AbstractViewComponent(
+            ComponentTemplateSource source,
+            Function<? super Class<? extends AbstractViewComponent>, ? extends ComponentTemplateCompiler> compilerFunction
+    ) {
+        final var compiler = compilerFunction.apply(this.getSelfClass());
+        try {
+            this.template = compiler.compileAndGet(this.getSelfClass(), source);
+        } catch (ComponentTemplateCompileErrorException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     protected abstract Class<? extends AbstractViewComponent> getSelfClass();

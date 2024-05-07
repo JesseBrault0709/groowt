@@ -6,8 +6,12 @@ public record SourcePosition(int line, int column) {
 
     public static final SourcePosition UNKNOWN = new SourcePosition(-1, -1);
 
-    public static String formatStartOfToken(Token token) {
+    public static String formatStartOfTokenShort(Token token) {
         return fromStartOfToken(token).toStringShort();
+    }
+
+    public static String formatStartOfTokenLong(Token token) {
+        return fromStartOfToken(token).toStringLong();
     }
 
     public static SourcePosition fromStartOfToken(Token token) {
@@ -44,6 +48,10 @@ public record SourcePosition(int line, int column) {
 
     public String toStringShort() {
         return this.line + "," + this.column;
+    }
+
+    public String toStringLong() {
+        return "line " + this.line + ", column " + this.column;
     }
 
 }

@@ -2,8 +2,9 @@ package groowt.view.web.lib
 
 
 import groowt.view.component.context.ComponentContext
-import groowt.view.web.DefaultWebViewComponentTemplateCompiler
-import groowt.view.web.WebViewComponentTemplateCompiler
+import groowt.view.component.factory.ComponentTemplateSource
+import groowt.view.web.compiler.DefaultWebViewComponentTemplateCompiler
+import groowt.view.web.compiler.WebViewComponentTemplateCompiler
 import groowt.view.web.runtime.DefaultWebViewComponentWriter
 import org.codehaus.groovy.control.CompilerConfiguration
 
@@ -13,13 +14,14 @@ abstract class AbstractWebViewComponentTests implements WithContext {
 
     protected WebViewComponentTemplateCompiler compiler() {
         new DefaultWebViewComponentTemplateCompiler(
+                new GroovyClassLoader(this.class.classLoader),
                 CompilerConfiguration.DEFAULT,
                 this.class.packageName
         )
     }
 
-    protected void doTest(Reader source, String expected, ComponentContext context) {
-        def template = this.compiler().compileAnonymous(source)
+    protected void doTest(Reader sourceReader, String expected, ComponentContext context) {
+        def template = this.compiler().compileAndGetAnonymous(ComponentTemplateSource.of(sourceReader))
         def renderer = template.getRenderer()
         def sw = new StringWriter()
         def out = new DefaultWebViewComponentWriter(sw)

@@ -3,15 +3,17 @@ package groowt.view.web;
 import groovy.lang.Closure;
 import groowt.view.component.AbstractViewComponent;
 import groowt.view.component.ComponentTemplate;
+import groowt.view.component.compiler.ComponentTemplateCompiler;
 import groowt.view.component.factory.ComponentTemplateSource;
+import groowt.view.web.compiler.WebViewComponentTemplateCompiler;
 import groowt.view.web.runtime.DefaultWebViewComponentWriter;
 import groowt.view.web.runtime.WebViewComponentWriter;
-import org.codehaus.groovy.control.CompilerConfiguration;
 
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class AbstractWebViewComponent extends AbstractViewComponent implements WebViewComponent {
 
@@ -27,15 +29,16 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
         super(templateClass);
     }
 
-    protected AbstractWebViewComponent(ComponentTemplateSource source) {
-        super(source, packageName -> new DefaultWebViewComponentTemplateCompiler(
-                CompilerConfiguration.DEFAULT,
-                packageName
-        ));
-    }
-
     protected AbstractWebViewComponent(ComponentTemplateSource source, WebViewComponentTemplateCompiler compiler) {
         super(source, compiler);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected AbstractWebViewComponent(
+            ComponentTemplateSource source,
+            Function<? super Class<? extends AbstractWebViewComponent>, ? extends ComponentTemplateCompiler> compilerFunction
+    ) {
+        super(source, selfClass -> compilerFunction.apply((Class<AbstractWebViewComponent>) selfClass));
     }
 
     @Override

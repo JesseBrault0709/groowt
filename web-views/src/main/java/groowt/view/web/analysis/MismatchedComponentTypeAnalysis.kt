@@ -17,8 +17,8 @@ private fun getErrorMessage(
     openType: ComponentTypeContext,
     closingType: ComponentTypeContext
 ) = "The component's opening and closing tags' types must match exactly. " +
-        "Found ${openType.text} at [${SourcePosition.formatStartOfToken(openType.start)}] " +
-        "and ${closingType.text} at [${SourcePosition.formatStartOfToken(closingType.start)}]."
+        "Found '${openType.text}' at ${SourcePosition.formatStartOfTokenLong(openType.start)} " +
+        "and '${closingType.text}' at ${SourcePosition.formatStartOfTokenLong(closingType.start)}."
 
 private fun test(
     openIdentifiers: List<Token>,
@@ -52,7 +52,7 @@ private fun doCheck(tree: ParseTree, destination: MutableList<MismatchedComponen
     }
 }
 
-data class MismatchedComponentTypeError(val tree: ParseTree, val message: String)
+data class MismatchedComponentTypeError(val component: ComponentWithChildrenContext, val message: String)
 
 fun check(tree: ParseTree): List<MismatchedComponentTypeError> {
     val result: MutableList<MismatchedComponentTypeError> = ArrayList()

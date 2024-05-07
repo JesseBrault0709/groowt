@@ -5,12 +5,12 @@ import groowt.view.component.ViewComponent;
 /**
  * Represents an exception thrown while attempting to instantiate a ComponentTemplate during compilation.
  */
-public class ComponentTemplateCompileException extends RuntimeException {
+public class ComponentTemplateCompileErrorException extends Exception {
 
     private final Class<? extends ViewComponent> forClass;
     private final Object templateSource;
 
-    public ComponentTemplateCompileException(
+    public ComponentTemplateCompileErrorException(
             String message,
             Class<? extends ViewComponent> forClass,
             Object templateSource
@@ -20,7 +20,7 @@ public class ComponentTemplateCompileException extends RuntimeException {
         this.templateSource = templateSource;
     }
 
-    public ComponentTemplateCompileException(
+    public ComponentTemplateCompileErrorException(
             String message,
             Throwable cause,
             Class<? extends ViewComponent> forClass,
@@ -31,12 +31,21 @@ public class ComponentTemplateCompileException extends RuntimeException {
         this.templateSource = templateSource;
     }
 
-    public ComponentTemplateCompileException(
+    public ComponentTemplateCompileErrorException(
             Throwable cause,
             Class<? extends ViewComponent> forClass,
             Object templateSource
     ) {
         super(cause);
+        this.forClass = forClass;
+        this.templateSource = templateSource;
+    }
+
+    public ComponentTemplateCompileErrorException(
+            Class<? extends ViewComponent> forClass,
+            Object templateSource
+    ) {
+        super("Compile error in " + templateSource + " for " + forClass.getName());
         this.forClass = forClass;
         this.templateSource = templateSource;
     }

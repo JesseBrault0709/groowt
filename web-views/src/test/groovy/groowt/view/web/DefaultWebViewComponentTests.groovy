@@ -1,12 +1,13 @@
 package groowt.view.web
 
 import groowt.view.component.factory.ComponentFactoryBase
+import groowt.view.web.lib.AbstractWebViewComponentTests
 import groowt.view.web.lib.WithContext
 import org.junit.jupiter.api.Test
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 
-class DefaultWebViewComponentTests implements WithContext {
+class DefaultWebViewComponentTests extends AbstractWebViewComponentTests {
 
     private static final class Greeter extends DefaultWebViewComponent {
 
@@ -41,8 +42,7 @@ class DefaultWebViewComponentTests implements WithContext {
 
     @Test
     void withPreambleImport() {
-        def c = new DefaultWebViewComponent(
-            '''
+        this.doTest('''
             ---
             import groovy.transform.Field
             
@@ -50,10 +50,7 @@ class DefaultWebViewComponentTests implements WithContext {
             String greeting = 'Hello, World!'
             ---
             $greeting
-            '''.stripIndent().trim()
-        )
-        c.context = this.context()
-        assertEquals("Hello, World!", c.render())
+            '''.stripIndent().trim(), "Hello, World!")
     }
 
     @Test
@@ -62,9 +59,7 @@ class DefaultWebViewComponentTests implements WithContext {
             this.configureContext(it)
             currentScope.add('Greeter', new GreeterFactory())
         }
-        def c = new DefaultWebViewComponent('<Greeter target="World" />')
-        c.context = context
-        assertEquals('Hello, World!', c.render())
+        this.doTest('<Greeter target="World" />', 'Hello, World!', context)
     }
 
     @Test
@@ -74,9 +69,7 @@ class DefaultWebViewComponentTests implements WithContext {
             currentScope.add('UsingGreeter') { new UsingGreeter() }
             currentScope.add('Greeter', new GreeterFactory())
         }
-        def c = new DefaultWebViewComponent('<UsingGreeter />')
-        c.context = context
-        assertEquals('Hello, World!', c.render())
+        this.doTest('<UsingGreeter />', 'Hello, World!', context)
     }
 
 }

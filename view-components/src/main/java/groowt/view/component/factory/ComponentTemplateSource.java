@@ -1,8 +1,6 @@
 package groowt.view.component.factory;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.Reader;
+import java.io.*;
 import java.net.URI;
 import java.net.URL;
 
@@ -38,6 +36,35 @@ public sealed interface ComponentTemplateSource {
      */
     static ComponentTemplateSource fromResource(String resourceName) {
         return of(ComponentTemplateSource.class.getClassLoader().getResource(resourceName));
+    }
+
+    static Reader toReader(ComponentTemplateSource source) {
+        return switch (source) {
+            case FileSource(File file) -> {
+                try {
+                    yield new FileReader(file);
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case StringSource(String rawSource) -> new StringReader(rawSource);
+            case InputStreamSource(InputStream inputStream) -> new InputStreamReader(inputStream);
+            case URISource(URI uri) -> {
+                try {
+                    yield new InputStreamReader(uri.toURL().openStream());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case URLSource(URL url) -> {
+                try {
+                    yield new InputStreamReader(url.openStream());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case ReaderSource(Reader reader) -> reader;
+        };
     }
 
     record StringSource(String template) implements ComponentTemplateSource {}

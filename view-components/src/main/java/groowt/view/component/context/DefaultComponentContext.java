@@ -54,7 +54,7 @@ public class DefaultComponentContext implements ComponentContext {
         final var missingStack = new LinkedList<>(this.scopeStack);
         NoFactoryMissingException first = null;
         while (!missingStack.isEmpty()) {
-            final ComponentScope scope = getStack.pop();
+            final ComponentScope scope = missingStack.pop();
             try {
                 return new DefaultResolved(component, scope.factoryMissing(component));
             } catch (NoFactoryMissingException e) {

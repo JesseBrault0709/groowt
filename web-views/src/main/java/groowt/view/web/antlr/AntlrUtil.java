@@ -5,7 +5,6 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.Tree;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public final class AntlrUtil {
@@ -36,8 +35,8 @@ public final class AntlrUtil {
             return this.nodesWithRecognitionException.size() + this.errorNodes.size();
         }
 
-        public Collection<Tree> getAll() {
-            final Collection<Tree> all = new ArrayList<>(this.nodesWithRecognitionException);
+        public List<Tree> getAll() {
+            final List<Tree> all = new ArrayList<>(this.nodesWithRecognitionException);
             all.addAll(this.errorNodes);
             return all;
         }

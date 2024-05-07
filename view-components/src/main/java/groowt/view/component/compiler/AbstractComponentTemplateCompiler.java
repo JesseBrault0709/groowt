@@ -1,52 +1,41 @@
 package groowt.view.component.compiler;
 
+import groovy.lang.GroovyClassLoader;
 import groowt.view.component.ComponentTemplate;
 import groowt.view.component.ViewComponent;
 import groowt.view.component.factory.ComponentTemplateSource;
-import groowt.view.component.factory.ComponentTemplateSource.*;
 
-import java.io.*;
-import java.net.URI;
-import java.net.URL;
+import java.io.IOException;
+import java.io.Reader;
 
 public abstract class AbstractComponentTemplateCompiler implements ComponentTemplateCompiler {
 
-    protected abstract ComponentTemplate compile(
+    private final GroovyClassLoader groovyClassLoader;
+
+    public AbstractComponentTemplateCompiler(GroovyClassLoader groovyClassLoader) {
+        this.groovyClassLoader = groovyClassLoader;
+    }
+
+    protected abstract ComponentTemplateCompileResult compile(
             ComponentTemplateSource componentTemplateSource,
             Class<? extends ViewComponent> forClass,
             Reader actualSource
-    );
+    ) throws ComponentTemplateCompileErrorException;
 
     @Override
-    public ComponentTemplate compile(Class<? extends ViewComponent> forClass, ComponentTemplateSource source) {
-        return switch (source) {
-            case FileSource(File file) -> {
-                try {
-                    yield this.compile(source, forClass, new FileReader(file));
-                } catch (FileNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            case StringSource(String rawSource) ->
-                    this.compile(source, forClass, new StringReader(rawSource));
-            case InputStreamSource(InputStream inputStream) ->
-                    this.compile(source, forClass, new InputStreamReader(inputStream));
-            case URISource(URI uri) -> {
-                try {
-                    yield this.compile(source, forClass, new InputStreamReader(uri.toURL().openStream()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            case URLSource(URL url) -> {
-                try {
-                    yield this.compile(source, forClass, new InputStreamReader(url.openStream()));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            case ReaderSource(Reader reader) -> this.compile(source, forClass, reader);
-        };
+    public ComponentTemplateCompileResult compile(Class<? extends ViewComponent> forClass, ComponentTemplateSource source)
+            throws ComponentTemplateCompileErrorException {
+        try (final Reader reader = ComponentTemplateSource.toReader(source)) {
+            return this.compile(source, forClass, reader);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ComponentTemplate compileAndGet(Class<? extends ViewComponent> forClass, ComponentTemplateSource source)
+            throws ComponentTemplateCompileErrorException {
+        return this.compileAndGet(this.groovyClassLoader, forClass, source);
     }
 
 }

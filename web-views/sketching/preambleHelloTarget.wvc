@@ -6,5 +6,5 @@ void consume(out) {
 @groovy.transform.Field
 String greeting = 'Hello'
 ---
-$greeting, ${consume(out)}!
+$greeting, ${consume(it)}!
 What a nice day.
