@@ -7,7 +7,7 @@ import groowt.view.component.compiler.CachingComponentTemplateCompiler;
 import groowt.view.component.compiler.ComponentTemplateCompileException;
 import groowt.view.component.factory.ComponentTemplateSource;
 import groowt.view.web.analysis.MismatchedComponentTypeError;
-import groowt.view.web.analysis.MismatchedComponentTypeErrorAnalysis;
+import groowt.view.web.analysis.MismatchedComponentTypeAnalysis;
 import groowt.view.web.antlr.CompilationUnitParseResult;
 import groowt.view.web.antlr.ParserUtil;
 import groowt.view.web.antlr.TokenList;
@@ -97,7 +97,7 @@ public class DefaultWebViewComponentTemplateCompiler extends CachingComponentTem
         final CompilationUnitParseResult parseResult = ParserUtil.parseCompilationUnit(reader);
 
         final List<MismatchedComponentTypeError> mismatchedComponentTypeErrors =
-                MismatchedComponentTypeErrorAnalysis.check(parseResult.getCompilationUnitContext());
+                MismatchedComponentTypeAnalysis.check(parseResult.getCompilationUnitContext());
 
         final var tokenList = new TokenList(parseResult.getTokenStream());
         final var astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList));

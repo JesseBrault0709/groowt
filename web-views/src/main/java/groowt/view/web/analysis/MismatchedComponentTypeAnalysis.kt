@@ -1,4 +1,4 @@
-@file:JvmName("MismatchedComponentTypeErrorAnalysis")
+@file:JvmName("MismatchedComponentTypeAnalysis")
 package groowt.view.web.analysis
 
 import groowt.view.web.antlr.WebViewComponentsParser.ComponentTypeContext
