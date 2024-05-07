@@ -135,8 +135,21 @@ public class DefaultComponentClassNodeResolver implements ComponentClassNodeReso
         final var classLoaderResolved = this.resolveWithClassLoader(identifier);
         if (classLoaderResolved.isRight()) {
             this.addToCache(identifier, classLoaderResolved.asRight().get());
+            return classLoaderResolved;
+        } else {
+            // Return the left only if we had an error that we weren't possibly expecting.
+            final Throwable cause = classLoaderResolved.asLeft().get().cause();
+            if (!(cause instanceof ClassNotFoundException)) {
+                return classLoaderResolved;
+            }
         }
-        return classLoaderResolved;
+
+        // We have a fqn which is outside the expected packages/classpath
+        // Make a custom class node and hope that the groovy compiler
+        // can resolve it later.
+        final ClassNode classNode = ClassHelper.make(fqn);
+        this.addToCache(new ClassIdentifierWithFqn(getAlias(fqn), fqn), classNode);
+        return Either.right(classNode);
     }
 
     @Override
@@ -148,7 +161,7 @@ public class DefaultComponentClassNodeResolver implements ComponentClassNodeReso
             return Either.right(fromCache);
         }
 
-        // try imports
+        // try given imports (not from compilation customizer)
         final var importedClassNode = this.moduleNode.getImportType(nameWithoutPackage);
         if (importedClassNode != null) {
             this.addToCache(

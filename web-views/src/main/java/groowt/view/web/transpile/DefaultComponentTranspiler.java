@@ -5,6 +5,7 @@ import groowt.view.component.*;
 import groowt.view.component.context.*;
 import groowt.view.web.ast.node.*;
 import groowt.view.web.runtime.WebViewComponentChildCollection;
+import groowt.view.web.transpile.resolve.ComponentClassNodeResolver;
 import groowt.view.web.transpile.util.GroovyUtil;
 import groowt.view.web.transpile.util.GroovyUtil.ConvertResult;
 import org.codehaus.groovy.ast.*;
@@ -46,6 +47,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     private ValueNodeTranspiler valueNodeTranspiler;
     private BodyTranspiler bodyTranspiler;
     private AppendOrAddStatementFactory appendOrAddStatementFactory;
+    private ComponentClassNodeResolver componentClassNodeResolver;
 
     public void setValueNodeTranspiler(ValueNodeTranspiler valueNodeTranspiler) {
         this.valueNodeTranspiler = valueNodeTranspiler;
@@ -57,6 +59,10 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
 
     public void setAppendOrAddStatementFactory(AppendOrAddStatementFactory appendOrAddStatementFactory) {
         this.appendOrAddStatementFactory = appendOrAddStatementFactory;
+    }
+
+    public void setComponentClassNodeResolver(ComponentClassNodeResolver componentClassNodeResolver) {
+        this.componentClassNodeResolver = componentClassNodeResolver;
     }
 
     // ViewComponent c0

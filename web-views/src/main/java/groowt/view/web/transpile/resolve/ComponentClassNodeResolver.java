@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 public interface ComponentClassNodeResolver {
 
-    record ClassNodeResolveError(ClassIdentifier identifier, String getMessage, @Nullable Throwable getCause) {}
+    record ClassNodeResolveError(ClassIdentifier identifier, String message, @Nullable Throwable cause) {}
 
     Either<ClassNodeResolveError, ClassNode> getClassForFqn(String fqn);
     Either<ClassNodeResolveError, ClassNode> getClassForNameWithoutPackage(String nameWithoutPackage);

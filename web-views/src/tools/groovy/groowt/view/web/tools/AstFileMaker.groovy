@@ -2,7 +2,7 @@ package groowt.view.web.tools
 
 import groovy.transform.InheritConstructors
 import groovy.transform.MapConstructor
-import groowt.view.web.analysis.MismatchedComponentTypeAnalyzer
+import groowt.view.web.analysis.MismatchedComponentTypeErrorAnalysis
 import groowt.view.web.antlr.AntlrUtil
 import groowt.view.web.antlr.ParserUtil
 import groowt.view.web.antlr.TokenList
@@ -96,12 +96,11 @@ final class AstFileMaker extends AbstractTreeFileMaker {
                 )
             }
 
-            def mismatchedTypeAnalyzer = new MismatchedComponentTypeAnalyzer()
-            def mismatchedTypeErrors = mismatchedTypeAnalyzer.analyze(cuContext)
+            def mismatchedTypeErrors = MismatchedComponentTypeErrorAnalysis.check(cuContext)
 
             if (!mismatchedTypeErrors.isEmpty()) {
                 def message = 'There were mismatched type errors: \n' + mismatchedTypeErrors.collect {
-                    it.message()
+                    it.getMessage()
                 }.join('\n')
                 return new BuildFailure(
                         compilationUnitContext: cuContext,
