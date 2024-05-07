@@ -1,10 +1,13 @@
 package groowt.view.web;
 
 import groovy.lang.GroovyClassLoader;
-import groowt.view.component.*;
+import groowt.view.component.ComponentTemplate;
+import groowt.view.component.ViewComponent;
 import groowt.view.component.compiler.CachingComponentTemplateCompiler;
 import groowt.view.component.compiler.ComponentTemplateCompileException;
 import groowt.view.component.factory.ComponentTemplateSource;
+import groowt.view.web.analysis.MismatchedComponentTypeError;
+import groowt.view.web.analysis.MismatchedComponentTypeErrorAnalysis;
 import groowt.view.web.antlr.CompilationUnitParseResult;
 import groowt.view.web.antlr.ParserUtil;
 import groowt.view.web.antlr.TokenList;
@@ -25,6 +28,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Objects;
 
 public class DefaultWebViewComponentTemplateCompiler extends CachingComponentTemplateCompiler
@@ -92,7 +96,8 @@ public class DefaultWebViewComponentTemplateCompiler extends CachingComponentTem
     ) {
         final CompilationUnitParseResult parseResult = ParserUtil.parseCompilationUnit(reader);
 
-        // TODO: analysis
+        final List<MismatchedComponentTypeError> mismatchedComponentTypeErrors =
+                MismatchedComponentTypeErrorAnalysis.check(parseResult.getCompilationUnitContext());
 
         final var tokenList = new TokenList(parseResult.getTokenStream());
         final var astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList));

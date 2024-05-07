@@ -35,6 +35,7 @@ dependencies {
             libs.groovy,
             libs.groovy.templates,
             libs.antlr.runtime,
+            libs.classgraph,
             project(':view-components'),
             project(':views')
     )

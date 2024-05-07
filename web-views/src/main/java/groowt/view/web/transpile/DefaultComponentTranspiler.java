@@ -56,7 +56,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     }
 
     public void setAppendOrAddStatementFactory(AppendOrAddStatementFactory appendOrAddStatementFactory) {
-        this.appendOrAddStatementFactory = Objects.requireNonNull(appendOrAddStatementFactory);
+        this.appendOrAddStatementFactory = appendOrAddStatementFactory;
     }
 
     // ViewComponent c0

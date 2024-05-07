@@ -1,3 +1,4 @@
+@file:JvmName("MismatchedComponentTypeErrorAnalysis")
 package groowt.view.web.analysis
 
 import groowt.view.web.antlr.WebViewComponentsParser.ComponentTypeContext
@@ -50,6 +51,8 @@ private fun doCheck(tree: ParseTree, destination: MutableList<MismatchedComponen
         }
     }
 }
+
+data class MismatchedComponentTypeError(val tree: ParseTree, val message: String)
 
 fun check(tree: ParseTree): List<MismatchedComponentTypeError> {
     val result: MutableList<MismatchedComponentTypeError> = ArrayList()
