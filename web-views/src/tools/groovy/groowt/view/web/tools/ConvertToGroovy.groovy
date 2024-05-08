@@ -1,17 +1,10 @@
 package groowt.view.web.tools
 
 import groovy.console.ui.AstNodeToScriptVisitor
-import groowt.util.di.DefaultRegistryObjectFactory
-import groowt.view.web.antlr.ParserUtil
-import groowt.view.web.antlr.TokenList
-import groowt.view.web.ast.DefaultAstBuilder
-import groowt.view.web.ast.DefaultNodeFactory
-import groowt.view.web.ast.node.CompilationUnitNode
-import groowt.view.web.transpile.DefaultGroovyTranspiler
-import groowt.view.web.transpile.DefaultTranspilerConfiguration
-import org.codehaus.groovy.control.CompilationUnit
-import org.codehaus.groovy.control.CompilerConfiguration
-import org.codehaus.groovy.control.io.FileReaderSource
+import groowt.view.component.compiler.source.ComponentTemplateSource
+import groowt.view.web.compiler.AnonymousWebViewComponent
+import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit
+import org.codehaus.groovy.tools.GroovyClass
 import picocli.CommandLine
 
 import java.util.concurrent.Callable
@@ -59,46 +52,47 @@ class ConvertToGroovy implements Callable<Integer> {
     )
     File classesDir
 
+    private void writeClass(File classesDir, GroovyClass groovyClass) {
+        new File(classesDir, groovyClass.name + '.class').withOutputStream {
+            it.write(groovyClass.bytes)
+        }
+    }
+
     @Override
     Integer call() throws Exception {
         boolean success = this.targets.inject(true) { acc, target ->
             def name = target.name.takeBefore('.wvc')
             try {
-                def parseResult = ParserUtil.parseCompilationUnit(target)
-                def tokenList = new TokenList(parseResult.tokenStream)
-                def astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList))
-                def cuNode = astBuilder.build(parseResult.compilationUnitContext) as CompilationUnitNode
-                def config = new CompilerConfiguration().tap {
-                    it.targetDirectory = this.doClasses
-                            ? this.classesDir ?: new File(target.parentFile, 'classes')
-                            : File.createTempDir()
-                }
-                def gcu = new CompilationUnit(config)
+                def compileUnit = new WebViewComponentTemplateCompileUnit(
+                        AnonymousWebViewComponent,
+                        ComponentTemplateSource.of(target),
+                        AnonymousWebViewComponent.packageName
+                )
 
                 def w = new StringWriter()
                 def astVisitor = new AstNodeToScriptVisitor(w)
-                gcu.addPhaseOperation(astVisitor, this.compilePhase)
+                compileUnit.groovyCompilationUnit.addPhaseOperation(astVisitor, this.compilePhase)
 
-                def transpiler = new DefaultGroovyTranspiler(
-                        gcu,
-                        this.defaultPackageName,
-                        { new DefaultTranspilerConfiguration() }
-                )
-                transpiler.transpile(
-                        cuNode,
-                        tokenList,
-                        name.capitalize(),
-                        new FileReaderSource(target, new CompilerConfiguration())
-                )
-                gcu.compile(this.compilePhase)
+                def compileResult = compileUnit.compile()
+
+                if (!this.quiet) {
+                    println w.toString()
+                }
 
                 if (this.writeOut) {
                     def outFile = new File(target.parentFile, name + '.groovy')
                     outFile.write(w.toString())
                 }
-                if (!this.quiet) {
-                    println w.toString()
+
+                if (this.doClasses) {
+                    def classesDir = this.classesDir != null
+                            ? this.classesDir
+                            : new File(target.parentFile, 'classes')
+                    classesDir.mkdirs()
+                    this.writeClass(classesDir, compileResult.templateClass)
+                    compileResult.otherClasses.each { this.writeClass(classesDir, it) }
                 }
+
                 return true
             } catch (Exception e) {
                 e.printStackTrace()

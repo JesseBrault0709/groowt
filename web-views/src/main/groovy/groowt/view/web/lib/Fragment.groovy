@@ -1,8 +1,8 @@
 package groowt.view.web.lib
 
-import groowt.view.web.DefaultWebViewComponent
+import groowt.view.web.BaseWebViewComponent
 
-final class Fragment extends DefaultWebViewComponent {
+final class Fragment extends BaseWebViewComponent {
 
     @Override
     void renderTo(Writer out) throws IOException {

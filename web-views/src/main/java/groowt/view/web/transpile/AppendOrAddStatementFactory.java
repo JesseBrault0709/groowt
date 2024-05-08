@@ -17,4 +17,8 @@ public interface AppendOrAddStatementFactory {
     Statement appendOnly(BodyChildNode sourceNode, TranspilerState state, Expression rightSide);
     Statement addOrAppend(BodyChildNode sourceNode, TranspilerState state, Function<Action, Expression> getRightSide);
 
+    default Statement addOrAppend(BodyChildNode sourceNode, TranspilerState state, Expression rightSide) {
+        return this.addOrAppend(sourceNode, state, ignored -> rightSide);
+    }
+
 }

@@ -4,6 +4,7 @@ import groowt.gradle.antlr.GroowtAntlrExecTask
 plugins {
     id 'groowt-conventions'
     id 'groowt-antlr-plugin'
+    id 'groowt-logging'
     id 'java-library'
     id 'groovy'
     id 'org.jetbrains.kotlin.jvm'
@@ -19,13 +20,23 @@ configurations {
     toolsImplementation {
         extendsFrom(apiElements, runtimeElements)
     }
+    sketchingImplementation {
+        extendsFrom(apiElements, runtimeElements)
+    }
 }
 
 sourceSets {
+    sketching {
+        java {
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
+        }
+    }
     tools {
         java {
             compileClasspath += sourceSets.main.output
             runtimeClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.sketching.output
         }
     }
 }
@@ -35,7 +46,6 @@ dependencies {
             libs.groovy,
             libs.groovy.templates,
             libs.antlr.runtime,
-            libs.classgraph,
             project(':view-components'),
             project(':views')
     )
@@ -64,6 +74,8 @@ dependencies {
     groovyConsole libs.groovy.console
     toolsApi libs.picocli
     toolsImplementation libs.groovy.console
+
+    sketchingApi libs.groovy
 }
 
 java {

@@ -6,23 +6,34 @@ import groowt.view.web.ast.DefaultAstBuilder;
 import groowt.view.web.ast.DefaultNodeFactory;
 import groowt.view.web.ast.node.BodyNode;
 import groowt.view.web.ast.node.CompilationUnitNode;
+import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit;
 import groowt.view.web.transpile.BodyTranspiler;
 import groowt.view.web.transpile.TranspilerConfiguration;
 import groowt.view.web.transpile.TranspilerUtil;
+import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(MockitoExtension.class)
 public abstract class BodyTranspilerTests {
 
-    protected abstract TranspilerConfiguration getConfiguration();
+    protected abstract TranspilerConfiguration getConfiguration(
+            WebViewComponentTemplateCompileUnit compileUnit,
+            ModuleNode moduleNode
+    );
 
-    protected record BuildResult(BodyNode bodyNode, TokenList tokenList) {}
+    protected record BuildResult(BodyNode bodyNode, TokenList tokenList) {
+
+    }
 
     protected BuildResult build(String source) {
         final var parseResult = ParserUtil.parseCompilationUnit(source);
@@ -36,24 +47,29 @@ public abstract class BodyTranspilerTests {
         return new BuildResult(bodyNode, tokenList);
     }
 
-    protected BodyTranspiler getBodyTranspiler() {
-        return this.getConfiguration().getBodyTranspiler();
+    protected BodyTranspiler getBodyTranspiler(TranspilerConfiguration configuration) {
+        return configuration.getBodyTranspiler();
     }
 
     @Test
-    public void smokeScreen() {
+    public void smokeScreen(@Mock WebViewComponentTemplateCompileUnit compileUnit, @Mock ModuleNode moduleNode) {
         assertDoesNotThrow(() -> {
-            this.getBodyTranspiler();
+            final var configuration = this.getConfiguration(compileUnit, moduleNode);
+            this.getBodyTranspiler(configuration);
         });
     }
 
     @Test
-    public void simpleGStringOutStatement() {
+    public void simpleGStringOutStatement(
+            @Mock WebViewComponentTemplateCompileUnit compileUnit,
+            @Mock ModuleNode moduleNode
+    ) {
         final var source = "Hello, $target!";
         final var buildResult = this.build(source);
-        final var transpiler = this.getBodyTranspiler();
+        final var configuration = this.getConfiguration(compileUnit, moduleNode);
+        final var transpiler = this.getBodyTranspiler(configuration);
         final var state = TranspilerUtil.TranspilerState.withDefaultRootScope();
-        final var addOrAppend = this.getConfiguration().getAppendOrAddStatementFactory();
+        final var addOrAppend = configuration.getAppendOrAddStatementFactory();
         final BlockStatement blockStatement = transpiler.transpileBody(
                 buildResult.bodyNode(),
                 (node, expression) -> addOrAppend.addOrAppend(node, state, ignored -> expression),
@@ -63,12 +79,16 @@ public abstract class BodyTranspilerTests {
     }
 
     @Test
-    public void simpleJStringOutStatement() {
+    public void simpleJStringOutStatement(
+            @Mock WebViewComponentTemplateCompileUnit compileUnit,
+            @Mock ModuleNode moduleNode
+    ) {
         final var source = "Hello, World!";
         final var buildResult = this.build(source);
-        final var transpiler = this.getBodyTranspiler();
+        final var configuration = this.getConfiguration(compileUnit, moduleNode);
+        final var transpiler = this.getBodyTranspiler(configuration);
         final var state = TranspilerUtil.TranspilerState.withDefaultRootScope();
-        final var addOrAppend = this.getConfiguration().getAppendOrAddStatementFactory();
+        final var addOrAppend = configuration.getAppendOrAddStatementFactory();
         final BlockStatement blockStatement = transpiler.transpileBody(
                 buildResult.bodyNode(),
                 (node, expression) -> addOrAppend.addOrAppend(node, state, ignored -> expression),

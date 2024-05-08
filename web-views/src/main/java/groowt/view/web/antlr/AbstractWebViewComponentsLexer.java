@@ -75,11 +75,11 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
 
     @Override
     public void pushMode(int m) {
-        if (logger.isDebugEnabled()) {
+        if (logger.isTraceEnabled()) {
             final var old = this._mode;
             super.pushMode(m);
             final var delta = this._mode;
-            logger.debug("pushMode: target {} to {}", this.getModeName(old), this.getModeName(delta));
+            logger.trace("pushMode: target {} to {}", this.getModeName(old), this.getModeName(delta));
         } else {
             super.pushMode(m);
         }
@@ -87,10 +87,10 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
 
     @Override
     public int popMode() {
-        if (logger.isDebugEnabled()) {
+        if (logger.isTraceEnabled()) {
             final var popped = this._mode;
             final var delta = super.popMode();
-            logger.debug("popMode: to {} target {}", this.getModeName(popped), this.getModeName(delta));
+            logger.trace("popMode: to {} target {}", this.getModeName(popped), this.getModeName(delta));
             return popped;
         } else {
             return super.popMode();

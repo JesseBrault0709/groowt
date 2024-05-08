@@ -1,10 +1,12 @@
 package groowt.view.web.tools
 
+import groowt.view.component.compiler.SimpleComponentTemplateClassFactory
+import groowt.view.component.compiler.source.ComponentTemplateSource
 import groowt.view.component.context.DefaultComponentContext
-import groowt.view.component.factory.ComponentTemplateSource
-import groowt.view.web.compiler.DefaultWebViewComponentTemplateCompiler
-import groowt.view.web.runtime.DefaultWebViewComponentWriter
-import org.codehaus.groovy.control.CompilerConfiguration
+import groowt.view.component.runtime.DefaultComponentWriter
+import groowt.view.web.BaseWebViewComponent
+import groowt.view.web.compiler.AnonymousWebViewComponent
+import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -27,20 +29,44 @@ class RunTemplate implements Callable<Integer> {
     )
     Map<String, String> properties
 
+    static class PropertiesComponent extends BaseWebViewComponent {
+
+        private final Map<String, String> properties
+
+        @SuppressWarnings('GroovyAssignabilityCheck')
+        PropertiesComponent(Map<String, Object> attr) {
+            super('${renderChildren()}')
+            this.properties = attr.properties ?: [:]
+        }
+
+        @Override
+        Object getProperty(String propertyName) {
+            try {
+                return super.getProperty(propertyName)
+            } catch (Exception ignored) {
+                return this.properties.get(propertyName)
+            }
+        }
+
+    }
+
     @Override
     Integer call() throws Exception {
-        def gcl = new GroovyClassLoader(this.class.classLoader)
-        def compiler = new DefaultWebViewComponentTemplateCompiler(
-                gcl,
-                CompilerConfiguration.DEFAULT,
+        def compileUnit = new WebViewComponentTemplateCompileUnit(
+                AnonymousWebViewComponent,
+                ComponentTemplateSource.of(this.template),
                 'groowt.view.web.tools'
         )
-        def template = compiler.compileAndGetAnonymous(ComponentTemplateSource.of(this.template))
+
+        def compileResult = compileUnit.compile()
+        def templateLoader = new SimpleComponentTemplateClassFactory()
+        def templateClass = templateLoader.getTemplateClass(compileResult)
+        def template = templateClass.getConstructor().newInstance()
 
         def context = new DefaultComponentContext()
         context.pushDefaultScope()
 
-        def componentWriter = new DefaultWebViewComponentWriter(new OutputStreamWriter(System.out))
+        def componentWriter = new DefaultComponentWriter(new OutputStreamWriter(System.out))
 
         template.renderer.call(context, componentWriter)
 

@@ -1,0 +1,4 @@
+---
+package groowt.view.web.sketching
+---
+<Greeters.Simple target='World' />

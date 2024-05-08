@@ -1,5 +1,6 @@
 package groowt.view.web.transpile;
 
+import groowt.view.web.WebViewComponentBugError;
 import groowt.view.web.ast.node.*;
 import groowt.view.web.transpile.TranspilerUtil.TranspilerState;
 import jakarta.inject.Inject;
@@ -30,7 +31,7 @@ public class DefaultBodyTranspiler implements BodyTranspiler {
             TranspilerState state
     ) {
         final BlockStatement block = new BlockStatement();
-        block.setVariableScope(state.currentScope());
+        block.setVariableScope(state.pushScope());
         for (final Node child : bodyNode.getChildren()) {
             switch (child) {
                 case GStringBodyTextNode gStringBodyTextNode -> {
@@ -49,16 +50,17 @@ public class DefaultBodyTranspiler implements BodyTranspiler {
                 }
                 case ComponentNode componentNode -> {
                     // DO NOT add/append this, because the component transpiler does it already
-                    block.addStatement(this.componentTranspiler.createComponentStatements(componentNode, state));
+                    block.addStatements(this.componentTranspiler.createComponentStatements(componentNode, state));
                 }
                 case PlainScriptletNode plainScriptletNode -> {
                     throw new UnsupportedOperationException("TODO");
                 }
-                default -> throw new UnsupportedOperationException(
+                default -> throw new WebViewComponentBugError(new UnsupportedOperationException(
                         "BodyNode child of type " + child.getClass().getSimpleName() + " is not supported."
-                );
+                ));
             }
         }
+        state.popScope();
         return block;
     }
 

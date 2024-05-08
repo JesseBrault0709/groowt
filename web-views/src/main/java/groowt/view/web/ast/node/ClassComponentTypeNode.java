@@ -25,6 +25,7 @@ public non-sealed class ClassComponentTypeNode extends ComponentTypeNode {
         this.fqn = Objects.requireNonNull(fullyQualifiedName);
     }
 
+    @Deprecated
     public String getFullyQualifiedName() {
         return Objects.requireNonNullElse(this.fqn, this.getIdentifier());
     }

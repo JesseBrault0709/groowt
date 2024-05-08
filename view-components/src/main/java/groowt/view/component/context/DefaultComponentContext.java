@@ -1,98 +1,35 @@
 package groowt.view.component.context;
 
 import groowt.view.component.ViewComponent;
-import groowt.view.component.factory.ComponentFactory;
+import groowt.view.component.runtime.RenderContext;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class DefaultComponentContext implements ComponentContext {
 
-    protected static class DefaultResolved implements ComponentContext.Resolved {
+    private final LinkedList<ComponentScope> scopeStack = new LinkedList<>();
+    private RenderContext renderContext;
 
-        private final String typeName;
-        private final ComponentFactory<?> factory;
-
-        public DefaultResolved(String typeName, ComponentFactory<?> factory) {
-            this.typeName = typeName;
-            this.factory = factory;
-        }
-
-        @Override
-        public String getTypeName() {
-            return this.typeName;
-        }
-
-        @Override
-        public ComponentFactory<?> getComponentFactory() {
-            return this.factory;
-        }
-
-    }
-
-    private final Deque<ComponentScope> scopeStack = new LinkedList<>();
-    private final Deque<ViewComponent> componentStack = new LinkedList<>();
-
-    @Override
-    public Resolved resolve(String component) {
-        if (scopeStack.isEmpty()) {
-            throw new IllegalStateException("There are no scopes on the scopeStack.");
-        }
-
-        final var getStack = new LinkedList<>(this.scopeStack);
-        while (!getStack.isEmpty()) {
-            final ComponentScope scope = getStack.pop();
-            if (scope.contains(component)) {
-                return new DefaultResolved(component, scope.get(component));
-            }
-        }
-
-        final var missingStack = new LinkedList<>(this.scopeStack);
-        NoFactoryMissingException first = null;
-        while (!missingStack.isEmpty()) {
-            final ComponentScope scope = missingStack.pop();
-            try {
-                return new DefaultResolved(component, scope.factoryMissing(component));
-            } catch (NoFactoryMissingException e) {
-                if (first == null) {
-                    first = e;
-                }
-            }
-        }
-
-        if (first == null) {
-            throw new IllegalStateException("First FactoryMissingException is still null.");
-        }
-
-        throw first;
-    }
-
-    @Override
-    public ViewComponent create(Resolved resolved, Object... args) {
-        return resolved.getComponentFactory().create(
-                resolved.getTypeName(), this, args
+    @ApiStatus.Internal
+    public RenderContext getRenderContext() {
+        return Objects.requireNonNull(
+                this.renderContext,
+                "The renderContext is null. Did this method get called from outside of a rendering context?"
         );
     }
 
-    @Override
-    public void beforeComponentRender(ViewComponent component) {
-        this.componentStack.push(component);
+    @ApiStatus.Internal
+    public void setRenderContext(RenderContext renderContext) {
+        this.renderContext = Objects.requireNonNull(renderContext);
     }
 
     @Override
-    public void afterComponentRender(ViewComponent component) {
-        final var popped = this.componentStack.pop();
-        if (!popped.equals(component)) {
-            throw new IllegalStateException("Popped component does not equal arg to afterComponent()");
-        }
-    }
-
-    @Override
-    public Deque<ComponentScope> getScopeStack() {
+    public List<ComponentScope> getScopeStack() {
         return new LinkedList<>(this.scopeStack);
     }
 
@@ -116,18 +53,15 @@ public class DefaultComponentContext implements ComponentContext {
     }
 
     @Override
-    public Deque<ViewComponent> getComponentStack() {
-        return new LinkedList<>(this.componentStack);
+    public ComponentScope getRootScope() {
+        return this.scopeStack.getLast();
     }
 
     @Override
     public @Nullable ViewComponent getParent() {
-        if (this.componentStack.size() > 1) {
-            final var child = this.componentStack.pop();
-            final var parent = this.componentStack.pop();
-            this.componentStack.push(parent);
-            this.componentStack.push(child);
-            return parent;
+        final List<ViewComponent> componentStack = this.getRenderContext().getComponentStack();
+        if (componentStack.size() > 1) {
+            return componentStack.get(1);
         }
         return null;
     }
@@ -139,35 +73,21 @@ public class DefaultComponentContext implements ComponentContext {
 
     @Override
     public @Nullable ViewComponent findNearestAncestor(Predicate<? super ViewComponent> matching) {
-        if (this.componentStack.size() > 1) {
-            final Deque<ViewComponent> tmp = new LinkedList<>();
-            tmp.push(this.componentStack.pop()); // child
-            ViewComponent result = null;
-            while (result == null && !this.componentStack.isEmpty()) {
-                final var ancestor = this.componentStack.pop();
-                tmp.push(ancestor);
+        final List<ViewComponent> componentStack = this.getRenderContext().getComponentStack();
+        if (componentStack.size() > 1) {
+            for (final var ancestor : componentStack.subList(1, componentStack.size() -1)) {
                 if (matching.test(ancestor)) {
-                    result = ancestor;
+                    return ancestor;
                 }
             }
-            while (!tmp.isEmpty()) {
-                this.componentStack.push(tmp.pop());
-            }
-            return result;
         }
         return null;
     }
 
     @Override
     public List<ViewComponent> getAllAncestors() {
-        if (this.componentStack.size() > 1) {
-            final var child = this.componentStack.pop();
-            final List<ViewComponent> result = new ArrayList<>(this.componentStack);
-            this.componentStack.push(child);
-            return result;
-        } else {
-            return List.of();
-        }
+        final List<ViewComponent> componentStack = this.getRenderContext().getComponentStack();
+        return componentStack.subList(1, componentStack.size());
     }
 
 }

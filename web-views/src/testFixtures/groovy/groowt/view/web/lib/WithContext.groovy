@@ -10,23 +10,14 @@ trait WithContext {
     WebViewComponentContext context(
             @ClosureParams(value = SimpleType, options = 'groowt.view.web.WebViewComponentContext')
             @DelegatesTo(value = WebViewComponentContext)
-            Closure configure
+            Closure configure = { configureContext(it) }
     ) {
         new DefaultWebViewComponentContext().tap {
-            pushDefaultScope()
             configure.delegate = it
             configure(it)
         }
     }
 
-    WebViewComponentContext context() {
-        new DefaultWebViewComponentContext().tap {
-            configureContext(it)
-        }
-    }
-
-    void configureContext(WebViewComponentContext context) {
-        context.pushDefaultScope()
-    }
+    void configureContext(WebViewComponentContext context) {}
 
 }

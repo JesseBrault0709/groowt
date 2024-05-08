@@ -1,10 +1,8 @@
 package groowt.view.component;
 
 import groovy.lang.Closure;
-import groowt.view.component.compiler.ComponentTemplateCompileErrorException;
-import groowt.view.component.compiler.ComponentTemplateCompiler;
+import groowt.view.component.compiler.*;
 import groowt.view.component.context.ComponentContext;
-import groowt.view.component.factory.ComponentTemplateSource;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -13,44 +11,45 @@ import java.util.function.Function;
 
 public abstract class AbstractViewComponent implements ViewComponent {
 
-    private ComponentContext context;
-    private ComponentTemplate template;
+    private static final ComponentTemplateClassFactory templateClassFactory = new SimpleComponentTemplateClassFactory();
 
-    public AbstractViewComponent() {}
-
-    public AbstractViewComponent(ComponentTemplate template) {
-        this.template = Objects.requireNonNull(template);
-    }
-
-    public AbstractViewComponent(Class<? extends ComponentTemplate> templateClass) {
+    private static ComponentTemplate instantiateTemplate(Class<? extends ComponentTemplate> templateClass) {
         try {
-            this.template = templateClass.getConstructor().newInstance();
+            return templateClass.getConstructor().newInstance();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    protected AbstractViewComponent(ComponentTemplateSource source, ComponentTemplateCompiler compiler) {
-        try {
-            this.template = compiler.compileAndGet(this.getSelfClass(), source);
-        } catch (ComponentTemplateCompileErrorException e) {
-            throw new RuntimeException(e);
-        }
+    private final ComponentTemplate template;
+    private ComponentContext context;
+
+    public AbstractViewComponent() {
+        this.template = null;
     }
 
-    protected AbstractViewComponent(
-            ComponentTemplateSource source,
-            Function<? super Class<? extends AbstractViewComponent>, ? extends ComponentTemplateCompiler> compilerFunction
+    public AbstractViewComponent(ComponentTemplate template) {
+        this.template = template;
+    }
+
+    public AbstractViewComponent(Class<? extends ComponentTemplate> templateClass) {
+        this.template = instantiateTemplate(templateClass);
+    }
+
+    public AbstractViewComponent(
+            Function<? super Class<? extends AbstractViewComponent>, ComponentTemplateCompileUnit> compileUnitFunction
     ) {
-        final var compiler = compilerFunction.apply(this.getSelfClass());
+        final ComponentTemplateCompileResult compileResult;
         try {
-            this.template = compiler.compileAndGet(this.getSelfClass(), source);
-        } catch (ComponentTemplateCompileErrorException e) {
+            compileResult = compileUnitFunction.apply(this.getClass()).compile();
+        } catch (ComponentTemplateCompileException e) {
             throw new RuntimeException(e);
         }
+        final var templateClass = templateClassFactory.getTemplateClass(compileResult);
+        this.template = instantiateTemplate(templateClass);
     }
 
-    protected abstract Class<? extends AbstractViewComponent> getSelfClass();
+
 
     @Override
     public void setContext(ComponentContext context) {
@@ -66,26 +65,20 @@ public abstract class AbstractViewComponent implements ViewComponent {
         return Objects.requireNonNull(template);
     }
 
-    protected void setTemplate(ComponentTemplate template) {
-        this.template = Objects.requireNonNull(template);
-    }
+    protected void beforeRender() {}
 
-    protected void beforeRender() {
-        this.getContext().beforeComponentRender(this);
-    }
-
-    protected void afterRender() {
-        this.getContext().afterComponentRender(this);
-    }
+    protected void afterRender() {}
 
     /**
      * @implSpec If overriding, <strong>please</strong> call
-     * {@link #beforeRender()}and {@link #afterRender()} before
-     * and after the actual rendering is done, respectively.
+     * {@link #beforeRender()} and {@link #afterRender()} before
+     * and after the actual rendering is done, respectively;
+     * this way, components can still do their before/after
+     * logic even if this method is overwritten.
      */
     @Override
     public void renderTo(Writer out) throws IOException {
-        final Closure<?> closure = this.template.getRenderer();
+        final Closure<?> closure = this.getTemplate().getRenderer();
         closure.setDelegate(this);
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         this.beforeRender();

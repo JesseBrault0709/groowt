@@ -3,11 +3,11 @@ package groowt.view.web;
 import groovy.lang.Closure;
 import groowt.view.component.AbstractViewComponent;
 import groowt.view.component.ComponentTemplate;
-import groowt.view.component.compiler.ComponentTemplateCompiler;
-import groowt.view.component.factory.ComponentTemplateSource;
-import groowt.view.web.compiler.WebViewComponentTemplateCompiler;
-import groowt.view.web.runtime.DefaultWebViewComponentWriter;
-import groowt.view.web.runtime.WebViewComponentWriter;
+import groowt.view.component.compiler.ComponentTemplateCompileUnit;
+import groowt.view.component.compiler.source.ComponentTemplateSource;
+import groowt.view.component.runtime.ComponentWriter;
+import groowt.view.component.runtime.DefaultComponentWriter;
+import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 public abstract class AbstractWebViewComponent extends AbstractViewComponent implements WebViewComponent {
 
-    private List<WebViewChildRenderer> childRenderers;
+    private List<WebViewComponentChild> childRenderers;
 
     public AbstractWebViewComponent() {}
 
@@ -29,20 +29,18 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
         super(templateClass);
     }
 
-    protected AbstractWebViewComponent(ComponentTemplateSource source, WebViewComponentTemplateCompiler compiler) {
-        super(source, compiler);
+    public AbstractWebViewComponent(
+            Function<? super Class<? extends AbstractViewComponent>, ComponentTemplateCompileUnit> compileUnitFunction
+    ) {
+        super(compileUnitFunction);
     }
 
-    @SuppressWarnings("unchecked")
-    protected AbstractWebViewComponent(
-            ComponentTemplateSource source,
-            Function<? super Class<? extends AbstractWebViewComponent>, ? extends ComponentTemplateCompiler> compilerFunction
-    ) {
-        super(source, selfClass -> compilerFunction.apply((Class<AbstractWebViewComponent>) selfClass));
+    public AbstractWebViewComponent(ComponentTemplateSource source) {
+        this(selfClass -> new WebViewComponentTemplateCompileUnit(selfClass, source, selfClass.getPackageName()));
     }
 
     @Override
-    public List<WebViewChildRenderer> getChildRenderers() {
+    public List<WebViewComponentChild> getChildren() {
         if (this.childRenderers == null) {
             this.childRenderers = new ArrayList<>();
         }
@@ -51,35 +49,28 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
 
     @Override
     public boolean hasChildren() {
-        return !this.getChildRenderers().isEmpty();
+        return !this.getChildren().isEmpty();
     }
 
     @Override
-    public void setChildRenderers(List<WebViewChildRenderer> children) {
+    public void setChildren(List<WebViewComponentChild> children) {
         this.childRenderers = children;
     }
 
     @Override
     public void renderChildren() {
-        for (final var childRenderer : this.getChildRenderers()) {
+        for (final var childRenderer : this.getChildren()) {
             try {
-                if (childRenderer instanceof WebViewChildComponentRenderer childComponentRenderer) {
-                    this.getContext().beforeComponentRender(childComponentRenderer.getComponent());
-                }
                 childRenderer.render(this);
             } catch (Exception e) {
                 throw new ChildRenderException(e);
-            } finally {
-                if (childRenderer instanceof WebViewChildComponentRenderer childComponentRenderer) {
-                    this.getContext().afterComponentRender(childComponentRenderer.getComponent());
-                }
             }
         }
     }
 
     @Override
     public void renderTo(Writer out) throws IOException {
-        final WebViewComponentWriter webWriter = new DefaultWebViewComponentWriter(out);
+        final ComponentWriter webWriter = new DefaultComponentWriter(out);
         final Closure<?> renderer = this.getTemplate().getRenderer();
         renderer.setDelegate(this);
         renderer.setResolveStrategy(Closure.DELEGATE_FIRST);

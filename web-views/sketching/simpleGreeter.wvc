@@ -1,1 +1,11 @@
+---
+class Greeter extends BaseWebViewComponent {
+    String target
+
+    Greeter(Map attr) {
+        super('Hello, $target!')
+        this.target = attr.target
+    }
+}
+---
 <Greeter target='World' />

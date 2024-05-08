@@ -4,7 +4,6 @@ import groowt.view.web.ast.node.*;
 import groowt.view.web.transpile.TranspilerUtil.TranspilerState;
 import groowt.view.web.transpile.util.GroovyUtil;
 import groowt.view.web.transpile.util.GroovyUtil.ConvertResult;
-import jakarta.inject.Inject;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -14,8 +13,9 @@ import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.jetbrains.annotations.Nullable;
 
-import static groowt.view.web.transpile.TranspilerUtil.makeStringLiteral;
+import static groowt.view.web.transpile.TranspilerUtil.getStringLiteral;
 
+// TODO: set positions
 public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
 
     private final ComponentTranspiler componentTranspiler;
@@ -32,6 +32,7 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
             throw new IllegalStateException("block statement is null or empty");
         }
         final ExpressionStatement exprStmt = (ExpressionStatement) blockStatement.getStatements().getFirst();
+        // TODO: set pos
         return (ClosureExpression) exprStmt.getExpression();
     }
 
@@ -43,25 +44,26 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
             throw new IllegalStateException("block statement is null or empty");
         }
         final ExpressionStatement exprStmt = (ExpressionStatement) blockStatement.getStatements().getFirst();
+        // TODO: set pos
         return exprStmt.getExpression();
     }
 
     private ConstantExpression jStringValue(JStringValueNode jStringValueNode) {
-        return makeStringLiteral(jStringValueNode.getContent());
+        return getStringLiteral(jStringValueNode.getContent()); // TODO: set pos
     }
 
     private ClosureExpression emptyClosureValue(EmptyClosureValueNode emptyClosureValueNode) {
-        return new ClosureExpression(Parameter.EMPTY_ARRAY, EmptyStatement.INSTANCE);
+        return new ClosureExpression(Parameter.EMPTY_ARRAY, EmptyStatement.INSTANCE); // TODO: set pos
     }
 
     private ClosureExpression componentValue(ComponentValueNode componentValueNode, TranspilerState state) {
         return new ClosureExpression(
                 Parameter.EMPTY_ARRAY,
-                this.componentTranspiler.createComponentStatements(
+                new BlockStatement(this.componentTranspiler.createComponentStatements(
                         componentValueNode.getComponentNode(),
                         state
-                )
-        );
+                ), state.getCurrentScope())
+        ); // TODO: set pos
     }
 
     @Override

@@ -1,11 +1,20 @@
 package groowt.view.web.compiler;
 
-import groowt.view.component.ComponentTemplate;
-import groowt.view.component.compiler.ComponentTemplateCompileErrorException;
+import groowt.view.component.compiler.ComponentTemplateCompileException;
+import groowt.view.component.compiler.ComponentTemplateCompileResult;
 import groowt.view.component.compiler.ComponentTemplateCompiler;
-import groowt.view.component.factory.ComponentTemplateSource;
+import groowt.view.component.compiler.source.ComponentTemplateSource;
 
-public interface WebViewComponentTemplateCompiler extends ComponentTemplateCompiler {
-    ComponentTemplateCompileResult compileAnonymous(ComponentTemplateSource source) throws ComponentTemplateCompileErrorException;
-    ComponentTemplate compileAndGetAnonymous(ComponentTemplateSource source) throws ComponentTemplateCompileErrorException;
+public interface WebViewComponentTemplateCompiler
+        extends ComponentTemplateCompiler<WebViewComponentTemplateCompileUnit> {
+
+    default ComponentTemplateCompileResult compileAnonymous(ComponentTemplateSource source, String packageName)
+            throws ComponentTemplateCompileException {
+        return this.compile(new WebViewComponentTemplateCompileUnit(
+                AnonymousWebViewComponent.class,
+                source,
+                packageName
+        ));
+    }
+
 }

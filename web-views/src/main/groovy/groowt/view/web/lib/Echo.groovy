@@ -3,8 +3,7 @@ package groowt.view.web.lib
 import groowt.view.View
 import groowt.view.component.context.ComponentContext
 import groowt.view.component.factory.ComponentFactory
-import groowt.view.component.ComponentRenderException
-import groowt.view.web.WebViewChildComponentRenderer
+import groowt.view.web.runtime.WebViewComponentChildCollector
 
 class Echo extends DelegatingWebViewComponent {
 
@@ -12,95 +11,50 @@ class Echo extends DelegatingWebViewComponent {
 
     protected static class EchoFactory implements ComponentFactory<Echo> {
 
-        Echo doCreate(String typeName) {
-            doCreate(typeName, [:], true)
+        protected Echo doCreate() {
+            new Echo([:], [])
         }
 
-        Echo doCreate(String typeName, boolean selfClose) {
-            doCreate(typeName, [:], selfClose)
+        protected Echo doCreate(Map attr) {
+            new Echo(attr, [])
         }
 
-        Echo doCreate(String typeName, Map<String, Object> attr) {
-            doCreate(typeName, attr, true)
+        protected Echo doCreate(WebViewComponentChildCollector childCollector) {
+            new Echo([:], childCollector.children)
         }
 
-        Echo doCreate(String typeName, Map<String, Object> attr, boolean selfClose) {
-            new Echo(attr, typeName, selfClose)
-        }
-
-        Echo doCreate(
-                String typeName,
-                Map<String, Object> attr,
-                List<WebViewChildComponentRenderer> children
-        ) {
-            def echo = new Echo(attr, typeName, false)
-            echo.childRenderers = children
-            echo
+        protected Echo doCreate(Map attr, WebViewComponentChildCollector childCollector) {
+            new Echo(attr, childCollector.children)
         }
 
         @Override
-        Echo create(String type, ComponentContext componentContext, Object... args) {
-            this.doCreate(type, *args) as Echo
+        Echo create(String typeName, ComponentContext componentContext, Object... args) {
+            throw new UnsupportedOperationException('Cannot create Echo for string type components')
         }
 
         @Override
-        Echo create(Class<?> type, ComponentContext componentContext, Object... args) {
-            throw new UnsupportedOperationException('<Echo> can only be used with String types.')
+        Echo create(String alias, Class<?> type, ComponentContext componentContext, Object... args) {
+            this.doCreate(*args)
         }
 
     }
 
-    String name
-    boolean selfClose
+    Map attr
 
-    Echo(Map<String, Object> attr, String name, boolean selfClose) {
-        super(attr)
-        this.name = name
-        this.selfClose = selfClose
+    Echo(Map attr, List children) {
+        this.attr = attr
+        this.children = children
+    }
+
+    Object propertyMissing(String propertyName) {
+        attr[propertyName]
     }
 
     @Override
     protected View getDelegate() {
-        if (this.selfClose && this.hasChildren()) {
-            throw new ComponentRenderException('Cannot have selfClose set to true and have children.')
-        }
         return {
-            it << '<'
-            it << this.name
-            if (!this.attr.isEmpty()) {
-                it << ' '
-                formatAttr(it)
-            }
-            if (this.selfClose) {
-                it << ' /'
-            }
-            it << '>'
-            if (this.hasChildren()) {
-                this.renderChildren() // TODO: fix this
-            }
-            if (this.hasChildren() || !this.selfClose) {
-                it << '</'
-                it << this.name
-                it << '>'
-            }
-        }
-    }
-
-    protected void formatAttr(Writer writer) {
-        def iter = this.attr.iterator()
-        while (iter.hasNext()) {
-            def entry = iter.next()
-            writer << entry.key
-            def value = entry.value
-            if (value instanceof Boolean) {
-                // no-op, because we already wrote the key
-            } else {
-                writer << '="'
-                writer << value
-                writer << '"'
-            }
-            if (iter.hasNext()) {
-                writer << ' '
+            this.children.each {
+                it.render(this)
             }
         }
     }

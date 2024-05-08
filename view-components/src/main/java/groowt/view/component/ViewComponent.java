@@ -5,10 +5,6 @@ import groowt.view.component.context.ComponentContext;
 
 public interface ViewComponent extends View {
 
-    default String getTypeName() {
-        return this.getClass().getName();
-    }
-
     /**
      * <em>Note:</em> compiled templates are required to automatically
      * call this method after the component is constructed. One

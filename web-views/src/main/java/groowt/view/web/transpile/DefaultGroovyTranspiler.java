@@ -1,28 +1,32 @@
 package groowt.view.web.transpile;
 
-import groowt.view.web.antlr.TokenList;
+import groovy.transform.Field;
+import groowt.view.component.compiler.ComponentTemplateCompileException;
+import groowt.view.component.compiler.ComponentTemplateCompilerConfiguration;
+import groowt.view.web.WebViewComponentBugError;
 import groowt.view.web.ast.node.BodyNode;
 import groowt.view.web.ast.node.CompilationUnitNode;
 import groowt.view.web.ast.node.PreambleNode;
+import groowt.view.web.compiler.MultipleWebViewComponentCompileErrorsException;
+import groowt.view.web.compiler.WebViewComponentTemplateCompileException;
+import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit;
+import groowt.view.web.runtime.DefaultWebViewComponentRenderContext;
+import groowt.view.web.transpile.resolve.ClassLoaderComponentClassNodeResolver;
 import groowt.view.web.transpile.util.GroovyUtil;
 import org.codehaus.groovy.ast.*;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.control.io.ReaderSource;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static groowt.view.web.transpile.TranspilerUtil.*;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -38,34 +42,18 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultGroovyTranspiler.class);
 
-    private final CompilationUnit groovyCompilationUnit;
-    private final String defaultPackageName;
-    private final Supplier<? extends TranspilerConfiguration> configurationSupplier;
+    private static final ClassNode FIELD_ANNOTATION = ClassHelper.make(Field.class);
+    private static final ClassNode RENDER_CONTEXT_IMPLEMENTATION =
+            ClassHelper.make(DefaultWebViewComponentRenderContext.class);
 
-    public DefaultGroovyTranspiler(
-            CompilationUnit groovyCompilationUnit,
-            @Nullable String defaultPackageName,
-            Supplier<? extends TranspilerConfiguration> configurationSupplier
+    protected TranspilerConfiguration getConfiguration(
+            WebViewComponentTemplateCompileUnit compileUnit,
+            ModuleNode moduleNode,
+            ClassLoader classLoader
     ) {
-        this.groovyCompilationUnit = groovyCompilationUnit;
-        this.defaultPackageName = defaultPackageName;
-        this.configurationSupplier = configurationSupplier;
-    }
-
-    protected TranspilerConfiguration getConfiguration() {
-        return this.configurationSupplier.get();
-    }
-
-    public @NotNull String getDefaultPackageName() {
-        return this.defaultPackageName != null ? this.defaultPackageName : GROOWT_VIEW_WEB;
-    }
-
-    protected @NotNull String getPackageName(ModuleNode moduleNode) {
-        if (moduleNode.hasPackageName()) {
-            return moduleNode.getPackageName();
-        } else {
-            return this.getDefaultPackageName();
-        }
+        return new DefaultTranspilerConfiguration(new ClassLoaderComponentClassNodeResolver(
+                compileUnit, moduleNode, classLoader
+        ));
     }
 
     protected void checkPreambleClasses(String templateName, List<ClassNode> classNodes) {
@@ -81,7 +69,10 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         }
     }
 
-    protected List<InnerClassNode> convertPreambleClassesToInnerClasses(ClassNode mainClassNode, List<ClassNode> classNodes) {
+    protected List<InnerClassNode> convertPreambleClassesToInnerClasses(
+            ClassNode mainClassNode,
+            List<ClassNode> classNodes
+    ) {
         final List<InnerClassNode> result = new ArrayList<>();
         for (final var classNode : classNodes) {
             if (classNode instanceof InnerClassNode innerClassNode) {
@@ -102,18 +93,23 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
     }
 
     protected void handlePreamble(
-            String templateName,
+            String templateClassName,
             PreambleNode preambleNode,
             ClassNode mainClassNode,
             WebViewComponentModuleNode moduleNode
     ) {
-        final GroovyUtil.ConvertResult preambleConvert = GroovyUtil.convert(
+        final GroovyUtil.ConvertResult convertResult = GroovyUtil.convert(
                 preambleNode.getGroovyCode().getAsValidGroovyCode()
         );
 
-        WebViewComponentModuleNode.copyTo(preambleConvert.moduleNode(), moduleNode);
+        WebViewComponentModuleNode.copyTo(convertResult.moduleNode(), moduleNode);
 
-        final BlockStatement preambleBlock = preambleConvert.blockStatement();
+        if (convertResult.moduleNode().hasPackage()) {
+            moduleNode.setPackage(convertResult.moduleNode().getPackage());
+            mainClassNode.setName(moduleNode.getPackageName() + "." + templateClassName);
+        }
+
+        final BlockStatement preambleBlock = convertResult.blockStatement();
         if (preambleBlock != null) {
             // Fields
             final List<Statement> preambleStatements = preambleBlock.getStatements();
@@ -133,7 +129,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                                 "Currently, only classes, methods, and field declarations " +
                                 "(marked with @groovy.transform.Field) " +
                                 "are supported. The rest will be ignored.",
-                        templateName
+                        templateClassName
                 );
             }
             declarationsWithField.forEach(declaration -> {
@@ -142,16 +138,16 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         }
 
         // move methods from script class
-        final ClassNode scriptClass = preambleConvert.scriptClass();
+        final ClassNode scriptClass = convertResult.scriptClass();
         if (scriptClass != null) {
             scriptClass.getMethods().forEach(mainClassNode::addMethod);
         }
 
         // handle classes
-        final List<ClassNode> classNodes = preambleConvert.classNodes();
-        this.checkPreambleClasses(templateName, classNodes);
+        final List<ClassNode> classNodes = convertResult.classNodes();
+        this.checkPreambleClasses(templateClassName, classNodes);
         final List<ClassNode> toInner = classNodes.stream()
-                .filter(classNode -> classNode != preambleConvert.scriptClass())
+                .filter(classNode -> classNode != convertResult.scriptClass())
                 .filter(classNode -> !classNode.isScript())
                 .toList();
         final List<InnerClassNode> innerClassNodes = this.convertPreambleClassesToInnerClasses(mainClassNode, toInner);
@@ -164,30 +160,35 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
     // - preamble with script -> use the script class from the converted preamble,
     // and don't forget to call run in our render method
     @Override
-    public void transpile(
+    public WebViewComponentSourceUnit transpile(
+            ComponentTemplateCompilerConfiguration compilerConfiguration,
+            WebViewComponentTemplateCompileUnit compileUnit,
             CompilationUnitNode compilationUnitNode,
-            TokenList tokens,
-            String ownerComponentName,
-            ReaderSource readerSource
-    ) {
-        final var configuration = this.getConfiguration();
-        final String templateName = ownerComponentName + "Template";
-
+            String templateClassName
+    ) throws ComponentTemplateCompileException {
+        final var groovyCompilerConfiguration = compilerConfiguration.getGroovyCompilerConfiguration();
         final var sourceUnit = new WebViewComponentSourceUnit(
-                templateName,
-                readerSource,
-                this.groovyCompilationUnit.getConfiguration(),
-                this.groovyCompilationUnit.getClassLoader(),
-                this.groovyCompilationUnit.getErrorCollector()
+                templateClassName,
+                compileUnit,
+                groovyCompilerConfiguration,
+                compilerConfiguration.getGroovyClassLoader(),
+                new ErrorCollector(groovyCompilerConfiguration)
         );
+
         final var moduleNode = new WebViewComponentModuleNode(sourceUnit);
         sourceUnit.setModuleNode(moduleNode);
 
-        final String packageName = this.getPackageName(moduleNode);
-        moduleNode.setPackageName(packageName);
+        moduleNode.setPackageName(compileUnit.getDefaultPackageName());
+
+        moduleNode.addStarImport(GROOWT_VIEW_WEB + ".lib");
+        moduleNode.addImport(COMPONENT_TEMPLATE.getNameWithoutPackage(), COMPONENT_TEMPLATE);
+        moduleNode.addImport(COMPONENT_CONTEXT_TYPE.getNameWithoutPackage(), COMPONENT_CONTEXT_TYPE);
+        moduleNode.addImport(WEB_VIEW_COMPONENT_TYPE.getNameWithoutPackage(), WEB_VIEW_COMPONENT_TYPE);
+        moduleNode.addStarImport("groowt.view.component.runtime");
+        moduleNode.addStarImport(GROOWT_VIEW_WEB + ".runtime");
 
         final ClassNode mainClassNode = new ClassNode(
-                packageName + "." + templateName,
+                compileUnit.getDefaultPackageName() + "." + templateClassName,
                 ACC_PUBLIC,
                 ClassHelper.OBJECT_TYPE
         );
@@ -199,15 +200,73 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         // preamble
         final PreambleNode preambleNode = compilationUnitNode.getPreambleNode();
         if (preambleNode != null) {
-            this.handlePreamble(templateName, preambleNode, mainClassNode, moduleNode);
+            this.handlePreamble(templateClassName, preambleNode, mainClassNode, moduleNode);
         }
 
-        // renderer
-        final var renderBlock = new BlockStatement();
+        // getRenderer
+        // params
+        final Parameter componentContextParam = new Parameter(COMPONENT_CONTEXT_TYPE, COMPONENT_CONTEXT_NAME);
+        final Parameter writerParam = new Parameter(COMPONENT_WRITER_TYPE, COMPONENT_WRITER_NAME);
+        final VariableExpression renderContextVariable = new VariableExpression(
+                RENDER_CONTEXT_NAME,
+                RENDER_CONTEXT_TYPE
+        );
 
-        final TranspilerState state = TranspilerState.withDefaultRootScope();
-        renderBlock.setVariableScope(state.currentScope());
+        // closure body
+        final BlockStatement renderBlock = new BlockStatement();
 
+        final TranspilerState state = TranspilerState.withRootScope(
+                componentContextParam,
+                writerParam,
+                renderContextVariable
+        );
+        renderBlock.setVariableScope(state.getCurrentScope());
+
+        // init: construct RenderContext
+        final ConstructorCallExpression renderContextConstructor = new ConstructorCallExpression(
+                RENDER_CONTEXT_IMPLEMENTATION,
+                new ArgumentListExpression(
+                        new VariableExpression(componentContextParam), // component context
+                        new VariableExpression(writerParam)
+                )
+        );
+        final BinaryExpression renderContextAssignExpr = new DeclarationExpression(
+                renderContextVariable,
+                getAssignToken(),
+                renderContextConstructor
+        );
+        renderBlock.addStatement(new ExpressionStatement(renderContextAssignExpr));
+
+        // init: componentContext.renderContext = renderContext
+        final BinaryExpression componentContextRenderContextAssign = new BinaryExpression(
+                new PropertyExpression(new VariableExpression(componentContextParam), "renderContext"),
+                getAssignToken(),
+                renderContextVariable
+        );
+        renderBlock.addStatement(new ExpressionStatement(componentContextRenderContextAssign));
+
+        // init: writer.renderContext = renderContext
+        final BinaryExpression writerRenderContextAssign = new BinaryExpression(
+                new PropertyExpression(new VariableExpression(writerParam), "renderContext"),
+                getAssignToken(),
+                renderContextVariable
+        );
+        renderBlock.addStatement(new ExpressionStatement(writerRenderContextAssign));
+
+        // init: writer.componentContext = componentContext
+        final BinaryExpression writerComponentContextAssign = new BinaryExpression(
+                new PropertyExpression(new VariableExpression(writerParam), "componentContext"),
+                getAssignToken(),
+                new VariableExpression(componentContextParam)
+        );
+        renderBlock.addStatement(new ExpressionStatement(writerComponentContextAssign));
+
+        // actual rendering of body
+        final var configuration = this.getConfiguration(
+                compileUnit,
+                moduleNode,
+                compilerConfiguration.getGroovyClassLoader()
+        );
         final BodyNode bodyNode = compilationUnitNode.getBodyNode();
         if (bodyNode != null) {
             final var appendOrAddStatementFactory = configuration.getAppendOrAddStatementFactory();
@@ -215,22 +274,26 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                     configuration.getBodyTranspiler()
                             .transpileBody(
                                     compilationUnitNode.getBodyNode(),
-                                    (source, expr) -> appendOrAddStatementFactory.addOrAppend(source, state, action -> {
-                                        if (action == AppendOrAddStatementFactory.Action.ADD) {
-                                            throw new IllegalStateException("Should not be adding here!");
-                                        }
-                                        return expr;
-                                    }),
-                                    state
+                                    (source, expr) -> appendOrAddStatementFactory.addOrAppend(
+                                            source,
+                                            state,
+                                            action -> {
+                                                if (action == AppendOrAddStatementFactory.Action.ADD) {
+                                                    throw new WebViewComponentBugError(new IllegalStateException(
+                                                            "Should not be adding from document root!"
+                                                    ));
+                                                }
+                                                return expr;
+                                            }),
+                                            state
                             )
             );
         }
 
+        renderBlock.addStatement(new ReturnStatement(ConstantExpression.NULL));
+
         final ClosureExpression renderer = new ClosureExpression(
-                new Parameter[] {
-                        (Parameter) state.context(),
-                        (Parameter) state.out()
-                },
+                new Parameter[] { componentContextParam, writerParam },
                 renderBlock
         );
 
@@ -250,7 +313,16 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         );
         mainClassNode.addMethod(getRenderer);
 
-        this.groovyCompilationUnit.addSource(sourceUnit);
+        if (state.hasErrors()) {
+            final List<ComponentTemplateCompileException> errors = state.getErrors();
+            if (errors.size() == 1) {
+                throw new WebViewComponentTemplateCompileException(compileUnit, errors.getFirst());
+            } else {
+                throw new MultipleWebViewComponentCompileErrorsException(compileUnit, errors);
+            }
+        }
+
+        return sourceUnit;
     }
 
 }

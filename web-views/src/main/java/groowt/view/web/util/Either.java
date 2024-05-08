@@ -1,28 +1,43 @@
 package groowt.view.web.util;
 
+import java.util.function.Function;
+
 public sealed interface Either<E, T> {
 
     @SuppressWarnings("unchecked")
     static <E, T> Either<E, T> left(E error) {
-        return (Either<E, T>) new Left<>((Class<E>) error.getClass(), error);
+        return (Either<E, T>) new Left<>(error);
     }
 
     @SuppressWarnings("unchecked")
     static <E, T> Either<E, T> right(T item) {
-        return (Either<E, T>) new Right<>((Class<T>) item.getClass(), item);
+        return (Either<E, T>) new Right<>(item);
     }
 
-    record Left<E>(Class<E> errorClass, E error) implements Either<E, Object> {
+    final class Left<E> implements Either<E, Object> {
+
+        private final E error;
+
+        public Left(E error) {
+            this.error = error;
+        }
 
         public E get() {
-            return this.errorClass.cast(this.error);
+            return this.error;
         }
+
     }
 
-    record Right<T>(Class<T> itemClass, T item) implements Either<Object, T> {
+    final class Right<T> implements Either<Object, T> {
+
+        private final T item;
+
+        public Right(T item) {
+            this.item = item;
+        }
 
         public T get() {
-            return this.itemClass.cast(this.item);
+            return this.item;
         }
 
     }
@@ -43,6 +58,33 @@ public sealed interface Either<E, T> {
     @SuppressWarnings("unchecked")
     default Right<T> asRight() {
         return (Right<T>) this;
+    }
+
+    default E getLeft() {
+        return this.asLeft().get();
+    }
+
+    default T getRight() {
+        return this.asRight().get();
+    }
+
+    @SuppressWarnings("unchecked")
+    default Either<E, T> mapLeft(Function<? super E, ? extends T> onLeft) {
+        if (this.isLeft()) {
+            return (Either<E, T>) new Right<>(onLeft.apply(this.getLeft()));
+        } else {
+            return this;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    default Either<E, T> flatMapLeft(Function<? super E, Either<E, ? extends T>> onLeft) {
+        if (this.isLeft()) {
+            final var error = this.getLeft();
+            return (Either<E, T>) onLeft.apply(error);
+        } else {
+            return this;
+        }
     }
 
 }

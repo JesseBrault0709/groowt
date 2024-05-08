@@ -63,7 +63,7 @@ public class DefaultAppendOrAddStatementFactory implements AppendOrAddStatementF
         return this.doCreate(
                 bodyChildNode,
                 rightSide,
-                new VariableExpression(state.out()),
+                new VariableExpression(state.getWriter()),
                 TranspilerUtil.APPEND,
                 true
         );

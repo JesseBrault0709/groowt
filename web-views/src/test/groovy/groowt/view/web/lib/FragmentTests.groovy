@@ -1,35 +1,33 @@
 package groowt.view.web.lib
 
-import groowt.view.component.context.ComponentContext
-import groowt.view.web.DefaultWebViewComponent
-import groowt.view.web.DefaultWebViewComponentContext
-import groowt.view.component.factory.ComponentTemplateSource
+import groowt.view.web.BaseWebViewComponent
+import groowt.view.web.WebViewComponentContext
 import org.junit.jupiter.api.Test
 
 import static groowt.view.web.WebViewComponentFactories.withAttr
 
 class FragmentTests extends AbstractWebViewComponentTests {
 
-    static class Greeter extends DefaultWebViewComponent {
+    static class Greeter extends BaseWebViewComponent {
 
         String greeting
 
         Greeter(Map<String, Object> attr) {
-            super(ComponentTemplateSource.of('$greeting'))
+            super('$greeting')
             greeting = attr.greeting
         }
 
     }
 
-    private final ComponentContext greeterContext = new DefaultWebViewComponentContext().tap {
-        pushDefaultScope()
-        def greeterFactory = withAttr(Greeter.&new)
-        currentScope.add('Greeter', greeterFactory)
+    @Override
+    void configureContext(WebViewComponentContext context) {
+        def greeterFactory = withAttr(Greeter, Greeter.&new)
+        context.currentScope.add(Greeter, greeterFactory)
     }
 
     @Test
     void simple() {
-        this.doTest('<><Greeter greeting="Hello, World!" /></>', 'Hello, World!', this.greeterContext)
+        this.doTest('<><FragmentTests.Greeter greeting="Hello, World!" /></>', 'Hello, World!')
     }
 
     @Test
@@ -37,9 +35,9 @@ class FragmentTests extends AbstractWebViewComponentTests {
         this.doTest(
                 '''
                 <>
-                    <Greeter greeting='Hello, one!' />&nbsp;<Greeter greeting='Hello, two!' />
+                    <FragmentTests.Greeter greeting='Hello, one!' />&nbsp;<FragmentTests.Greeter greeting='Hello, two!' />
                 </>
-                '''.stripIndent(), 'Hello, one!&nbsp;Hello, two!', this.greeterContext
+                '''.stripIndent(), 'Hello, one!&nbsp;Hello, two!'
         )
     }
 

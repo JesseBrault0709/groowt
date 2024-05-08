@@ -1,48 +1,52 @@
 package groowt.view.component.context;
 
-import groovy.lang.Closure;
 import groowt.view.component.ViewComponent;
 import groowt.view.component.factory.ComponentFactory;
 
 public interface ComponentScope {
 
-    void add(String name, ComponentFactory<?> factory);
-    boolean contains(String name);
-    void remove(String name);
-    ComponentFactory<?> get(String name);
+    record TypeAndFactory<T extends ViewComponent>(Class<? extends T> type, ComponentFactory<? extends T> factory) {}
 
-    default ComponentFactory<?> factoryMissing(String typeName) {
-        throw new NoFactoryMissingException(this.getClass().getName() + " does not support factoryMissing()");
+    //---- string types
+
+    <T extends ViewComponent> void add(String typeName, Class<T> forClass, ComponentFactory<? extends T> factory);
+
+    boolean contains(String typeName);
+
+    void remove(String typeName);
+
+    TypeAndFactory<?> get(String typeName);
+
+    default TypeAndFactory<?> factoryMissing(String typeName) throws ComponentResolveException {
+        throw new FactoryMissingUnsupportedException(
+                this.getClass().getName() + " does not support factoryMissing() for string types.",
+                typeName
+        );
     }
 
-    default <T extends ViewComponent> void add(Class<T> clazz, ComponentFactory<T> factory) {
-        this.add(clazz.getName(), factory);
-    }
+    //---- class types
 
-    default boolean contains(Class<? extends ViewComponent> clazz) {
-        return this.contains(clazz.getName());
-    }
+    <T extends ViewComponent> void add(Class<T> forClass, ComponentFactory<? extends T> factory);
 
-    @SuppressWarnings("unchecked")
-    default <T extends ViewComponent> ComponentFactory<T> get(Class<T> clazz) {
-        return (ComponentFactory<T>) this.get(clazz.getName());
-    }
+    <T extends ViewComponent> void add(
+            Class<T> publicType,
+            Class<? extends T> implementingType,
+            ComponentFactory<? extends T> factory
+    );
 
-    default void remove(Class<? extends ViewComponent> clazz) {
-        this.remove(clazz.getName());
-    }
+    boolean contains(Class<? extends ViewComponent> type);
 
-    @SuppressWarnings("unchecked")
-    default <T extends ViewComponent> ComponentFactory<T> factoryMissing(Class<T> clazz) {
-        return (ComponentFactory<T>) this.factoryMissing(clazz.getName());
-    }
+    <T extends ViewComponent> TypeAndFactory<T> get(Class<T> type);
 
-    default void add(String name, Closure<? extends ViewComponent> closure) {
-        this.add(name, ComponentFactory.ofClosure(closure));
-    }
+    void remove(Class<? extends ViewComponent> type);
 
-    default <T extends ViewComponent> void add(Class<T> type, Closure<? extends T> closure) {
-        this.add(type, ComponentFactory.ofClosure(closure));
+    default <T extends ViewComponent> TypeAndFactory<?> factoryMissing(String typeName, Class<T> type)
+            throws ComponentResolveException {
+        throw new FactoryMissingUnsupportedException(
+                this.getClass().getName() + " does not support factoryMissing() for class component types.",
+                typeName,
+                type
+        );
     }
 
 }

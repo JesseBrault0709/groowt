@@ -1,0 +1,130 @@
+= Component Template Specification
+
+== Compiled Component Template Code
+
+The following code represents a typical (transpiled) component template:
+
+[source, groovy]
+----
+package com.jessebrault.website
+
+import groowt.view.component.ComponentTemplate
+import groowt.view.component.context.ComponentContext
+import groowt.view.component.runtime.*
+import groowt.view.web.WebViewComponent
+import groowt.view.web.lib.*
+import groowt.view.web.runtime.*
+
+class MyComponentTemplate implements ComponentTemplate {
+
+    Closure getRenderer() {
+        return { ComponentContext componentContext, ComponentWriter out ->
+            // <1>
+            final RenderContext renderContext = new DefaultWebViewComponentRenderContext(componentContext, out)
+            componentContext.setRenderContext(renderContext)
+            out.setRenderContext(renderContext)
+            out.setComponentContext(renderContext)
+
+            out.append 'Hello from simple text!' // <2>
+
+            out.append "Hello from GString!" // <3>
+
+            // <4>
+            ComponentContext.Resolved c0Resolved // <5>
+            try {
+                c0Resolved = renderContext.resolve('MySubComponent', MySubComponent) // <6>
+            } catch (ComponentResolveException c0ResolveException) { // <7>
+                c0ResolveException.template = this
+                c0ResolveException.line = 1
+                c0ResolveException.column = 1
+                throw c0ResolveException
+            }
+
+            WebViewComponent c0 // <8>
+            try {
+                c0 = renderContext.create( // <9>
+                        c0Resolved,
+                        [greeting: 'Hello, World!'],
+                        "Some constructor arg",
+                        WebViewComponentChildCollectorClosure.get(this) { c0cc ->
+                            c0cc.add 'JString child.' // <10>
+                            c0cc.add "GString child"
+
+                            ComponentContext.Resolved c1Resolved
+                            try {
+                                c1Resolved = renderContext.resolve('h1') // <11>
+                            } catch (ComponentResolveException c1ResolveException) {
+                                c1ResolveException.type = IntrinsicHtml // <12>
+                                c1ResolveException.template = this
+                                c1ResolveException.line = 1
+                                c1ResolveException.column = 10
+                                throw c1ResolveException
+                            }
+
+                            WebViewComponent c1
+                            try {
+                                c1 = renderContext.create(
+                                        c1_resolved,
+                                        WebViewComponentChildCollectorClosure.get(this) { c1cc ->
+                                            c1cc.add "$greeting"
+                                        }
+                                )
+                            } catch (ComponentCreateException c1CreateException) {
+                                c1CreateException.template = this
+                                c1CreateException.line = 1
+                                c1CreateException.column = 1
+                            }
+
+                            c0cc.add c1
+                        }
+                )
+            } catch (ComponentCreateException c0CreateException) {
+                c0CreateException.template = this
+                c0CreateException.line = 1
+                c0CreateException.column = 1
+                throw c0CreateException
+            }
+
+            // append it
+            out.append c0
+        }
+    }
+}
+----
+<1> Initialize the contexts.
+<2> Appending a plain old java string (jstring) to `out`.
+<3> Appending a GString to `out`.
+<4> Now begins a component 'block', where a component is resolved, created, and either rendered or appended
+    to a child collector (see below).
+<5> First, we define the `resolved` variable, of the type `ComponentContext.Resolved`.
+<6> Resolve it from the context.
+<7> If the context cannot resolve the component, it should throw a `ComponentResolveException`. We catch it
+    here in order to set the template (`this`), line, and column information for debugging purposes.
+<8> Now we can start to create the component by first defining a variable for it.
+<9> The create function takes a few things:
+. The relevant instance of `ComponentContext.Resolved`.
+. Any attributes for the component, passed as a `Map`.
+. Any arguments from the component constructor.
+. A `WebViewComponentChildCollectorClosure`, which is a 'marker' subclass of `Closure`
+(so that constructor args ending with a closure don't get confused), which simply collects
+the children of the component.
+<10> For children, we add the value of the child, rather than appending it directly to `out`.
+The collector itself will be given the `out` writer from the `context`, which will then
+supply the parent with the ability to render to out. This way the parent doesn't ever have to worry about `out` itself
+(though if the parent wants access to `out` (for example, it is using a non-wvc template) it can access the out writer
+from the context).
+<11> Here, a string type is passed, since all lowercase type names are treated as string types in web view components.
+<12> Because this is an intrinsic html element, we set the type here.
+<13> Finally, our child component is added as a `Closure` which accepts the component back again and appends
+it to out.
+
+== Items requiring Groovy ASTNode position adjustment
+
+The following items all need to have their transpiled Groovy ASTNodes' positions adjusted to match the original source
+file, in case there is a Groovy compilation error involved.
+
+* JStrings
+* GStrings
+* Component types (Class and String expressions)
+* Attribute keys and values
+* Component constructor args

@@ -94,13 +94,14 @@ public abstract class ComponentFactoryBase<T extends ViewComponent> extends Groo
     }
 
     @Override
-    public T create(String type, ComponentContext componentContext, Object... args) {
-        return this.findAndDoCreate(type, componentContext, args);
+    public T create(String typeName, ComponentContext componentContext, Object... args) {
+        throw new UnsupportedOperationException();
     }
 
+    // TODO: this needs to be updated.
     @Override
-    public T create(Class<?> type, ComponentContext componentContext, Object... args) {
-        return this.findAndDoCreate(type, componentContext, args);
+    public T create(String alias, Class<?> type, ComponentContext componentContext, Object... args) {
+        throw new UnsupportedOperationException();
     }
 
 }
