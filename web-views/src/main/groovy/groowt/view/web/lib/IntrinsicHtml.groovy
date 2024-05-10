@@ -5,7 +5,6 @@ import groowt.view.component.ComponentRenderException
 import groowt.view.component.context.ComponentContext
 import groowt.view.component.context.ComponentScope.TypeAndFactory
 import groowt.view.component.factory.ComponentFactory
-import groowt.view.web.WebViewComponentChild
 import groowt.view.web.util.WithHtml
 
 class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
@@ -26,27 +25,13 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
             new IntrinsicHtml([:], typeName, typeName in voidElements)
         }
 
-        IntrinsicHtml doCreate(String typeName, boolean selfClose) {
-            new IntrinsicHtml([:], typeName, selfClose)
-        }
-
         IntrinsicHtml doCreate(String typeName, Map<String, Object> attr) {
             new IntrinsicHtml(attr, typeName, typeName in voidElements)
         }
 
-        IntrinsicHtml doCreate(String typeName, Map<String, Object> attr, boolean selfClose) {
-            new IntrinsicHtml(attr, typeName, selfClose)
-        }
-
-        IntrinsicHtml doCreate(String typeName, Map<String, Object> attr, List<WebViewComponentChild> children) {
-            def intrinsicHtml = new IntrinsicHtml(attr, typeName, typeName in voidElements)
-            intrinsicHtml.children = children
-            intrinsicHtml
-        }
-
         @Override
         IntrinsicHtml create(String typeName, ComponentContext componentContext, Object... args) {
-            return this.doCreate(typeName, componentContext, *args)
+            return this.doCreate(typeName, *args)
         }
 
         @Override
@@ -58,18 +43,18 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
 
     Map attr
     String name
-    boolean selfClose
+    boolean isVoidElement
 
-    IntrinsicHtml(Map attr, String elementName, boolean selfClose) {
+    IntrinsicHtml(Map attr, String elementName, boolean isVoidElement) {
         this.attr = attr
         this.name = elementName
-        this.selfClose = selfClose
+        this.isVoidElement = isVoidElement
     }
 
     @Override
     protected View getDelegate() {
-        if (this.selfClose && this.hasChildren()) {
-            throw new ComponentRenderException('Cannot have selfClose set to true and have children.')
+        if (this.isVoidElement && this.hasChildren()) {
+            throw new ComponentRenderException('A void html element cannot have children.')
         }
         return {
             it << '<'
@@ -78,9 +63,6 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
                 it << ' '
                 this.formatAttr(it)
             }
-            if (this.selfClose) {
-                it << ' /'
-            }
             it << '>'
             if (this.hasChildren()) {
                 this.children.each {
@@ -88,7 +70,7 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
                     renderer.call(it.child)
                 }
             }
-            if (this.hasChildren() || !this.selfClose) {
+            if (!this.isVoidElement) {
                 it << '</'
                 it << this.name
                 it << '>'

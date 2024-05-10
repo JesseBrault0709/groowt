@@ -3,7 +3,6 @@ package groowt.view.web.lib
 import groowt.view.View
 import groowt.view.component.context.ComponentContext
 import groowt.view.component.factory.ComponentFactory
-import groowt.view.web.runtime.WebViewComponentChildCollector
 
 class Echo extends DelegatingWebViewComponent {
 
@@ -12,19 +11,11 @@ class Echo extends DelegatingWebViewComponent {
     protected static class EchoFactory implements ComponentFactory<Echo> {
 
         protected Echo doCreate() {
-            new Echo([:], [])
+            new Echo([:])
         }
 
         protected Echo doCreate(Map attr) {
-            new Echo(attr, [])
-        }
-
-        protected Echo doCreate(WebViewComponentChildCollector childCollector) {
-            new Echo([:], childCollector.children)
-        }
-
-        protected Echo doCreate(Map attr, WebViewComponentChildCollector childCollector) {
-            new Echo(attr, childCollector.children)
+            new Echo(attr)
         }
 
         @Override
@@ -41,13 +32,17 @@ class Echo extends DelegatingWebViewComponent {
 
     Map attr
 
-    Echo(Map attr, List children) {
+    Echo(Map attr) {
         this.attr = attr
-        this.children = children
     }
 
-    Object propertyMissing(String propertyName) {
-        attr[propertyName]
+    @Override
+    Object getProperty(String propertyName) {
+        try {
+            return super.getProperty(propertyName)
+        } catch (MissingPropertyException ignored) {
+            return attr[propertyName]
+        }
     }
 
     @Override
