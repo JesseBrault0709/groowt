@@ -22,8 +22,8 @@ class IntrinsicHtmlTests extends AbstractWebViewComponentTests {
 
     @Test
     @Disabled('Until we figure out nested closure delegates')
-    void canUseEchoAttrProperty() {
-        this.doTest('<Echo greeting="Hello!"><p>$greeting</p></Echo>', '<p>Hello!</p>')
+    void canUseEchoAttrPropertyViaContext() {
+        this.doTest('<Echo greeting="Hello!"><p>${context}</p></Echo>', '<p>Hello!</p>')
     }
 
 }

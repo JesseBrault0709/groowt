@@ -1,6 +1,5 @@
 package groowt.view.web.transpile.resolve;
 
-import groowt.view.web.WebViewComponentBugError;
 import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit;
 import groowt.view.web.util.Either;
 import org.codehaus.groovy.ast.ClassNode;
@@ -30,10 +29,12 @@ public class ModuleNodeComponentClassNodeResolver extends CachingComponentClassN
 
             // try pre-pending package and asking for fqn
             final var packageName = this.moduleNode.getPackageName();
+            final String fqn;
             if (packageName.endsWith(".")) {
-                throw new WebViewComponentBugError(new IllegalStateException("Package name illegally ends with '.'"));
+                fqn = this.moduleNode + nameWithoutPackage;
+            } else {
+                fqn = this.moduleNode.getPackageName() + "." + nameWithoutPackage;
             }
-            final var fqn = this.moduleNode.getPackageName() + "." + nameWithoutPackage;
             final var withPackage = this.getClassForFqn(fqn);
             if (withPackage.isRight()) {
                 return withPackage;

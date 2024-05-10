@@ -56,24 +56,23 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
         if (this.isVoidElement && this.hasChildren()) {
             throw new ComponentRenderException('A void html element cannot have children.')
         }
-        return {
-            it << '<'
-            it << this.name
+        return { writer ->
+            writer << '<'
+            writer << this.name
             if (!this.attr.isEmpty()) {
-                it << ' '
-                this.formatAttr(it)
+                writer << ' '
+                this.formatAttr(writer)
             }
-            it << '>'
+            writer << '>'
             if (this.hasChildren()) {
                 this.children.each {
-                    def renderer = it.getRenderer(this)
-                    renderer.call(it.child)
+                    it.renderTo(writer, this)
                 }
             }
             if (!this.isVoidElement) {
-                it << '</'
-                it << this.name
-                it << '>'
+                writer << '</'
+                writer << this.name
+                writer << '>'
             }
         }
     }
