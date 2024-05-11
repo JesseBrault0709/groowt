@@ -36,7 +36,7 @@ fun isAnyOf(subject: Char, vararg tests: Char): Boolean {
             break
         }
     }
-    logDebug ("subject: {}, tests: {}, result: {}", subject, tests, result)
+    logDebug("subject: {}, tests: {}, result: {}", subject, tests, result)
     return result
 }
 
@@ -50,7 +50,7 @@ fun isAnyOf(subject: Int, vararg tests: Char): Boolean = isAnyOf(subject.toChar(
  */
 fun canFollowJStringOpening(nextTwo: String): Boolean {
     val result = nextTwo[0] != '\'' || nextTwo[1] != '\''
-    logDebug ("nextTwo: {}, result: {}", nextTwo, result)
+    logDebug("nextTwo: {}, result: {}", nextTwo, result)
     return result
 }
 
@@ -62,7 +62,7 @@ fun canFollowJStringOpening(nextTwo: String): Boolean {
  */
 fun canFollowGStringOpening(nextTwo: String): Boolean {
     val result = nextTwo[0] != '"' || nextTwo[1] != '"'
-    logDebug ("nextTwo: {}, result: {}", nextTwo, result)
+    logDebug("nextTwo: {}, result: {}", nextTwo, result)
     return result
 }
 
