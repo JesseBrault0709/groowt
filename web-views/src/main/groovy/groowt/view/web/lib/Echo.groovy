@@ -15,8 +15,12 @@ class Echo extends DelegatingWebViewComponent {
     Object getProperty(String propertyName) {
         try {
             return super.getProperty(propertyName)
-        } catch (MissingPropertyException ignored) {
-            return attr[propertyName]
+        } catch (MissingPropertyException missingPropertyException) {
+            if (this.attr.containsKey(propertyName)) {
+                return this.attr[propertyName]
+            } else {
+                throw missingPropertyException
+            }
         }
     }
 

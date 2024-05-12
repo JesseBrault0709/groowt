@@ -1,4 +1,4 @@
 ---
 import groowt.view.web.lib.Echo
 ---
-<Echo greeting=${cliGreeting}><p>$greeting</p></Echo>
+<Echo><p>$cliGreeting</p></Echo>
