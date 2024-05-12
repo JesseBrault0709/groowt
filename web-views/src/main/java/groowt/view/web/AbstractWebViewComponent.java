@@ -61,13 +61,23 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
     }
 
     @Override
+    public void renderChildren() {
+        this.renderChildren(this.getContext().getRenderContext().getWriter());
+    }
+
+    @Override
     public void renderChildren(Writer to) {
         final ComponentWriter componentWriter = new DefaultComponentWriter(to);
         componentWriter.setComponentContext(this.getContext());
         componentWriter.setRenderContext(this.getContext().getRenderContext());
+        this.renderChildren(componentWriter);
+    }
+
+    @Override
+    public void renderChildren(ComponentWriter to) {
         for (final var child : this.getChildren()) {
             try {
-                componentWriter.append(child);
+                to.append(child);
             } catch (Exception e) {
                 throw new ChildRenderException(e);
             }
