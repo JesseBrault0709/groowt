@@ -49,8 +49,6 @@ public abstract class AbstractViewComponent implements ViewComponent {
         this.template = instantiateTemplate(templateClass);
     }
 
-
-
     @Override
     public void setContext(ComponentContext context) {
         this.context = context;

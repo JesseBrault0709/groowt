@@ -7,7 +7,7 @@ import org.codehaus.groovy.runtime.InvokerHelper
 
 import static groowt.view.web.WebViewComponentFactories.withAttr
 
-class DefaultWebViewComponentScope extends DefaultComponentScope {
+class DefaultWebViewComponentScope extends DefaultComponentScope implements WebViewComponentScope {
 
     static DefaultWebViewComponentScope getDefaultRootScope() {
         new DefaultWebViewComponentScope().tap {
@@ -15,6 +15,7 @@ class DefaultWebViewComponentScope extends DefaultComponentScope {
         }
     }
 
+    @Override
     <T extends WebViewComponent> void addWithAttr(Class<T> componentClass) {
         add(componentClass, withAttr(componentClass) { attr ->
             InvokerHelper.invokeConstructorOf(componentClass, attr) as T

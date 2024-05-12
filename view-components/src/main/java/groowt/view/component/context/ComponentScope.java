@@ -1,6 +1,7 @@
 package groowt.view.component.context;
 
 import groowt.view.component.ViewComponent;
+import groowt.view.component.factory.ComponentFactories;
 import groowt.view.component.factory.ComponentFactory;
 
 public interface ComponentScope {
@@ -10,6 +11,10 @@ public interface ComponentScope {
     //---- string types
 
     <T extends ViewComponent> void add(String typeName, Class<T> forClass, ComponentFactory<? extends T> factory);
+
+    default <T extends ViewComponent> void addWithNoArgConstructor(String typeName, Class<T> forClass) {
+        this.add(typeName, forClass, ComponentFactories.ofNoArgConstructor(forClass));
+    }
 
     boolean contains(String typeName);
 
@@ -33,6 +38,17 @@ public interface ComponentScope {
             Class<? extends T> implementingType,
             ComponentFactory<? extends T> factory
     );
+
+    default <T extends ViewComponent> void addWithNoArgConstructor(Class<T> forClass) {
+        this.add(forClass, ComponentFactories.ofNoArgConstructor(forClass));
+    }
+
+    default <T extends ViewComponent> void addWithNoArgConstructor(
+            Class<T> publicType,
+            Class<? extends T> implementingClass
+    ) {
+        this.add(publicType, implementingClass, ComponentFactories.ofNoArgConstructor(implementingClass));
+    }
 
     boolean contains(Class<? extends ViewComponent> type);
 

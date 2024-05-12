@@ -22,6 +22,18 @@ public final class ComponentFactories {
         return (typeName, componentContext, args) -> supplier.get();
     }
 
+    public static <T extends ViewComponent> ComponentFactory<T> ofNoArgConstructor(
+            Class<? extends T> viewComponentClass
+    ) {
+        return (typeName, componentContext, args) -> {
+            try {
+                return viewComponentClass.getConstructor().newInstance();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
     private ComponentFactories() {}
 
 }

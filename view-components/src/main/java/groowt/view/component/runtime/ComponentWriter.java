@@ -15,11 +15,10 @@ public interface ComponentWriter {
 
     void append(String string);
     void append(GString gString);
-    void append(GString gString, int line, int column);
     void append(ViewComponent viewComponent);
-    void append(ViewComponent viewComponent, int line, int column);
     void append(Object object);
-
+    
+    @SuppressWarnings("unused")
     default void leftShift(Object object) {
         switch (object) {
             case String s -> this.append(s);

@@ -20,7 +20,7 @@ public abstract class AbstractRenderContext implements RenderContext {
         this.writer = writer;
     }
 
-    public ComponentContext getComponentContext() {
+    protected ComponentContext getComponentContext() {
         return this.componentContext;
     }
 

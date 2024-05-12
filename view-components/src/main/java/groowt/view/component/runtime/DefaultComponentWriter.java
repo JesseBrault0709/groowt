@@ -58,51 +58,19 @@ public class DefaultComponentWriter implements ComponentWriter {
     }
 
     @Override
-    public void append(GString gString, int line, int column) {
-        final String content;
-        try {
-            content = gString.toString();
-        } catch (Exception exception) {
-            throw new ComponentRenderException(line, column, exception);
-        }
-        try {
-            this.delegate.append(content);
-        } catch (IOException ioException) {
-            throw new RuntimeException(ioException);
-        }
-    }
-
-    private void doComponentRender(ViewComponent viewComponent) throws IOException {
-        this.getRenderContext().pushComponent(viewComponent);
-        this.getComponentContext().pushDefaultScope();
-        viewComponent.renderTo(this.delegate);
-        this.getComponentContext().popScope();
-        this.getRenderContext().popComponent(viewComponent);
-    }
-
-    @Override
     public void append(ViewComponent viewComponent) {
         try {
-            this.doComponentRender(viewComponent);
+            this.getRenderContext().pushComponent(viewComponent);
+            this.getComponentContext().pushDefaultScope();
+            viewComponent.renderTo(this.delegate);
+            this.getComponentContext().popScope();
+            this.getRenderContext().popComponent(viewComponent);
         } catch (IOException ioException) {
             throw new RuntimeException(ioException);
         } catch (ComponentRenderException componentRenderException) {
             throw componentRenderException;
         } catch (Exception exception) {
             throw new ComponentRenderException(viewComponent, exception);
-        }
-    }
-
-    @Override
-    public void append(ViewComponent viewComponent, int line, int column) {
-        try {
-            this.doComponentRender(viewComponent);
-        } catch (IOException ioException) {
-            throw new RuntimeException(ioException);
-        } catch (ComponentRenderException componentRenderException) {
-            throw componentRenderException;
-        } catch (Exception exception) {
-            throw new ComponentRenderException(viewComponent, line, column, exception);
         }
     }
 

@@ -1,10 +1,10 @@
 package groowt.view.web.tools
 
+import groowt.view.component.ComponentTemplate
 import groowt.view.component.compiler.SimpleComponentTemplateClassFactory
 import groowt.view.component.compiler.source.ComponentTemplateSource
-import groowt.view.component.context.DefaultComponentContext
-import groowt.view.component.runtime.DefaultComponentWriter
 import groowt.view.web.BaseWebViewComponent
+import groowt.view.web.DefaultWebViewComponentContext
 import groowt.view.web.compiler.AnonymousWebViewComponent
 import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit
 import picocli.CommandLine
@@ -27,16 +27,15 @@ class RunTemplate implements Callable<Integer> {
             names = ['-A', '--attr', '--attribute'],
             description = 'Attribute(s) to pass to the template.'
     )
-    Map<String, String> properties
+    Map<String, String> attr
 
-    static class PropertiesComponent extends BaseWebViewComponent {
+    static class RunnableTemplate extends BaseWebViewComponent {
 
-        private final Map<String, String> properties
+        private final Map<String, String> cliAttr
 
-        @SuppressWarnings('GroovyAssignabilityCheck')
-        PropertiesComponent(Map<String, Object> attr) {
-            super('${renderChildren()}')
-            this.properties = attr.properties ?: [:]
+        RunnableTemplate(Class<? extends ComponentTemplate> templateClass, Map<String, String> cliAttr) {
+            super(templateClass)
+            this.cliAttr = cliAttr
         }
 
         @Override
@@ -44,7 +43,7 @@ class RunTemplate implements Callable<Integer> {
             try {
                 return super.getProperty(propertyName)
             } catch (Exception ignored) {
-                return this.properties.get(propertyName)
+                return this.cliAttr.get(propertyName)
             }
         }
 
@@ -61,14 +60,12 @@ class RunTemplate implements Callable<Integer> {
         def compileResult = compileUnit.compile()
         def templateLoader = new SimpleComponentTemplateClassFactory()
         def templateClass = templateLoader.getTemplateClass(compileResult)
-        def template = templateClass.getConstructor().newInstance()
 
-        def context = new DefaultComponentContext()
-        context.pushDefaultScope()
+        def runnableTemplate = new RunnableTemplate(templateClass, this.attr)
+        def componentContext = new DefaultWebViewComponentContext()
+        runnableTemplate.context = componentContext
 
-        def componentWriter = new DefaultComponentWriter(new OutputStreamWriter(System.out))
-
-        template.renderer.call(context, componentWriter)
+        println runnableTemplate.render()
 
         return 0
     }

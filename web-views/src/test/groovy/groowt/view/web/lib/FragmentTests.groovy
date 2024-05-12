@@ -1,8 +1,8 @@
 package groowt.view.web.lib
 
 import groowt.view.web.BaseWebViewComponent
-import groowt.view.web.DefaultWebViewComponentScope
 import groowt.view.web.WebViewComponentContext
+import groowt.view.web.WebViewComponentScope
 import org.junit.jupiter.api.Test
 
 class FragmentTests extends AbstractWebViewComponentTests {
@@ -20,7 +20,7 @@ class FragmentTests extends AbstractWebViewComponentTests {
 
     @Override
     void configureContext(WebViewComponentContext context) {
-        context.getRootScope(DefaultWebViewComponentScope).with {
+        context.configureRootScope(WebViewComponentScope) {
             addWithAttr(Greeter)
         }
     }
