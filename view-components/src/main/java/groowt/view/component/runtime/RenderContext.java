@@ -3,11 +3,9 @@ package groowt.view.component.runtime;
 import groowt.view.component.ViewComponent;
 import groowt.view.component.context.ComponentResolveException;
 import groowt.view.component.factory.ComponentFactory;
-import org.jetbrains.annotations.ApiStatus;
 
 import java.util.List;
 
-@ApiStatus.Internal
 public interface RenderContext {
 
     interface Resolved<T extends ViewComponent> {
@@ -30,8 +28,6 @@ public interface RenderContext {
 
     Resolved<?> resolve(String typeName) throws ComponentResolveException;
     <T extends ViewComponent> Resolved<T> resolve(String alias, Class<T> type) throws ComponentResolveException;
-
-    ViewComponent create(Resolved<?> resolved, Object... args);
 
     void pushComponent(ViewComponent component);
     void popComponent(ViewComponent component);

@@ -15,7 +15,7 @@ public class DefaultComponentContext implements ComponentContext {
     private final LinkedList<ComponentScope> scopeStack = new LinkedList<>();
     private RenderContext renderContext;
 
-    @ApiStatus.Internal
+    @Override
     public RenderContext getRenderContext() {
         return Objects.requireNonNull(
                 this.renderContext,
@@ -64,11 +64,6 @@ public class DefaultComponentContext implements ComponentContext {
             return componentStack.get(1);
         }
         return null;
-    }
-
-    @Override
-    public <T extends ViewComponent> @Nullable T getParent(Class<T> parentClass) {
-        return parentClass.cast(this.getParent());
     }
 
     @Override

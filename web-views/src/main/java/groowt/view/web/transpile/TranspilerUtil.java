@@ -23,7 +23,7 @@ public final class TranspilerUtil {
     public static final ClassNode COMPONENT_TEMPLATE = ClassHelper.make(ComponentTemplate.class);
     public static final ClassNode COMPONENT_CONTEXT_TYPE = ClassHelper.make(ComponentContext.class);
     public static final ClassNode COMPONENT_WRITER_TYPE = ClassHelper.make(ComponentWriter.class);
-    public static final ClassNode RENDER_CONTEXT_TYPE = ClassHelper.make(WebViewComponentRenderContext.class);
+    public static final ClassNode WEB_VIEW_COMPONENT_RENDER_CONTEXT_TYPE = ClassHelper.make(WebViewComponentRenderContext.class);
     public static final ClassNode WEB_VIEW_COMPONENT_TYPE = ClassHelper.make(WebViewComponent.class);
 
     public static final String GROOWT_VIEW_WEB = "groowt.view.web";
@@ -51,6 +51,10 @@ public final class TranspilerUtil {
         return new Token(Types.ASSIGN, "=", -1, -1);
     }
 
+    public static Token getLeftShiftToken() {
+        return new Token(Types.LEFT_SHIFT, "<<", -1, -1);
+    }
+
     public static final class TranspilerState {
 
         public static TranspilerState withRootScope(
@@ -71,15 +75,17 @@ public final class TranspilerUtil {
             final VariableScope rootScope = new VariableScope();
             rootScope.putDeclaredVariable(new Parameter(COMPONENT_CONTEXT_TYPE, COMPONENT_CONTEXT_NAME));
             rootScope.putDeclaredVariable(new Parameter(COMPONENT_WRITER_TYPE, COMPONENT_WRITER_NAME));
-            rootScope.putDeclaredVariable(new VariableExpression(RENDER_CONTEXT_NAME, RENDER_CONTEXT_TYPE));
+            rootScope.putDeclaredVariable(new VariableExpression(RENDER_CONTEXT_NAME,
+                    WEB_VIEW_COMPONENT_RENDER_CONTEXT_TYPE
+            ));
             return new TranspilerState(rootScope);
         }
 
         private final AtomicInteger componentNumberCounter = new AtomicInteger();
         private final Deque<VariableScope> scopeStack = new LinkedList<>();
-        private final Deque<Variable> componentStack = new LinkedList<>();
-        private final Deque<Variable> resolvedStack = new LinkedList<>();
-        private final Deque<Variable> childCollectorStack = new LinkedList<>();
+        private final Deque<VariableExpression> componentStack = new LinkedList<>();
+        private final Deque<VariableExpression> resolvedStack = new LinkedList<>();
+        private final Deque<Parameter> childListStack = new LinkedList<>();
         private final List<ComponentTemplateCompileException> errors = new ArrayList<>();
 
         private int lastComponentNumber;
@@ -112,10 +118,6 @@ public final class TranspilerUtil {
             return Objects.requireNonNull(this.scopeStack.peek());
         }
 
-        public void putToCurrentScope(Variable variable) {
-            this.getCurrentScope().putDeclaredVariable(variable);
-        }
-
         private Variable getDeclaredVariable(String name) {
             VariableScope scope = this.getCurrentScope();
             while (scope != null) {
@@ -129,15 +131,15 @@ public final class TranspilerUtil {
             throw new NullPointerException("Cannot find variable: " + name);
         }
 
-        public Variable getWriter() {
-            return this.getDeclaredVariable(COMPONENT_WRITER_NAME);
+        public VariableExpression getWriter() {
+            return new VariableExpression(this.getDeclaredVariable(COMPONENT_WRITER_NAME));
         }
 
-        public Variable getRenderContext() {
-            return this.getDeclaredVariable(RENDER_CONTEXT_NAME);
+        public VariableExpression getRenderContext() {
+            return (VariableExpression) this.getDeclaredVariable(RENDER_CONTEXT_NAME);
         }
 
-        public void pushComponent(Variable componentVariable) {
+        public void pushComponent(VariableExpression componentVariable) {
             this.componentStack.push(componentVariable);
         }
 
@@ -145,11 +147,11 @@ public final class TranspilerUtil {
             this.componentStack.pop();
         }
 
-        public Variable getCurrentComponent() {
+        public VariableExpression getCurrentComponent() {
             return Objects.requireNonNull(this.componentStack.peek());
         }
 
-        public void pushResolved(Variable resolvedVariable) {
+        public void pushResolved(VariableExpression resolvedVariable) {
             this.resolvedStack.push(resolvedVariable);
         }
 
@@ -157,24 +159,25 @@ public final class TranspilerUtil {
             this.resolvedStack.pop();
         }
 
-        public Variable getCurrentResolved() {
+        public VariableExpression getCurrentResolved() {
             return Objects.requireNonNull(this.resolvedStack.peek());
         }
 
-        public void pushChildCollector(Variable childCollector) {
-            this.childCollectorStack.push(childCollector);
+        public void pushChildList(Parameter childCollector) {
+            this.childListStack.push(childCollector);
         }
 
-        public void popChildCollector() {
-            this.childCollectorStack.pop();
+        public void popChildList() {
+            this.childListStack.pop();
         }
 
-        public Variable getCurrentChildCollector() {
-            return Objects.requireNonNull(this.childCollectorStack.peek());
+        public VariableExpression getCurrentChildList() {
+            final Parameter childCollectorParam = Objects.requireNonNull(this.childListStack.peek());
+            return new VariableExpression(childCollectorParam);
         }
 
-        public boolean hasCurrentChildCollector() {
-            return this.childCollectorStack.peek() != null;
+        public boolean hasCurrentChildList() {
+            return this.childListStack.peek() != null;
         }
 
         public void addError(ComponentTemplateCompileException error) {

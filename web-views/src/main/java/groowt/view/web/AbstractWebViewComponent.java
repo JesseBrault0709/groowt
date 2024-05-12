@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 public abstract class AbstractWebViewComponent extends AbstractViewComponent implements WebViewComponent {
 
-    private List<WebViewComponentChild> childRenderers;
+    private List<Object> children;
 
     public AbstractWebViewComponent() {}
 
@@ -40,11 +40,11 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
     }
 
     @Override
-    public List<WebViewComponentChild> getChildren() {
-        if (this.childRenderers == null) {
-            this.childRenderers = new ArrayList<>();
+    public List<Object> getChildren() {
+        if (this.children == null) {
+            this.children = new ArrayList<>();
         }
-        return this.childRenderers;
+        return this.children;
     }
 
     @Override
@@ -53,15 +53,21 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
     }
 
     @Override
-    public void setChildren(List<WebViewComponentChild> children) {
-        this.childRenderers = children;
+    public void setChildren(List<?> children) {
+        if (this.children == null) {
+            this.children = new ArrayList<>();
+        }
+        this.children.addAll(children);
     }
 
     @Override
-    public void renderChildren() {
-        for (final var childRenderer : this.getChildren()) {
+    public void renderChildren(Writer to) {
+        final ComponentWriter componentWriter = new DefaultComponentWriter(to);
+        componentWriter.setComponentContext(this.getContext());
+        componentWriter.setRenderContext(this.getContext().getRenderContext());
+        for (final var child : this.getChildren()) {
             try {
-                childRenderer.render(this);
+                componentWriter.append(child);
             } catch (Exception e) {
                 throw new ChildRenderException(e);
             }

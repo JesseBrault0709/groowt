@@ -2,9 +2,10 @@ package groowt.view.web.tools
 
 import groovy.console.ui.AstNodeToScriptVisitor
 import groowt.view.component.compiler.source.ComponentTemplateSource
+import groowt.view.component.compiler.util.GroovyClassWriter
+import groowt.view.component.compiler.util.SimpleGroovyClassWriter
 import groowt.view.web.compiler.AnonymousWebViewComponent
 import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit
-import org.codehaus.groovy.tools.GroovyClass
 import picocli.CommandLine
 
 import java.util.concurrent.Callable
@@ -48,15 +49,12 @@ class ConvertToGroovy implements Callable<Integer> {
 
     @CommandLine.Option(
             names = ['-d', '--classesDir'],
-            description = 'If the GroovyCompiler outputs classes, where to write them.'
+            description = 'If the GroovyCompiler outputs classes, where to write them, relative to the target.',
+            defaultValue = 'classes'
     )
     File classesDir
 
-    private void writeClass(File classesDir, GroovyClass groovyClass) {
-        new File(classesDir, groovyClass.name + '.class').withOutputStream {
-            it.write(groovyClass.bytes)
-        }
-    }
+    private final GroovyClassWriter groovyClassWriter = new SimpleGroovyClassWriter()
 
     @Override
     Integer call() throws Exception {
@@ -85,12 +83,11 @@ class ConvertToGroovy implements Callable<Integer> {
                 }
 
                 if (this.doClasses) {
-                    def classesDir = this.classesDir != null
-                            ? this.classesDir
-                            : new File(target.parentFile, 'classes')
-                    classesDir.mkdirs()
-                    this.writeClass(classesDir, compileResult.templateClass)
-                    compileResult.otherClasses.each { this.writeClass(classesDir, it) }
+                    def classesDir = target.parentFile.toPath().resolve(this.classesDir.toPath())
+                    this.groovyClassWriter.writeTo(classesDir, compileResult.templateClass)
+                    compileResult.otherClasses.each {
+                        this.groovyClassWriter.writeTo(classesDir, it)
+                    }
                 }
 
                 return true

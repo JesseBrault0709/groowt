@@ -13,8 +13,6 @@ public interface AppendOrAddStatementFactory {
         ADD, APPEND
     }
 
-    Statement addOnly(BodyChildNode sourceNode, TranspilerState state, Expression rightSide);
-    Statement appendOnly(BodyChildNode sourceNode, TranspilerState state, Expression rightSide);
     Statement addOrAppend(BodyChildNode sourceNode, TranspilerState state, Function<Action, Expression> getRightSide);
 
     default Statement addOrAppend(BodyChildNode sourceNode, TranspilerState state, Expression rightSide) {

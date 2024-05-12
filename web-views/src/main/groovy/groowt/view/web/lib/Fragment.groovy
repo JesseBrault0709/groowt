@@ -7,7 +7,7 @@ final class Fragment extends BaseWebViewComponent {
     @Override
     void renderTo(Writer out) throws IOException {
         this.beforeRender()
-        this.renderChildren()
+        this.renderChildren(out)
         this.afterRender()
     }
 

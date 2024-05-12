@@ -1,7 +1,6 @@
 package groowt.view.web.compiler;
 
 import groowt.view.component.context.ComponentContext;
-import groowt.view.web.WebViewComponentChild;
 import groowt.view.web.WebViewComponent;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -27,7 +26,7 @@ public final class AnonymousWebViewComponent implements WebViewComponent {
     }
 
     @Override
-    public List<WebViewComponentChild> getChildren() {
+    public List<Object> getChildren() {
         throw new UnsupportedOperationException();
     }
 
@@ -37,12 +36,12 @@ public final class AnonymousWebViewComponent implements WebViewComponent {
     }
 
     @Override
-    public void setChildren(List<WebViewComponentChild> children) {
+    public void setChildren(List<?> children) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void renderChildren() {
+    public void renderChildren(Writer to) {
         throw new UnsupportedOperationException();
     }
 

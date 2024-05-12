@@ -21,11 +21,7 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
 
     protected static class IntrinsicHtmlFactory implements ComponentFactory<IntrinsicHtml> {
 
-        IntrinsicHtml doCreate(String typeName) {
-            new IntrinsicHtml([:], typeName, typeName in voidElements)
-        }
-
-        IntrinsicHtml doCreate(String typeName, Map<String, Object> attr) {
+        IntrinsicHtml doCreate(String typeName, Map<String, Object> attr, Object[] ignored) {
             new IntrinsicHtml(attr, typeName, typeName in voidElements)
         }
 
@@ -64,11 +60,7 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
                 this.formatAttr(writer)
             }
             writer << '>'
-            if (this.hasChildren()) {
-                this.children.each {
-                    it.renderTo(writer, this)
-                }
-            }
+            this.renderChildren(writer)
             if (!this.isVoidElement) {
                 writer << '</'
                 writer << this.name

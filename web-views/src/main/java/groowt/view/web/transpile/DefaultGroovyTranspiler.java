@@ -10,7 +10,7 @@ import groowt.view.web.ast.node.PreambleNode;
 import groowt.view.web.compiler.MultipleWebViewComponentCompileErrorsException;
 import groowt.view.web.compiler.WebViewComponentTemplateCompileException;
 import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit;
-import groowt.view.web.runtime.DefaultWebViewComponentRenderContext;
+import groowt.view.web.runtime.DefaultWebViewRenderContext;
 import groowt.view.web.transpile.resolve.ClassLoaderComponentClassNodeResolver;
 import groowt.view.web.transpile.util.GroovyUtil;
 import org.codehaus.groovy.ast.*;
@@ -44,7 +44,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
     private static final ClassNode FIELD_ANNOTATION = ClassHelper.make(Field.class);
     private static final ClassNode RENDER_CONTEXT_IMPLEMENTATION =
-            ClassHelper.make(DefaultWebViewComponentRenderContext.class);
+            ClassHelper.make(DefaultWebViewRenderContext.class);
 
     protected TranspilerConfiguration getConfiguration(
             WebViewComponentTemplateCompileUnit compileUnit,
@@ -183,7 +183,6 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         moduleNode.addStarImport(GROOWT_VIEW_WEB + ".lib");
         moduleNode.addImport(COMPONENT_TEMPLATE.getNameWithoutPackage(), COMPONENT_TEMPLATE);
         moduleNode.addImport(COMPONENT_CONTEXT_TYPE.getNameWithoutPackage(), COMPONENT_CONTEXT_TYPE);
-        moduleNode.addImport(WEB_VIEW_COMPONENT_TYPE.getNameWithoutPackage(), WEB_VIEW_COMPONENT_TYPE);
         moduleNode.addStarImport("groowt.view.component.runtime");
         moduleNode.addStarImport(GROOWT_VIEW_WEB + ".runtime");
 
@@ -209,7 +208,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         final Parameter writerParam = new Parameter(COMPONENT_WRITER_TYPE, COMPONENT_WRITER_NAME);
         final VariableExpression renderContextVariable = new VariableExpression(
                 RENDER_CONTEXT_NAME,
-                RENDER_CONTEXT_TYPE
+                WEB_VIEW_COMPONENT_RENDER_CONTEXT_TYPE
         );
 
         // closure body
@@ -284,8 +283,9 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                                                     ));
                                                 }
                                                 return expr;
-                                            }),
-                                            state
+                                            }
+                                    ),
+                                    state
                             )
             );
         }

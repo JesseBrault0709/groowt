@@ -1,6 +1,5 @@
 package groowt.view.web.lib
 
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class IntrinsicHtmlTests extends AbstractWebViewComponentTests {
@@ -21,9 +20,8 @@ class IntrinsicHtmlTests extends AbstractWebViewComponentTests {
     }
 
     @Test
-    @Disabled('Until we figure out nested closure delegates')
     void canUseEchoAttrPropertyViaContext() {
-        this.doTest('<Echo greeting="Hello!"><p>${context}</p></Echo>', '<p>Hello!</p>')
+        this.doTest('<Echo greeting="Hello!"><p>$greeting</p></Echo>', '<p>Hello!</p>')
     }
 
 }

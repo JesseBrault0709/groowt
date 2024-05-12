@@ -1,10 +1,7 @@
 package groowt.view.web.transpile;
 
 import groovy.lang.Tuple2;
-import groowt.view.web.ast.NodeUtil;
 import groowt.view.web.ast.node.BodyChildNode;
-import groowt.view.web.ast.node.ComponentNode;
-import groowt.view.web.ast.node.GStringBodyTextNode;
 import groowt.view.web.transpile.TranspilerUtil.TranspilerState;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -29,8 +26,8 @@ public class DefaultAppendOrAddStatementFactory implements AppendOrAddStatementF
             BodyChildNode bodyChildNode,
             Expression rightSide,
             VariableExpression target,
-            String methodName,
-            boolean addLineAndColumn
+            String methodName // ,
+            // boolean addLineAndColumn
     ) {
         final ArgumentListExpression args;
         if (rightSide instanceof ArgumentListExpression argumentListExpression) {
@@ -39,33 +36,31 @@ public class DefaultAppendOrAddStatementFactory implements AppendOrAddStatementF
             args = new ArgumentListExpression();
             args.addExpression(rightSide);
         }
-        if (addLineAndColumn &&
-                NodeUtil.isAnyOfType(bodyChildNode.asNode(), GStringBodyTextNode.class, ComponentNode.class)) {
-            this.addLineAndColumn(bodyChildNode, args);
-        }
+//        if (addLineAndColumn &&
+//                NodeUtil.isAnyOfType(bodyChildNode.asNode(), GStringBodyTextNode.class, ComponentNode.class)) {
+//            this.addLineAndColumn(bodyChildNode, args);
+//        }
         final MethodCallExpression outExpression = new MethodCallExpression(target, methodName, args);
         return new ExpressionStatement(outExpression);
     }
 
-    @Override
-    public Statement addOnly(BodyChildNode bodyChildNode, TranspilerState state, Expression rightSide) {
+    protected Statement addOnly(BodyChildNode bodyChildNode, TranspilerState state, Expression rightSide) {
         return this.doCreate(
                 bodyChildNode,
                 rightSide,
-                new VariableExpression(state.getCurrentChildCollector()),
-                TranspilerUtil.ADD,
-                false
+                state.getCurrentChildList(),
+                TranspilerUtil.ADD //,
+                // false
         );
     }
 
-    @Override
-    public Statement appendOnly(BodyChildNode bodyChildNode, TranspilerState state, Expression rightSide) {
+    protected Statement appendOnly(BodyChildNode bodyChildNode, TranspilerState state, Expression rightSide) {
         return this.doCreate(
                 bodyChildNode,
                 rightSide,
-                new VariableExpression(state.getWriter()),
-                TranspilerUtil.APPEND,
-                true
+                state.getWriter(),
+                TranspilerUtil.APPEND //,
+                // false
         );
     }
 
@@ -75,7 +70,7 @@ public class DefaultAppendOrAddStatementFactory implements AppendOrAddStatementF
             TranspilerState state,
             Function<Action, Expression> getRightSide
     ) {
-        if (state.hasCurrentChildCollector()) {
+        if (state.hasCurrentChildList()) {
             return this.addOnly(bodyChildNode, state, getRightSide.apply(Action.ADD));
         } else {
             return this.appendOnly(bodyChildNode, state, getRightSide.apply(Action.APPEND));

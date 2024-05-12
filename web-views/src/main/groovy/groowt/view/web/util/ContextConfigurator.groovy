@@ -2,8 +2,8 @@ package groowt.view.web.util
 
 import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
+import groowt.view.web.DefaultWebViewComponentScope
 import groowt.view.web.WebViewComponentContext
-import groowt.view.web.WebViewComponentScope
 
 class ContextConfigurator {
 
@@ -14,12 +14,12 @@ class ContextConfigurator {
     }
 
     void rootScope(
-            @DelegatesTo(WebViewComponentScope)
+            @DelegatesTo(DefaultWebViewComponentScope)
             @ClosureParams(value = SimpleType, options = 'groowt.view.web.WebViewComponentScope')
             Closure configureRootScope
     ) {
         //noinspection GroovyAssignabilityCheck
-        WebViewComponentScope rootScope = context.rootScope
+        DefaultWebViewComponentScope rootScope = context.rootScope
         configureRootScope.delegate = rootScope
         configureRootScope(rootScope)
     }

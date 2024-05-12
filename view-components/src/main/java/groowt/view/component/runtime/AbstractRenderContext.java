@@ -9,13 +9,13 @@ import groowt.view.component.context.ComponentScope.TypeAndFactory;
 import java.util.LinkedList;
 import java.util.List;
 
-public class DefaultRenderContext implements RenderContext {
+public abstract class AbstractRenderContext implements RenderContext {
 
     private final ComponentContext componentContext;
     private final ComponentWriter writer;
     private final LinkedList<ViewComponent> componentStack = new LinkedList<>();
 
-    public DefaultRenderContext(ComponentContext componentContext, ComponentWriter writer) {
+    public AbstractRenderContext(ComponentContext componentContext, ComponentWriter writer) {
         this.componentContext = componentContext;
         this.writer = writer;
     }
@@ -78,39 +78,6 @@ public class DefaultRenderContext implements RenderContext {
                 alias,
                 type
         );
-    }
-
-    @Override
-    public ViewComponent create(Resolved<?> resolved, Object... args) {
-        final ViewComponent created;
-        if (resolved instanceof ResolvedStringType<?> resolvedStringType) {
-            try {
-                created = resolvedStringType.componentFactory().create(
-                        resolvedStringType.typeName(),
-                        this.getComponentContext(),
-                        args
-                );
-            } catch (Exception createException) {
-                throw new ComponentCreateException(resolved, createException);
-            }
-        } else if (resolved instanceof ResolvedClassType<?> resolvedClassType) {
-            try {
-                created = resolvedClassType.componentFactory().create(
-                        resolvedClassType.alias(),
-                        resolvedClassType.resolvedType(),
-                        this.getComponentContext(),
-                        args
-                );
-            } catch (Exception createException) {
-                throw new ComponentCreateException(resolved, createException);
-            }
-        } else {
-            throw new UnsupportedOperationException(
-                    this.getClass().getName() + " cannot handle Resolved of sub-type " + resolved.getClass().getName()
-            );
-        }
-        created.setContext(this.getComponentContext());
-        return created;
     }
 
     @Override

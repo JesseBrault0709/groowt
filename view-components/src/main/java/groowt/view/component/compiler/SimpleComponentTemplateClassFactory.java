@@ -1,83 +1,39 @@
 package groowt.view.component.compiler;
 
 import groowt.view.component.ComponentTemplate;
-import org.codehaus.groovy.tools.GroovyClass;
+import groowt.view.component.compiler.util.GroovyClassWriter;
+import groowt.view.component.compiler.util.SimpleGroovyClassWriter;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
-import static java.nio.file.StandardOpenOption.WRITE;
-
 public final class SimpleComponentTemplateClassFactory implements ComponentTemplateClassFactory {
-
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
-
-    private static String[] classNameToPackageDirParts(String fullClassName) {
-        final String[] allParts = fullClassName.split("\\.");
-        if (allParts.length == 0) {
-            throw new RuntimeException("Did not expect allParts.length to be zero.");
-        } else if (allParts.length == 1) {
-            return EMPTY_STRING_ARRAY;
-        } else {
-            final var result = new String[allParts.length - 1];
-            System.arraycopy(allParts, 0, result, 0, allParts.length - 1);
-            return result;
-        }
-    }
-
-    private static Path resolvePackageDir(Path rootDir, String[] packageDirParts) {
-        return Path.of(rootDir.toString(), packageDirParts);
-    }
-
-    private static String isolateClassName(String fullClassName) {
-        final String[] parts = fullClassName.split("\\.");
-        if (parts.length == 0) {
-            throw new RuntimeException("Did not expect parts.length to be zero");
-        }
-        return parts[parts.length - 1];
-    }
 
     private final Map<String, Class<? extends ComponentTemplate>> cache = new HashMap<>();
     private final ClassLoader classLoader;
-    private final Path tempClassesDir;
+    private final File tempClassesDir;
+    private final GroovyClassWriter groovyClassWriter;
 
     public SimpleComponentTemplateClassFactory() {
+        this.groovyClassWriter = new SimpleGroovyClassWriter();
         try {
-            this.tempClassesDir = Files.createTempDirectory("view-component-classes-");
+            this.tempClassesDir = Files.createTempDirectory("view-component-classes-").toFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         try {
             this.classLoader = new URLClassLoader(
                     "SimpleComponentTemplateClassFactoryClassLoader",
-                    new URL[] { this.tempClassesDir.toUri().toURL() },
+                    new URL[] { this.tempClassesDir.toURI().toURL() },
                     this.getClass().getClassLoader()
             );
         } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void writeClassToDisk(GroovyClass groovyClass) {
-        final var className = groovyClass.getName();
-        final var packageDirParts = classNameToPackageDirParts(className);
-        final var packageDir = resolvePackageDir(this.tempClassesDir, packageDirParts);
-        try {
-            Files.createDirectories(packageDir);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        final var classFile = Path.of(packageDir.toString(), isolateClassName(className) + ".class");
-        try {
-            Files.write(classFile, groovyClass.getBytes(), CREATE_NEW, WRITE);
-        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -89,11 +45,13 @@ public final class SimpleComponentTemplateClassFactory implements ComponentTempl
             return this.cache.get(templateClassName);
         } else {
             // write classes to disk
-            this.writeClassToDisk(compileResult.getTemplateClass());
-            compileResult.getOtherClasses().forEach(this::writeClassToDisk);
+            this.groovyClassWriter.writeTo(this.tempClassesDir, compileResult.getTemplateClass());
+            compileResult.getOtherClasses().forEach(groovyClass -> this.groovyClassWriter.writeTo(
+                    this.tempClassesDir, groovyClass
+            ));
             // load the template class
             try {
-                //noinspection unchecked
+                @SuppressWarnings("unchecked")
                 final var templateClass = (Class<? extends ComponentTemplate>) this.classLoader.loadClass(
                         templateClassName
                 );

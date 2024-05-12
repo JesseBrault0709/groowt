@@ -1,6 +1,5 @@
 package groowt.view.web.lib
 
-
 import org.junit.jupiter.api.Test
 
 class EchoTests extends AbstractWebViewComponentTests {
@@ -18,6 +17,11 @@ class EchoTests extends AbstractWebViewComponentTests {
     @Test
     void withChildren() {
         this.doTest('<Echo>Hello, World!</Echo>', 'Hello, World!')
+    }
+
+    @Test
+    void childrenCanUseProperties() {
+        this.doTest('<Echo greeting="Hello, World!">$greeting</Echo>', 'Hello, World!')
     }
 
 }

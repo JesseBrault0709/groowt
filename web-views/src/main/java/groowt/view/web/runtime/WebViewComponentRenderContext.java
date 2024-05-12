@@ -1,14 +1,30 @@
 package groowt.view.web.runtime;
 
+import groovy.lang.Closure;
 import groowt.view.component.ViewComponent;
 import groowt.view.component.runtime.RenderContext;
 import groowt.view.web.WebViewComponent;
-import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.Nullable;
+
+import java.util.Map;
 
 public interface WebViewComponentRenderContext extends RenderContext {
 
-    @ApiStatus.Internal
-    ViewComponent createFragment(WebViewComponent fragment, WebViewComponentChildCollectorClosure cl);
+    Map<String, Object> EMPTY_ATTR = Map.of();
+    Object[] EMPTY_CONSTRUCTOR_ARGS = {};
+
+    WebViewComponent create(
+            Resolved<? extends WebViewComponent> resolved,
+            Map<String, Object> attr,
+            Object[] constructorArgs
+    );
+
+    WebViewComponent create(
+            Resolved<? extends WebViewComponent> resolved,
+            Map<String, Object> attr,
+            Object[] constructorArgs,
+            Closure<Void> childrenClosure
+    );
+
+    ViewComponent createFragment(WebViewComponent fragment, Closure<Void> childrenClosure);
 
 }

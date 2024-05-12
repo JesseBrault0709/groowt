@@ -1,34 +1,9 @@
 package groowt.view.web.lib
 
 import groowt.view.View
-import groowt.view.component.context.ComponentContext
-import groowt.view.component.factory.ComponentFactory
+import groowt.view.component.runtime.DefaultComponentWriter
 
 class Echo extends DelegatingWebViewComponent {
-
-    static final ComponentFactory<Echo> FACTORY = new EchoFactory()
-
-    protected static class EchoFactory implements ComponentFactory<Echo> {
-
-        protected Echo doCreate() {
-            new Echo([:])
-        }
-
-        protected Echo doCreate(Map attr) {
-            new Echo(attr)
-        }
-
-        @Override
-        Echo create(String typeName, ComponentContext componentContext, Object... args) {
-            throw new UnsupportedOperationException('Cannot create Echo for string type components')
-        }
-
-        @Override
-        Echo create(String alias, Class<?> type, ComponentContext componentContext, Object... args) {
-            this.doCreate(*args)
-        }
-
-    }
 
     Map attr
 
@@ -48,8 +23,11 @@ class Echo extends DelegatingWebViewComponent {
     @Override
     protected View getDelegate() {
         return {
+            def componentWriter = new DefaultComponentWriter(it)
+            componentWriter.setComponentContext(this.context)
+            componentWriter.setRenderContext(this.context.renderContext) // hacky
             this.children.each {
-                it.render(this)
+                componentWriter << it
             }
         }
     }

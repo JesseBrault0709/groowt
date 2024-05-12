@@ -1,15 +1,10 @@
 package groowt.view.web
 
 import groowt.view.component.factory.ComponentFactories
-import groowt.view.component.factory.ComponentFactory
 import groowt.view.web.lib.AbstractWebViewComponentTests
 import org.junit.jupiter.api.Test
 
 class BaseWebViewComponentTests extends AbstractWebViewComponentTests {
-
-    private static final ComponentFactory<Greeter> greeterFactory = WebViewComponentFactories.withAttr(Greeter) {
-        new Greeter(it)
-    }
 
     static final class Greeter extends BaseWebViewComponent {
 
@@ -50,8 +45,9 @@ class BaseWebViewComponentTests extends AbstractWebViewComponentTests {
     @Test
     void nestedGreeter() {
         def context = this.context {
-            this.configureContext(it)
-            currentScope.add(Greeter, greeterFactory)
+            getRootScope(DefaultWebViewComponentScope).with {
+                addWithAttr(Greeter)
+            }
         }
         this.doTest('<BaseWebViewComponentTests.Greeter target="World" />', 'Hello, World!', context)
     }
@@ -59,9 +55,10 @@ class BaseWebViewComponentTests extends AbstractWebViewComponentTests {
     @Test
     void doubleNested() {
         def context = this.context {
-            this.configureContext(it)
-            currentScope.add(UsingGreeter, ComponentFactories.ofSupplier { new UsingGreeter() })
-            currentScope.add(Greeter, greeterFactory)
+            getRootScope(DefaultWebViewComponentScope).with {
+                addWithAttr(Greeter)
+                add(UsingGreeter, ComponentFactories.ofSupplier { new UsingGreeter() })
+            }
         }
         this.doTest('<BaseWebViewComponentTests.UsingGreeter />', 'Hello, World!', context)
     }

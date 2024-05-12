@@ -6,12 +6,12 @@ import groowt.view.component.context.DefaultComponentContext
 class DefaultWebViewComponentContext extends DefaultComponentContext implements WebViewComponentContext {
 
     DefaultWebViewComponentContext() {
-        this.pushScope(WebViewComponentScope.getDefaultRootScope())
+        this.pushScope(DefaultWebViewComponentScope.getDefaultRootScope())
     }
 
     @Override
     protected ComponentScope getNewDefaultScope() {
-        new WebViewComponentScope()
+        new DefaultWebViewComponentScope()
     }
 
 }
