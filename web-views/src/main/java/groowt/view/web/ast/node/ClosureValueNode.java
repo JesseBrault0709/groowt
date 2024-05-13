@@ -38,7 +38,7 @@ public class ClosureValueNode extends AbstractLeafNode implements ValueNode {
     }
 
     protected String toValidGroovyCode(List<Token> groovyTokens) {
-        return "{ " + groovyTokens.stream().map(Token::getText).collect(Collectors.joining()) + "\n}";
+        return "def c = { " + groovyTokens.stream().map(Token::getText).collect(Collectors.joining()) + "\n}";
     }
 
     public GroovyCodeNodeExtension getGroovyCode() {

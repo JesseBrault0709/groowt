@@ -8,7 +8,7 @@ import groowt.view.web.ast.extension.GStringScriptletExtension;
 import groowt.view.web.ast.node.GStringBodyTextNode;
 import groowt.view.web.ast.node.JStringBodyTextNode;
 import groowt.view.web.ast.node.Node;
-import groowt.view.web.transpile.util.GroovyUtil;
+import groowt.view.web.transpile.groovy.GroovyUtil;
 import groowt.view.web.util.FilteringIterable;
 import groowt.view.web.util.Option;
 import groowt.view.web.util.TokenRange;
@@ -46,15 +46,11 @@ public class DefaultGStringTranspiler implements GStringTranspiler {
         }
     }
 
-    protected Option<ConstantExpression> checkNextAfterDollar(Node current, @Nullable Node next) {
-        if (!(next instanceof JStringBodyTextNode)) {
+    protected Option<ConstantExpression> checkNextAfterDollar(@Nullable Node next) {
+        if (next != null && next.hasExtension(GStringNodeExtension.class)) {
             return Option.liftLazy(() -> {
                 final ConstantExpression expression = this.jStringTranspiler.createEmptyStringLiteral();
-                if (next != null) {
-                    this.positionSetter.setToStartOf(expression, next);
-                } else {
-                    this.positionSetter.setToStartOf(expression, current);
-                }
+                this.positionSetter.setToStartOf(expression, next);
                 return expression;
             });
         } else {
@@ -114,13 +110,13 @@ public class DefaultGStringTranspiler implements GStringTranspiler {
             return new PathResult(
                     propertyExpression,
                     this.checkPrevBeforeDollar(prev, current),
-                    this.checkNextAfterDollar(current, next)
+                    this.checkNextAfterDollar(next)
             );
         } else {
             return new PathResult(
                     begin,
                     this.checkPrevBeforeDollar(prev, current),
-                    this.checkNextAfterDollar(current, next)
+                    this.checkNextAfterDollar(next)
             );
         }
     }
@@ -187,13 +183,13 @@ public class DefaultGStringTranspiler implements GStringTranspiler {
                     case GStringScriptletExtension scriptlet -> {
                         checkPrevBeforeDollar(prev, current).ifPresent(texts::add);
                         values.add(this.handleScriptlet(scriptlet));
-                        checkNextAfterDollar(current, next).ifPresent(texts::add);
+                        checkNextAfterDollar(next).ifPresent(texts::add);
                     }
                 }
             }
         }
 
-        if (texts.size() != values.size() + 1) {
+        if (!(texts.size() == values.size() || texts.size() == values.size() + 1)) {
             throw new IllegalStateException(
                     "incorrect amount of texts vs. values: " + texts.size() + " " + values.size()
             );

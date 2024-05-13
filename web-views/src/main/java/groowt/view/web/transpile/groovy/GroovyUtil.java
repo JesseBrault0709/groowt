@@ -1,11 +1,15 @@
-package groowt.view.web.transpile.util;
+package groowt.view.web.transpile.groovy;
 
 import groovy.lang.GroovyCodeSource;
+import groowt.view.web.WebViewComponentBugError;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.builder.AstStringCompiler;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.CompilerConfiguration;
@@ -95,6 +99,28 @@ public final class GroovyUtil {
             }
         }
         return new ConvertResult(moduleNode, blockStatement, scriptClassNode, classNodes);
+    }
+
+    /**
+     * @param source must be of form {@code def c = { ... }} and the closure must not be empty.
+     * @return the block inside the closure
+     */
+    public static ClosureExpression getClosure(String source) {
+        final ConvertResult convertResult = convert(source);
+        final BlockStatement blockStatement = convertResult.blockStatement();
+        if (blockStatement == null) {
+            throw new WebViewComponentBugError(new IllegalArgumentException(
+                    "Did not expect the source to produce no BlockStatement."
+            ));
+        }
+        if (blockStatement.isEmpty()) {
+            throw new WebViewComponentBugError(new IllegalArgumentException(
+                    "Did not expect the BlockStatement to be empty."
+            ));
+        }
+        final ExpressionStatement exprStmt = (ExpressionStatement) blockStatement.getStatements().getFirst();
+        final BinaryExpression binaryExpression = (BinaryExpression) exprStmt.getExpression();
+        return (ClosureExpression) binaryExpression.getRightExpression();
     }
 
     private GroovyUtil() {}

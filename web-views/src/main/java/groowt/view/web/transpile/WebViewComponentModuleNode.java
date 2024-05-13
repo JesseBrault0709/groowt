@@ -1,5 +1,6 @@
 package groowt.view.web.transpile;
 
+import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ImportNode;
 import org.codehaus.groovy.ast.ModuleNode;
@@ -55,9 +56,16 @@ public class WebViewComponentModuleNode extends ModuleNode {
                 .orElse(null);
     }
 
+    /**
+     * @param alias the name of interest
+     * @return a standard (non-static, non-star) import, or {@code null} if there is none
+     */
     @Override
     public @Nullable ImportNode getImport(String alias) {
-        return this.allImports.get(alias);
+        return this.imports.stream()
+                .filter(importNode -> importNode.getAlias().equals(alias))
+                .findFirst()
+                .orElse(null);
     }
 
     protected void putToAll(String alias, ImportNode importNode) {
@@ -86,6 +94,54 @@ public class WebViewComponentModuleNode extends ModuleNode {
     public void addStaticStarImport(String alias, ImportNode importNode) {
         this.staticStarImports.put(alias, importNode);
         this.putToAll(alias, importNode);
+    }
+
+    @Override
+    public void addImport(String alias, ClassNode type) {
+        this.addImport(new ImportNode(type, alias));
+    }
+
+    @Override
+    public void addImport(String alias, ClassNode type, List<AnnotationNode> annotations) {
+        final var importNode = new ImportNode(type, alias);
+        importNode.addAnnotations(annotations);
+        this.addImport(importNode);
+    }
+
+    @Override
+    public void addStarImport(String packageName) {
+        this.addStarImport(new ImportNode(packageName));
+    }
+
+    @Override
+    public void addStarImport(String packageName, List<AnnotationNode> annotations) {
+        final var importNode = new ImportNode(packageName);
+        importNode.addAnnotations(annotations);
+        this.addStarImport(importNode);
+    }
+
+    @Override
+    public void addStaticImport(ClassNode type, String fieldName, String alias) {
+        this.addStaticImport(alias, new ImportNode(type, fieldName, alias));
+    }
+
+    @Override
+    public void addStaticImport(ClassNode type, String fieldName, String alias, List<AnnotationNode> annotations) {
+        final var importNode = new ImportNode(type, fieldName, alias);
+        importNode.addAnnotations(annotations);
+        this.addStaticImport(alias, importNode);
+    }
+
+    @Override
+    public void addStaticStarImport(String name, ClassNode type) {
+        this.addStaticStarImport(name, new ImportNode(type, name));
+    }
+
+    @Override
+    public void addStaticStarImport(String name, ClassNode type, List<AnnotationNode> annotations) {
+        final var importNode = new ImportNode(type, name);
+        importNode.addAnnotations(annotations);
+        this.addStaticStarImport(name, importNode);
     }
 
 }

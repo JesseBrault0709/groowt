@@ -1,17 +1,19 @@
 package groowt.view.web.transpile;
 
+import groowt.view.web.WebViewComponentBugError;
 import groowt.view.web.ast.node.*;
 import groowt.view.web.transpile.TranspilerUtil.TranspilerState;
-import groowt.view.web.transpile.util.GroovyUtil;
-import groowt.view.web.transpile.util.GroovyUtil.ConvertResult;
+import groowt.view.web.transpile.groovy.GroovyUtil;
+import groowt.view.web.transpile.groovy.GroovyUtil.ConvertResult;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 import static groowt.view.web.transpile.TranspilerUtil.getStringLiteral;
 
@@ -24,16 +26,36 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
         this.componentTranspiler = componentTranspiler;
     }
 
-    protected ClosureExpression closureValue(ClosureValueNode closureValueNode) {
+    // TODO: positions
+    protected Expression handleClosureNode(ClosureValueNode closureValueNode) {
         final var rawCode = closureValueNode.getGroovyCode().getAsValidGroovyCode();
-        final ConvertResult convertResult = GroovyUtil.convert(rawCode);
-        final @Nullable BlockStatement blockStatement = convertResult.blockStatement();
-        if (blockStatement == null || blockStatement.isEmpty()) {
-            throw new IllegalStateException("block statement is null or empty");
+        final ClosureExpression convertedClosure = GroovyUtil.getClosure(rawCode);
+        final Statement closureCode = convertedClosure.getCode();
+        if (closureCode instanceof BlockStatement blockStatement) {
+            final List<Statement> statements = blockStatement.getStatements();
+            if (statements.isEmpty()) {
+                throw new WebViewComponentBugError(new IllegalArgumentException(
+                        "Did not expect ClosureValueNode to produce no statements."
+                ));
+            } else if (statements.size() == 1) {
+                final Statement statement = statements.getFirst();
+                if (statement instanceof ExpressionStatement expressionStatement) {
+                    final Expression expression = expressionStatement.getExpression();
+                    return switch (expression) {
+                        case ConstantExpression ignored -> expression;
+                        case VariableExpression ignored -> expression;
+                        case PropertyExpression ignored -> expression;
+                        default -> convertedClosure;
+                    };
+                } else {
+                    throw new IllegalArgumentException("A component closure value must produce a value.");
+                }
+            } else {
+                return convertedClosure;
+            }
+        } else {
+            return convertedClosure;
         }
-        final ExpressionStatement exprStmt = (ExpressionStatement) blockStatement.getStatements().getFirst();
-        // TODO: set pos
-        return (ClosureExpression) exprStmt.getExpression();
     }
 
     private Expression gStringValue(GStringValueNode gStringValueNode) {
@@ -69,7 +91,7 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
     @Override
     public Expression createExpression(ValueNode valueNode, TranspilerState state) {
         return switch (valueNode) {
-            case ClosureValueNode closureValueNode -> this.closureValue(closureValueNode);
+            case ClosureValueNode closureValueNode -> this.handleClosureNode(closureValueNode);
             case GStringValueNode gStringValueNode -> this.gStringValue(gStringValueNode);
             case JStringValueNode jStringValueNode -> this.jStringValue(jStringValueNode);
             case EmptyClosureValueNode emptyClosureValueNode -> this.emptyClosureValue(emptyClosureValueNode);

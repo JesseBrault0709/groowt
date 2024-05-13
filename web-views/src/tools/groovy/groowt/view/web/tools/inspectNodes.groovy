@@ -1,9 +1,9 @@
 package groowt.view.web.tools
 
-import groowt.view.web.transpile.util.GroovyUtil
+import groowt.view.web.transpile.groovy.GroovyUtil
 import org.codehaus.groovy.ast.ImportNode
 
-import static groowt.view.web.transpile.util.GroovyUtil.formatGroovy
+import static groowt.view.web.transpile.groovy.GroovyUtil.formatGroovy
 
 def src = '''
 import some.Thing

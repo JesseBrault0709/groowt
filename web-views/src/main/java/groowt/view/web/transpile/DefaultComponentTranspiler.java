@@ -4,9 +4,9 @@ import groowt.view.component.context.ComponentResolveException;
 import groowt.view.component.runtime.ComponentCreateException;
 import groowt.view.web.WebViewComponentBugError;
 import groowt.view.web.ast.node.*;
+import groowt.view.web.transpile.groovy.GroovyUtil;
+import groowt.view.web.transpile.groovy.GroovyUtil.ConvertResult;
 import groowt.view.web.transpile.resolve.ComponentClassNodeResolver;
-import groowt.view.web.transpile.util.GroovyUtil;
-import groowt.view.web.transpile.util.GroovyUtil.ConvertResult;
 import groowt.view.web.util.Provider;
 import groowt.view.web.util.SourcePosition;
 import org.codehaus.groovy.ast.*;
@@ -352,15 +352,9 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
             TranspilerState state
     ) {
         final var createArgs = new ArgumentListExpression();
-
-        final VariableExpression resolvedVariableExpression;
-        final Variable currentResolved = state.getCurrentResolved();
-        if (currentResolved instanceof VariableExpression) {
-            resolvedVariableExpression = (VariableExpression) currentResolved;
-        } else {
-            resolvedVariableExpression = new VariableExpression(currentResolved);
-        }
-        createArgs.addExpression(resolvedVariableExpression);
+        
+        final VariableExpression currentResolved = state.getCurrentResolved();
+        createArgs.addExpression(currentResolved);
 
         final List<AttrNode> attrNodes = componentNode.getArgs().getAttributes();
         if (attrNodes.isEmpty()) {

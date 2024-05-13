@@ -7,15 +7,11 @@ class BaseWebViewComponentTests extends AbstractWebViewComponentTests {
 
     static final class Greeter extends BaseWebViewComponent {
 
-        private final String target
+        final String target
 
         Greeter(Map<String, Object> attr) {
             super('Hello, $target!')
             this.target = Objects.requireNonNull(attr.get("target"))
-        }
-
-        String getTarget() {
-            return this.target
         }
 
     }

@@ -20,18 +20,34 @@ public class ModuleNodeComponentClassNodeResolver extends CachingComponentClassN
     @Override
     public Either<ClassNodeResolveException, ClassNode> getClassForNameWithoutPackage(String nameWithoutPackage) {
         return super.getClassForNameWithoutPackage(nameWithoutPackage).flatMapLeft(ignored -> {
-            // try imports first
+            // try regular imports first
             final var importedClassNode = this.moduleNode.getImportType(nameWithoutPackage);
             if (importedClassNode != null) {
                 this.addClassNode(importedClassNode);
                 return Either.right(importedClassNode);
             }
 
+            // try star imports
+            final var starImports = this.moduleNode.getStarImports();
+            for (final var starImport : starImports) {
+                final var packageName = starImport.getPackageName();
+                final String fqn;
+                if (packageName.endsWith(".")) {
+                    fqn = packageName + nameWithoutPackage;
+                } else {
+                    fqn = packageName + "." + nameWithoutPackage;
+                }
+                final var withPackage = this.getClassForFqn(fqn);
+                if (withPackage.isRight()) {
+                    return withPackage;
+                }
+            }
+
             // try pre-pending package and asking for fqn
             final var packageName = this.moduleNode.getPackageName();
             final String fqn;
             if (packageName.endsWith(".")) {
-                fqn = this.moduleNode + nameWithoutPackage;
+                fqn = this.moduleNode.getPackageName() + nameWithoutPackage;
             } else {
                 fqn = this.moduleNode.getPackageName() + "." + nameWithoutPackage;
             }

@@ -1,16 +1,19 @@
 package groowt.view.web.ast;
 
 import groowt.view.web.antlr.TokenList;
+import groowt.view.web.ast.extension.NodeExtension;
 import groowt.view.web.ast.node.LeafNode;
 import groowt.view.web.ast.node.Node;
 import groowt.view.web.ast.node.TreeNode;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class NodeUtil {
 
     public static boolean isAnyOfType(Node subject, Class<?>... nodeTypes) {
+        Objects.requireNonNull(subject);
         for (final var type : nodeTypes) {
             if (type.isAssignableFrom(subject.getClass())) {
                 return true;
@@ -19,7 +22,19 @@ public final class NodeUtil {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
+    public static boolean hasExtensionOfType(Node subject, Class<?>... extensionTypes) {
+        Objects.requireNonNull(subject);
+        for (final var extensionType : extensionTypes) {
+            if (subject.hasExtension((Class<? extends NodeExtension>) extensionType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isAnyOfType(Node subject, List<Class<? extends Node>> nodeTypes) {
+        Objects.requireNonNull(subject);
         for (final var type : nodeTypes) {
             if (type.isAssignableFrom(subject.getClass())) {
                 return true;
