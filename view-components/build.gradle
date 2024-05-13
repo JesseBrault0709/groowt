@@ -1,5 +1,7 @@
 plugins {
-    id 'java'
+    id 'groowt-conventions'
+    id 'groowt-testing'
+    id 'groowt-publish'
     id 'java-library'
     id 'groovy'
 }
@@ -9,27 +11,17 @@ repositories {
 }
 
 dependencies {
-    api libs.groovy, libs.groovy.templates, libs.jetbrains.anotations, project(':views')
+    api libs.groovy
+    api libs.jetbrains.anotations
+    api project(':views')
+
     implementation libs.slf4j.api
-
-    testImplementation libs.junit.jupiter.api
-    testRuntimeOnly libs.log4j.slf4jBinding, libs.log4j.core
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
-
-test {
-    testLogging.showStandardStreams = true
-}
-
-testing {
-    suites {
-        test {
-            useJUnitJupiter()
+publishing {
+    publications {
+        create('viewComponents', MavenPublication) {
+            artifactId = 'groowt-view-components'
         }
     }
 }

@@ -1,5 +1,8 @@
 plugins {
     id 'groowt-conventions'
+    id 'groowt-testing'
+    id 'groowt-logging'
+    id 'groowt-publish'
     id 'java-library'
 }
 
@@ -7,4 +10,17 @@ dependencies {
     api libs.jakarta.inject
     compileOnlyApi libs.jetbrains.anotations
     implementation libs.slf4j.api, libs.groovy
+}
+
+jar {
+    archiveBaseName = 'groowt-util-di'
+}
+
+publishing {
+    publications {
+        create('di', MavenPublication) {
+            artifactId = 'groowt-util-di'
+            from components.java
+        }
+    }
 }

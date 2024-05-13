@@ -1,0 +1,35 @@
+//file:noinspection GrPackage
+plugins {
+    id 'groowt-conventions'
+    id 'groowt-logging'
+}
+
+configurations {
+    testing {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    testImplementation {
+        extendsFrom configurations.testing
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testing libs.junit.jupiter.api
+}
+
+test {
+    testLogging.showStandardStreams = true
+}
+
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+        }
+    }
+}

@@ -1,4 +1,4 @@
-package groowt.view.web.util;
+package groowt.util.fp.either;
 
 import java.util.function.Function;
 

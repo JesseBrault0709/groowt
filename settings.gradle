@@ -6,7 +6,7 @@ pluginManagement {
 
 rootProject.name = 'groowt'
 
-include 'cli', 'groowt-gradle', 'groowt-gradle-model', 'views', 'view-components', 'web-views'
+include 'cli', 'groowt-all', 'groowt-gradle', 'groowt-gradle-model', 'views', 'view-components', 'web-views'
 
 file('util').eachDir {
     include it.name

@@ -1,0 +1,22 @@
+plugins {
+    id 'groowt-conventions'
+    id 'groowt-publish'
+    id 'java-library'
+}
+
+dependencies {
+    api project(':views')
+    api project(':view-components')
+    api project(':web-views')
+    api project(':di')
+    api project(':extensible')
+}
+
+publishing {
+    publications {
+        create('groowtAll', MavenPublication) {
+            artifactId = 'groowt-all'
+            from components.java
+        }
+    }
+}

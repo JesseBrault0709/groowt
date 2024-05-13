@@ -1,7 +1,7 @@
 package groowt.view.web.transpile;
 
+import groowt.util.fp.provider.Provider;
 import groowt.view.web.transpile.resolve.ComponentClassNodeResolver;
-import groowt.view.web.util.Provider;
 
 public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
 

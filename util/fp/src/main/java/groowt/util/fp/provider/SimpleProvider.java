@@ -1,18 +1,17 @@
-package groowt.view.web.util;
+package groowt.util.fp.provider;
+
+import java.util.Objects;
 
 final class SimpleProvider<T> implements Provider<T> {
 
     private final T t;
 
     public SimpleProvider(T t) {
-        this.t = t;
+        this.t = Objects.requireNonNull(t);
     }
 
     @Override
     public T get() {
-        if (this.t == null) {
-            throw new NullPointerException("This Provider has a null value.");
-        }
         return t;
     }
 

@@ -1,5 +1,6 @@
 package groowt.view.web.transpile;
 
+import groowt.util.fp.option.Option;
 import groowt.view.web.antlr.MergedGroovyCodeToken;
 import groowt.view.web.antlr.WebViewComponentsLexer;
 import groowt.view.web.ast.extension.GStringNodeExtension;
@@ -10,7 +11,6 @@ import groowt.view.web.ast.node.JStringBodyTextNode;
 import groowt.view.web.ast.node.Node;
 import groowt.view.web.transpile.groovy.GroovyUtil;
 import groowt.view.web.util.FilteringIterable;
-import groowt.view.web.util.Option;
 import groowt.view.web.util.TokenRange;
 import org.antlr.v4.runtime.Token;
 import org.codehaus.groovy.ast.expr.*;

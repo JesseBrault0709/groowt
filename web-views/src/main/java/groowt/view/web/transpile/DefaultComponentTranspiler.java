@@ -1,5 +1,6 @@
 package groowt.view.web.transpile;
 
+import groowt.util.fp.provider.Provider;
 import groowt.view.component.context.ComponentResolveException;
 import groowt.view.component.runtime.ComponentCreateException;
 import groowt.view.web.WebViewComponentBugError;
@@ -7,7 +8,6 @@ import groowt.view.web.ast.node.*;
 import groowt.view.web.transpile.groovy.GroovyUtil;
 import groowt.view.web.transpile.groovy.GroovyUtil.ConvertResult;
 import groowt.view.web.transpile.resolve.ComponentClassNodeResolver;
-import groowt.view.web.util.Provider;
 import groowt.view.web.util.SourcePosition;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;

@@ -1,8 +1,8 @@
 package groowt.view.web.transpile.resolve;
 
+import groowt.util.fp.either.Either;
 import groowt.view.web.WebViewComponent;
 import groowt.view.web.compiler.WebViewComponentTemplateCompileUnit;
-import groowt.view.web.util.Either;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.ClassNode;
 

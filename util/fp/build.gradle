@@ -4,18 +4,23 @@ plugins {
     id 'java-library'
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     compileOnlyApi libs.jetbrains.anotations
 }
 
 jar {
-    archiveBaseName = 'groowt-util-extensible'
+    archiveBaseName = 'groowt-util-fp'
 }
 
 publishing {
     publications {
-        create('extensible', MavenPublication) {
-            artifactId = 'groowt-util-extensible'
+        create('fp', MavenPublication) {
+            artifactId = 'groowt-util-fp'
+            from components.java
         }
     }
 }

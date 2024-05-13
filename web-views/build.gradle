@@ -4,7 +4,8 @@ import groowt.gradle.antlr.GroowtAntlrExecTask
 plugins {
     id 'groowt-conventions'
     id 'groowt-antlr-plugin'
-    id 'groowt-logging'
+    id 'groowt-testing'
+    id 'groowt-publish'
     id 'java-library'
     id 'groovy'
     id 'org.jetbrains.kotlin.jvm'
@@ -16,6 +17,9 @@ repositories {
 }
 
 configurations {
+    testFixturesApi {
+        extendsFrom configurations.testing
+    }
     groovyConsole
     toolsImplementation {
         extendsFrom(apiElements, runtimeElements)
@@ -46,6 +50,7 @@ dependencies {
             libs.groovy,
             libs.groovy.templates,
             libs.antlr.runtime,
+            project(':fp'),
             project(':view-components'),
             project(':views')
     )
@@ -63,7 +68,7 @@ dependencies {
     runtimeOnly libs.log4j.slf4jBinding
 
     def testLibs = [
-            libs.junit.jupiter.api, libs.mockito.core, libs.mockito.junit
+            libs.mockito.core, libs.mockito.junit
     ]
 
     testLibs.each {
@@ -188,13 +193,13 @@ tasks.register('cleanBin', Delete) {
 
 test {
     jvmArgs '-XX:+EnableDynamicAgentLoading' // for mockito/bytebuddy
-    testLogging.showStandardStreams = true
 }
 
-testing {
-    suites {
-        test {
-            useJUnitJupiter()
+publishing {
+    publications {
+        create('webViews', MavenPublication) {
+            artifactId = 'groowt-web-views'
+            from components.java
         }
     }
 }

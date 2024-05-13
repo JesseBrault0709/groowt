@@ -1,5 +1,6 @@
-package groowt.view.web.util;
+package groowt.util.fp.option;
 
+import groowt.util.fp.hkt.Monoid;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
