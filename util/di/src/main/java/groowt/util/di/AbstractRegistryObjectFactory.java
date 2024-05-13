@@ -75,8 +75,8 @@ public abstract class AbstractRegistryObjectFactory extends AbstractInjectingObj
     }
 
     @Override
-    public void configureRegistry(Consumer<? super Registry> use) {
-        use.accept(this.registry);
+    public Registry getRegistry() {
+        return this.registry;
     }
 
     @Override

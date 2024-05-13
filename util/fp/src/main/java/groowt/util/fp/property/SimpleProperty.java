@@ -1,10 +1,15 @@
 package groowt.util.fp.property;
 
+import groovy.lang.Closure;
 import groowt.util.fp.provider.Provider;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 final class SimpleProperty<T> implements Property<T> {
+
+    private final List<Closure<?>> configureClosures = new ArrayList<>();
 
     private Provider<? extends T> provider;
     private Provider<? extends T> convention;
@@ -44,14 +49,30 @@ final class SimpleProperty<T> implements Property<T> {
     }
 
     @Override
+    public void configure(Closure<?> configureClosure) {
+        this.configureClosures.add(configureClosure);
+    }
+
+    private void doConfigures(T t) {
+        for (final var configureClosure : this.configureClosures) {
+            configureClosure.setDelegate(t);
+            configureClosure.call(t);
+        }
+    }
+
+    @Override
     public T get() {
         if (!this.isPresent()) {
             throw new NullPointerException("Cannot get() from an empty Property. Set the value or set the convention.");
-        } else if (this.provider != null) {
-            return this.provider.get();
-        } else {
-            return this.convention.get();
         }
+        final T t;
+        if (this.provider != null) {
+            t = this.provider.get();
+        } else {
+            t = this.convention.get();
+        }
+        this.doConfigures(t);
+        return t;
     }
 
 }

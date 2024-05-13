@@ -1,5 +1,9 @@
 package groowt.util.fp.property;
 
+import groovy.lang.Closure;
+import groovy.lang.DelegatesTo;
+import groovy.transform.stc.ClosureParams;
+import groovy.transform.stc.FromString;
 import groowt.util.fp.provider.Provider;
 import org.jetbrains.annotations.Nullable;
 
@@ -7,7 +11,7 @@ import java.util.function.Supplier;
 
 public interface Property<T> extends Provider<T> {
 
-    static <T> Property<T> get(Class<? extends T> tClass) {
+    static <T> Property<T> empty() {
         return new SimpleProperty<>();
     }
 
@@ -17,7 +21,7 @@ public interface Property<T> extends Provider<T> {
         return property;
     }
 
-    static <T> Property<T> ofLazy(Provider<T> tProvider) {
+    static <T> Property<T> ofProvider(Provider<T> tProvider) {
         final Property<T> property = new SimpleProperty<>();
         property.set(tProvider);
         return property;
@@ -33,6 +37,12 @@ public interface Property<T> extends Provider<T> {
     void set(Provider<? extends T> tProvider);
     void setConvention(T t);
     void setConvention(Provider<? extends T> tProvider);
+
+    void configure(
+            @DelegatesTo(type = "T")
+            @ClosureParams(value = FromString.class, options = "T")
+            Closure<?> configureClosure
+    );
 
     boolean isPresent();
     boolean isEmpty();

@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+    api libs.groovy
     compileOnlyApi libs.jetbrains.anotations
 }
 

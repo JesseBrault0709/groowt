@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public interface Registry extends ExtensionContainer, QualifierHandlerContainer, ScopeHandlerContainer {
+
     <T> void bind(Class<T> key, Consumer<? super BindingConfigurator<T>> configure);
     @Nullable <T> Binding<T> getBinding(Class<T> key);
     void removeBinding(Class<?> key);

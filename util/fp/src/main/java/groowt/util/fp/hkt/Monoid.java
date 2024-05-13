@@ -12,6 +12,14 @@ public final class Monoid<T> {
         this.zero = Objects.requireNonNull(zero);
     }
 
+    public SemiGroup<T> getSemiGroup() {
+        return this.semiGroup;
+    }
+
+    public Zero<T> getZero() {
+        return this.zero;
+    }
+
     public T concat(T left, T right) {
         return this.semiGroup.concat(left, right);
     }
