@@ -5,7 +5,6 @@ import jakarta.inject.Named;
 import org.junit.jupiter.api.Test;
 
 import static groowt.util.di.BindingUtil.*;
-import static groowt.util.di.NamedRegistryExtension.named;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class DefaultRegistryObjectFactoryTests {

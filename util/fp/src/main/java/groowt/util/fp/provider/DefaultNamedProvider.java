@@ -1,18 +1,27 @@
 package groowt.util.fp.provider;
 
-public class DefaultNamedProvider<T> implements NamedProvider<T> {
+class DefaultNamedProvider<T> implements NamedProvider<T> {
 
+    private final Class<T> type;
     private final String name;
     private final Provider<T> delegate;
 
+    @SuppressWarnings("unchecked")
     public DefaultNamedProvider(String name, T element) {
+        this.type = (Class<T>) element.getClass();
         this.name = name;
-        this.delegate = Provider.of(element);
+        this.delegate = DefaultProvider.of(element);
     }
 
-    public DefaultNamedProvider(String name, Provider<T> delegate) {
+    public DefaultNamedProvider(Class<T> type, String name, Provider<T> delegate) {
+        this.type = type;
         this.name = name;
         this.delegate = delegate;
+    }
+
+    @Override
+    public Class<T> getType() {
+        return this.type;
     }
 
     @Override

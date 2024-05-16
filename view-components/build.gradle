@@ -18,10 +18,15 @@ dependencies {
     implementation libs.slf4j.api
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         create('viewComponents', MavenPublication) {
             artifactId = 'groowt-view-components'
+            from components.java
         }
     }
 }

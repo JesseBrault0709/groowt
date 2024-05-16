@@ -27,6 +27,10 @@ public final class BindingUtil {
         return bc -> {};
     }
 
+    public static <T> KeyHolder<NamedRegistryExtension, String, T> named(String name, Class<T> type) {
+        return new SimpleKeyHolder<>(NamedRegistryExtension.class, type, name);
+    }
+
     private BindingUtil() {}
 
 }

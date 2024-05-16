@@ -21,6 +21,10 @@ test {
     testLogging.showStandardStreams = true
 }
 
+java {
+    withSourcesJar()
+}
+
 publishing {
     publications {
         create('views', MavenPublication) {

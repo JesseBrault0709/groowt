@@ -12,8 +12,9 @@ public interface NamedProvider<T> extends Provider<T> {
             NamedProvider<? extends T> other
     ) {
         return new DefaultNamedProvider<>(
+                this.getType(),
                 nameSemiGroup.concat(this.getName(), other.getName()),
-                Provider.ofLazy(() -> tSemiGroup.concat(this.get(), other.get()))
+                DefaultProvider.ofLazy(this.getType(), () -> tSemiGroup.concat(this.get(), other.get()))
         );
     }
 

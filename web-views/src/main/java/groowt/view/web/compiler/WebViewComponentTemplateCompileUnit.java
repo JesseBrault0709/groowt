@@ -63,7 +63,7 @@ public class WebViewComponentTemplateCompileUnit extends AbstractComponentTempla
 
     @Override
     public @Nullable String getLine(int lineNumber, Janitor janitor) {
-        if (this.getSource().canReopen()) {
+        if (lineNumber > -1 && this.getSource().canReopen()) {
             return this.getSource().getLines().get(lineNumber);
         } else {
             return null;

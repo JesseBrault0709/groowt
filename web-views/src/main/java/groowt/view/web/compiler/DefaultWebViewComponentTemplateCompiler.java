@@ -163,7 +163,13 @@ public class DefaultWebViewComponentTemplateCompiler
         final var allClasses = compileUnit.getGroovyCompilationUnit().getClasses();
         GroovyClass templateGroovyClass = null;
         final Set<GroovyClass> otherClasses = new HashSet<>();
-        final String templateClassFqn = sourceUnit.getAST().getPackageName() + "." + templateClassSimpleName;
+        final String actualPackageName = sourceUnit.getAST().getPackageName();
+        final String templateClassFqn;
+        if (actualPackageName.endsWith(".")) {
+            templateClassFqn = actualPackageName + templateClassSimpleName;
+        } else {
+            templateClassFqn = actualPackageName + "." + templateClassSimpleName;
+        }
         for (final GroovyClass groovyClass : allClasses) {
             if (groovyClass.getName().equals(templateClassFqn)) {
                 if (templateGroovyClass != null) {

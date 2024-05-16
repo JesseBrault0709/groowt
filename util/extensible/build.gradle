@@ -8,6 +8,10 @@ dependencies {
     compileOnlyApi libs.jetbrains.anotations
 }
 
+java {
+    withSourcesJar()
+}
+
 jar {
     archiveBaseName = 'groowt-util-extensible'
 }
@@ -16,6 +20,7 @@ publishing {
     publications {
         create('extensible', MavenPublication) {
             artifactId = 'groowt-util-extensible'
+            from components.java
         }
     }
 }

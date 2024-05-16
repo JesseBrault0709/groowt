@@ -2,8 +2,6 @@ package groowt.util.di;
 
 import groovy.lang.Closure;
 import groovy.lang.DelegatesTo;
-import groovy.transform.stc.ClosureParams;
-import groovy.transform.stc.FromString;
 import groowt.util.di.filters.FilterHandler;
 import groowt.util.di.filters.IterableFilterHandler;
 import jakarta.inject.Provider;
@@ -20,10 +18,22 @@ import java.util.function.Consumer;
 public interface RegistryObjectFactory extends ObjectFactory {
 
     interface Builder<T extends RegistryObjectFactory> {
+
         void configureRegistry(Consumer<? super Registry> configure);
+
+        default void configureRegistry(@DelegatesTo(Registry.class) Closure<?> configureClosure) {
+            this.configureRegistry(registry -> {
+                configureClosure.setDelegate(registry);
+                configureClosure.call();
+            });
+        }
+
         void addFilterHandler(FilterHandler<?, ?> handler);
+
         void addIterableFilterHandler(IterableFilterHandler<?, ?> handler);
+
         T build();
+
     }
 
     Registry getRegistry();
@@ -33,13 +43,12 @@ public interface RegistryObjectFactory extends ObjectFactory {
     }
 
     default void configureRegistry(
-            @DelegatesTo(Registry.class)
-            @ClosureParams(value = FromString.class, options = "groowt.util.di.Registry")
+            @DelegatesTo(value = Registry.class)
             Closure<?> configureClosure
     ) {
         final Registry registry = this.getRegistry();
         configureClosure.setDelegate(registry);
-        configureClosure.call(registry);
+        configureClosure.call();
     }
 
     <A extends Annotation> @Nullable ScopeHandler<A> findScopeHandler(Class<A> scopeType);

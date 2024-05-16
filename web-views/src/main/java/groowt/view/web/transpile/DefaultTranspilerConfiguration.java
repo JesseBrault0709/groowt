@@ -1,6 +1,6 @@
 package groowt.view.web.transpile;
 
-import groowt.util.fp.provider.Provider;
+import groowt.util.fp.provider.DefaultProvider;
 import groowt.view.web.transpile.resolve.ComponentClassNodeResolver;
 
 public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
@@ -14,10 +14,10 @@ public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
         final var jStringTranspiler = new DefaultJStringTranspiler(positionSetter);
         final var gStringTranspiler = new DefaultGStringTranspiler(positionSetter, jStringTranspiler);
         final var componentTranspiler = new DefaultComponentTranspiler(
-                Provider.of(this.appendOrAddStatementFactory),
-                Provider.of(classNodeResolver),
-                Provider.ofLazy(this::getValueNodeTranspiler),
-                Provider.ofLazy(this::getBodyTranspiler)
+                DefaultProvider.of(this.appendOrAddStatementFactory),
+                DefaultProvider.of(classNodeResolver),
+                DefaultProvider.ofLazy(ValueNodeTranspiler.class, this::getValueNodeTranspiler),
+                DefaultProvider.ofLazy(BodyTranspiler.class, this::getBodyTranspiler)
         );
         this.valueNodeTranspiler = new DefaultValueNodeTranspiler(componentTranspiler);
         this.bodyTranspiler = new DefaultBodyTranspiler(gStringTranspiler, jStringTranspiler, componentTranspiler);

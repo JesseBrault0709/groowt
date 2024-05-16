@@ -1,18 +1,54 @@
 package groowt.util.fp.property;
 
 import groovy.lang.Closure;
+import groowt.util.fp.provider.DefaultProvider;
 import groowt.util.fp.provider.Provider;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.function.Supplier;
 
-final class SimpleProperty<T> implements Property<T> {
+import static java.util.Objects.requireNonNull;
 
+public class DefaultProperty<T> implements Property<T> {
+
+    public static <T> Property<T> empty(Class<T> type) {
+        return new DefaultProperty<>(type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> Property<T> of(T t) {
+        final Property<T> property = new DefaultProperty<>((Class<T>) t.getClass());
+        property.set(t);
+        return property;
+    }
+
+    public static <T> Property<T> ofProvider(Class<T> type, Provider<T> tProvider) {
+        final Property<T> property = new DefaultProperty<>(type);
+        property.set(tProvider);
+        return property;
+    }
+
+    public static <T> Property<T> ofLazy(Class<T> type, Supplier<T> tSupplier) {
+        final Property<T> property = new DefaultProperty<>(type);
+        property.set(DefaultProvider.ofLazy(type, tSupplier));
+        return property;
+    }
+
+    private final Class<T> type;
     private final List<Closure<?>> configureClosures = new ArrayList<>();
 
     private Provider<? extends T> provider;
     private Provider<? extends T> convention;
+
+    protected DefaultProperty(Class<T> type) {
+        this.type = type;
+    }
+
+    @Override
+    public Class<T> getType() {
+        return this.type;
+    }
 
     @Override
     public boolean isPresent() {
@@ -26,25 +62,25 @@ final class SimpleProperty<T> implements Property<T> {
 
     @Override
     public void set(T t) {
-        Objects.requireNonNull(t);
-        this.provider = Provider.of(t);
+        requireNonNull(t);
+        this.provider = DefaultProvider.of(t);
     }
 
     @Override
     public void set(Provider<? extends T> tProvider) {
-        Objects.requireNonNull(tProvider);
+        requireNonNull(tProvider);
         this.provider = tProvider;
     }
 
     @Override
     public void setConvention(T convention) {
-        Objects.requireNonNull(convention);
-        this.convention = Provider.of(convention);
+        requireNonNull(convention);
+        this.convention = DefaultProvider.of(convention);
     }
 
     @Override
     public void setConvention(Provider<? extends T> convention) {
-        Objects.requireNonNull(convention);
+        requireNonNull(convention);
         this.convention = convention;
     }
 

@@ -13,6 +13,10 @@ dependencies {
     compileOnlyApi libs.jetbrains.anotations
 }
 
+java {
+    withSourcesJar()
+}
+
 jar {
     archiveBaseName = 'groowt-util-fp'
 }

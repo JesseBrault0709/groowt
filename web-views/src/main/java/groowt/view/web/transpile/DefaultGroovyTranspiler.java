@@ -106,7 +106,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
         if (convertResult.moduleNode().hasPackage()) {
             moduleNode.setPackage(convertResult.moduleNode().getPackage());
-            mainClassNode.setName(moduleNode.getPackageName() + "." + templateClassName);
+            mainClassNode.setName(moduleNode.getPackageName() + templateClassName);
         }
 
         final BlockStatement preambleBlock = convertResult.blockStatement();

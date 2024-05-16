@@ -13,18 +13,9 @@ import java.util.function.Supplier;
  *
  * @param <T> The type of the value contained within.
  */
-@FunctionalInterface
 public interface Provider<T> {
 
-    static <T> Provider<T> of(T t) {
-        Objects.requireNonNull(t);
-        return () -> t;
-    }
-
-    static <T> Provider<T> ofLazy(Supplier<? extends T> tSupplier) {
-        Objects.requireNonNull(tSupplier);
-        return () -> Objects.requireNonNull(tSupplier.get(), "This Provider is empty.");
-    }
+    Class<T> getType();
 
     /**
      * @implSpec Must throw {@link NullPointerException} if the value is null.
@@ -34,32 +25,48 @@ public interface Provider<T> {
      */
     T get();
 
+    default T get(Supplier<RuntimeException> onEmpty) {
+        try {
+            return this.get();
+        } catch (NullPointerException nullPointerException) {
+            final RuntimeException onEmptyException = onEmpty.get();
+            onEmptyException.initCause(nullPointerException);
+            throw onEmptyException;
+        }
+    }
+
     default Provider<T> filter(Predicate<? super T> filter) {
         Objects.requireNonNull(filter);
-        return () -> {
+        return new DefaultProvider<>(this.getType(), () -> {
             final T t = this.get();
             if (filter.test(t)) {
                 return t;
             } else {
-                throw new NullPointerException("This Provider is empty.");
+                throw new NullPointerException("This Provider is empty (did not pass filter).");
             }
-        };
+        });
     }
 
-    default <U> Provider<U> map(Function<? super T, ? extends U> mapper) {
+    default <U> Provider<U> map(Class<U> targetType, Function<? super T, ? extends U> mapper) {
         Objects.requireNonNull(mapper);
-        return () -> mapper.apply(this.get());
+        return new DefaultProvider<>(targetType, () -> mapper.apply(this.get()));
     }
 
-    default <U> Provider<U> flatMap(Function<? super T, ? extends Provider<? extends U>> flatMapper) {
+    default <U> Provider<U> flatMap(
+            Class<U> targetType,
+            Function<? super T, ? extends Provider<? extends U>> flatMapper
+    ) {
         Objects.requireNonNull(flatMapper);
-        return () -> flatMapper.apply(this.get()).get();
+        return new DefaultProvider<>(targetType, () -> flatMapper.apply(this.get()).get());
     }
 
-    default Provider<T> zip(SemiGroup<T> semiGroup, Provider<? extends T> other) {
+    default Provider<T> zip(
+            SemiGroup<T> semiGroup,
+            Provider<? extends T> other
+    ) {
         Objects.requireNonNull(semiGroup);
         Objects.requireNonNull(other);
-        return () -> semiGroup.concat(this.get(), other.get());
+        return new DefaultProvider<>(this.getType(), () -> semiGroup.concat(this.get(), other.get()));
     }
 
 }
