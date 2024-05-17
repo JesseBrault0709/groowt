@@ -23,14 +23,14 @@ public class ComponentTemplateCompileException extends Exception {
     @Override
     public String getMessage() {
         final var sb = new StringBuilder("Error in ").append(compileUnit.getSource().getDescription());
-        final @Nullable String position = this.getPosition();
+        final @Nullable String position = this.formatPosition();
         if (position != null) {
             sb.append(" at ").append(position);
         }
         return sb.append(": ").append(super.getMessage()).toString();
     }
 
-    protected @Nullable String getPosition() {
+    protected @Nullable String formatPosition() {
         return null;
     }
 
