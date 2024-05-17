@@ -137,6 +137,7 @@ tasks.register('uberJar', Jar) {
     group = 'build'
     archiveBaseName = 'web-views-uber'
     from sourceSets.main.output
+    from sourceSets.sketching.output
     from sourceSets.main.runtimeClasspath.filter(File.&exists).collect {
         it.isDirectory() ? it : zipTree(it)
     }

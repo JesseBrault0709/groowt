@@ -87,6 +87,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                         classNode.getMixins()
                 );
                 icn.setDeclaringClass(mainClassNode);
+                result.add(icn);
             }
         }
         return result;
@@ -178,7 +179,10 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         final var moduleNode = new WebViewComponentModuleNode(sourceUnit);
         sourceUnit.setModuleNode(moduleNode);
 
-        moduleNode.setPackageName(compileUnit.getDefaultPackageName());
+        final String defaultPackageName = compileUnit.getDefaultPackageName();
+        if (!defaultPackageName.trim().isEmpty()) {
+            moduleNode.setPackageName(defaultPackageName);
+        }
 
         moduleNode.addStarImport(GROOWT_VIEW_WEB + ".lib");
         moduleNode.addImport(COMPONENT_TEMPLATE.getNameWithoutPackage(), COMPONENT_TEMPLATE);
@@ -187,7 +191,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         moduleNode.addStarImport(GROOWT_VIEW_WEB + ".runtime");
 
         final ClassNode mainClassNode = new ClassNode(
-                compileUnit.getDefaultPackageName() + "." + templateClassName,
+                compileUnit.getDefaultPackageName() + templateClassName,
                 ACC_PUBLIC,
                 ClassHelper.OBJECT_TYPE
         );

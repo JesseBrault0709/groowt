@@ -32,7 +32,7 @@ public class ModuleNodeComponentClassNodeResolver extends CachingComponentClassN
             for (final var starImport : starImports) {
                 final var packageName = starImport.getPackageName();
                 final String fqn;
-                if (packageName.endsWith(".")) {
+                if (!packageName.equals(".") && packageName.endsWith(".")) {
                     fqn = packageName + nameWithoutPackage;
                 } else {
                     fqn = packageName + "." + nameWithoutPackage;
@@ -44,13 +44,23 @@ public class ModuleNodeComponentClassNodeResolver extends CachingComponentClassN
             }
 
             // try pre-pending package and asking for fqn
-            final var packageName = this.moduleNode.getPackageName();
-            final String fqn;
-            if (packageName.endsWith(".")) {
-                fqn = this.moduleNode.getPackageName() + nameWithoutPackage;
+            final String moduleNodePackageName = this.moduleNode.getPackageName();
+            final String packageName;
+            if (moduleNodePackageName != null) {
+                packageName = moduleNodePackageName;
             } else {
-                fqn = this.moduleNode.getPackageName() + "." + nameWithoutPackage;
+                packageName = "";
             }
+
+            final String fqn;
+            if (packageName.equals(".") || packageName.isEmpty()) {
+                fqn = nameWithoutPackage;
+            } else if (packageName.endsWith(".")) {
+                fqn = packageName + nameWithoutPackage;
+            } else {
+                fqn = packageName + "." + nameWithoutPackage;
+            }
+
             final var withPackage = this.getClassForFqn(fqn);
             if (withPackage.isRight()) {
                 return withPackage;

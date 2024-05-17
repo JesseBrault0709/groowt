@@ -16,7 +16,7 @@ public class MultipleWebViewComponentCompileErrorsException extends ComponentTem
             ComponentTemplateCompileUnit compileUnit,
             List<? extends Throwable> errors
     ) {
-        super(compileUnit, "There were multiple errors during compilation.");
+        super(compileUnit, "There were multiple errors during compilation/transpilation.");
         this.errors.addAll(errors);
     }
 

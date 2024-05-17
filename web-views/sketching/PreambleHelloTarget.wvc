@@ -1,9 +1,13 @@
 ---
+package sketching
+
+import groovy.transform.Field
+
 void consume(out) {
     out << 'World'
 }
 
-@groovy.transform.Field
+@Field
 String greeting = 'Hello'
 ---
 $greeting, ${consume(it)}!

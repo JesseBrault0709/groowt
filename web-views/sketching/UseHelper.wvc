@@ -1,0 +1,4 @@
+---
+package sketching
+---
+${new Helper().help('My God, it works')}

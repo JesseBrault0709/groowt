@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 
 if [ "$1" == "--debug" ]; then
+  shift
   gradle -q uberJar && \
     java -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8192 \
       -cp build/libs/web-views-uber-0.1.0.jar \
       org.codehaus.groovy.tools.FileSystemCompiler \
       --configscript src/main/resources/groowt/view/web/groovyc/GroovycConfigurationScript.groovy \
       -d groovyc-out \
-      sketching/helloTarget.wvc
+      "$@"
 else
   gradle -q uberJar && \
     groovyc -cp build/libs/web-views-uber-0.1.0.jar \
       --configscript src/main/resources/groowt/view/web/groovyc/GroovycConfigurationScript.groovy \
       -d groovyc-out \
-      sketching/helloTarget.wvc
+      "$@"
 fi

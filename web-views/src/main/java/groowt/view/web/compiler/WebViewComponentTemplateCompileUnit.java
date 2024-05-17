@@ -28,7 +28,11 @@ public class WebViewComponentTemplateCompileUnit extends AbstractComponentTempla
             String defaultPackageName
     ) {
         super(forClass, source);
-        this.defaultPackageName = defaultPackageName;
+        if (!defaultPackageName.isEmpty() && !defaultPackageName.endsWith(".")) {
+            this.defaultPackageName = defaultPackageName + ".";
+        } else {
+            this.defaultPackageName = defaultPackageName;
+        }
     }
 
     @Override

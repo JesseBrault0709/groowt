@@ -1,4 +1,4 @@
 ---
-import groowt.view.web.lib.Echo
+package sketching
 ---
 <Echo><p>$cliGreeting</p></Echo>

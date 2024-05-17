@@ -1,4 +1,6 @@
 ---
+package sketching
+
 class Greeter extends BaseWebViewComponent {
     String target
 
