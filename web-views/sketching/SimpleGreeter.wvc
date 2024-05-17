@@ -1,7 +1,9 @@
 ---
 package sketching
 
-class Greeter extends BaseWebViewComponent {
+import groowt.view.web.BaseWebViewComponent
+
+static class Greeter extends BaseWebViewComponent {
     String target
 
     Greeter(Map attr) {
