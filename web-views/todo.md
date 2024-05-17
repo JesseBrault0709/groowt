@@ -21,6 +21,7 @@
 - [ ] Create smoke screen test cases for the compiler.
 - [ ] Separate the api, runtime, and compiler elements. The api/runtime can depend on the compiler. If users really want
   to meddle with the compiler for some reason, they can depend on it directly.
+- [ ] Get rid of sketching source set.
 
 ## Syntax ideas
 - Perhaps we could have a lambda- or closure-like factory at the beginning of a component for creating it. This could
