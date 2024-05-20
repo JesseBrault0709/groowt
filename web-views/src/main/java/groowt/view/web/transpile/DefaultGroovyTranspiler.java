@@ -25,7 +25,6 @@ import org.codehaus.groovy.control.SourceUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static groowt.view.web.transpile.TranspilerUtil.*;
@@ -67,30 +66,6 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                             "Remove the class with that name."
             );
         }
-    }
-
-    protected List<InnerClassNode> convertPreambleClassesToInnerClasses(
-            ClassNode mainClassNode,
-            List<ClassNode> classNodes
-    ) {
-        final List<InnerClassNode> result = new ArrayList<>();
-        for (final var classNode : classNodes) {
-            if (classNode instanceof InnerClassNode innerClassNode) {
-                result.add(innerClassNode);
-            } else {
-                final InnerClassNode icn = new InnerClassNode(
-                        mainClassNode,
-                        mainClassNode.getName() + "." + classNode.getNameWithoutPackage(),
-                        classNode.getModifiers(),
-                        classNode.getSuperClass(),
-                        classNode.getInterfaces(),
-                        classNode.getMixins()
-                );
-                icn.setDeclaringClass(mainClassNode);
-                result.add(icn);
-            }
-        }
-        return result;
     }
 
     protected void handlePreamble(
@@ -147,12 +122,9 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         // handle classes
         final List<ClassNode> classNodes = convertResult.classNodes();
         this.checkPreambleClasses(templateClassName, classNodes);
-        final List<ClassNode> toInner = classNodes.stream()
+        classNodes.stream()
                 .filter(classNode -> classNode != convertResult.scriptClass())
-                .filter(classNode -> !classNode.isScript())
-                .toList();
-        final List<InnerClassNode> innerClassNodes = this.convertPreambleClassesToInnerClasses(mainClassNode, toInner);
-        innerClassNodes.forEach(moduleNode::addClass);
+                .forEach(moduleNode::addClass);
     }
 
     // Cases:

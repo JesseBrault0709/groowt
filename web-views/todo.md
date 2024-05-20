@@ -18,9 +18,11 @@
 - [ ] Create smoke screen test cases for the compiler.
 - [ ] Separate the api, runtime, and compiler elements. The api/runtime can depend on the compiler. If users really want
   to meddle with the compiler for some reason, they can depend on it directly.
-- [ ] Fix inner class bug.
 
 ### Done
+- [X] Fix inner class bug.
+  - Update 5/20/24: Seems to be working now. N.b.: they are not truly 'inner' classes but rather classes that are added
+    to the same module. We should always prefer to err on the side of what the usual groovy script semantics are.
 - [X] Get rid of sketching source set.
   - Update 5/20/24: Done, but moved to `sketching/(java | groovy)/sketching` src set dirs.
 - [X] Think more about how to compile templates and components alongside each other. Perhaps we just need to bite
