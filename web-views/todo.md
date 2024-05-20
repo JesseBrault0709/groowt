@@ -18,6 +18,7 @@
 - [ ] Create smoke screen test cases for the compiler.
 - [ ] Separate the api, runtime, and compiler elements. The api/runtime can depend on the compiler. If users really want
   to meddle with the compiler for some reason, they can depend on it directly.
+- [ ] Rename base package to `groowt.view.component.web`
 
 ### Done
 - [X] Fix inner class bug.
