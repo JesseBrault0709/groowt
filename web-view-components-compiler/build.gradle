@@ -148,6 +148,7 @@ def toolSpec = { String name, String mainClass ->
 final List<ToolSpec> toolSpecs = [
         toolSpec('astFileMaker', 'AstFileMakerCli'),
         toolSpec('convertToGroovy', 'ConvertToGroovy'),
+        toolSpec('groovyWvc', 'GroovyWvcCompiler'),
         toolSpec('lexer', 'LexerTool'),
         toolSpec('parser', 'ParserTool'),
         toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli')

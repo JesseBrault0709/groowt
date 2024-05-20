@@ -2,24 +2,14 @@ package groowt.view.component.web.compiler;
 
 import groowt.view.component.compiler.*;
 import groowt.view.component.web.WebViewComponentBugError;
-import groowt.view.component.web.analysis.MismatchedComponentTypeAnalysis;
-import groowt.view.component.web.analysis.MismatchedComponentTypeError;
-import groowt.view.component.web.antlr.*;
-import groowt.view.component.web.ast.DefaultAstBuilder;
-import groowt.view.component.web.ast.DefaultNodeFactory;
 import groowt.view.component.web.ast.node.CompilationUnitNode;
 import groowt.view.component.web.transpile.DefaultGroovyTranspiler;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Tree;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.tools.GroovyClass;
 
-import java.io.Reader;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class DefaultWebViewComponentTemplateCompiler
@@ -30,18 +20,6 @@ public class DefaultWebViewComponentTemplateCompiler
 
     public DefaultWebViewComponentTemplateCompiler(ComponentTemplateCompilerConfiguration configuration) {
         this.configuration = configuration;
-    }
-
-    protected WebViewComponentTemplateCompileException getException(
-            WebViewComponentTemplateCompileUnit compileUnit,
-            TerminalNode terminalNode
-    ) {
-        final Token offending = terminalNode.getSymbol();
-        final var exception = new WebViewComponentTemplateCompileException(
-                compileUnit, "Invalid token '" + TokenUtil.excerptToken(offending) + "'."
-        );
-        exception.setTerminalNode(terminalNode);
-        return exception;
     }
 
     protected WebViewComponentTemplateCompileException getException(
@@ -57,80 +35,11 @@ public class DefaultWebViewComponentTemplateCompiler
         return exception;
     }
 
-    protected WebViewComponentTemplateCompileException getException(
-            WebViewComponentTemplateCompileUnit compileUnit,
-            Tree tree
-    ) {
-        if (tree instanceof ParserRuleContext parserRuleContext) {
-            return getException(compileUnit, parserRuleContext);
-        } else if (tree instanceof TerminalNode terminalNode) {
-            return getException(compileUnit, terminalNode);
-        } else {
-            return new WebViewComponentTemplateCompileException(
-                    compileUnit,
-                    "Error at parser/lexer node " + tree.toString()
-            );
-        }
-    }
-
-    protected WebViewComponentTemplateCompileException getException(
-            WebViewComponentTemplateCompileUnit compileUnit,
-            MismatchedComponentTypeError error
-    ) {
-        final var exception = new WebViewComponentTemplateCompileException(
-                compileUnit,
-                error.getMessage()
-        );
-        exception.setParserRuleContext(error.getComponent());
-        return exception;
-    }
-
     @Override
     protected ComponentTemplateCompileResult doCompile(WebViewComponentTemplateCompileUnit compileUnit)
             throws ComponentTemplateCompileException {
 
-        final Reader sourceReader;
-        try {
-            sourceReader = compileUnit.getSource().toReader();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        final CompilationUnitParseResult parseResult = ParserUtil.parseCompilationUnit(sourceReader);
-
-        // check for parser/lexer errors
-        final var parseErrors = AntlrUtil.findErrorNodes(parseResult.getCompilationUnitContext());
-        if (!parseErrors.isEmpty()) {
-            if (parseErrors.getErrorCount() == 1) {
-                final var errorNode = parseErrors.getAll().getFirst();
-                throw getException(compileUnit, errorNode);
-            } else {
-                final var errorExceptions = parseErrors.getAll().stream()
-                        .map(errorNode -> getException(compileUnit, errorNode))
-                        .toList();
-                throw new MultipleWebViewComponentCompileErrorsException(compileUnit, errorExceptions);
-            }
-        }
-
-        // check for mismatched type errors
-        final List<MismatchedComponentTypeError> mismatchedComponentTypeErrors =
-                MismatchedComponentTypeAnalysis.check(parseResult.getCompilationUnitContext());
-
-        if (!mismatchedComponentTypeErrors.isEmpty()) {
-            if (mismatchedComponentTypeErrors.size() == 1) {
-                throw getException(compileUnit, mismatchedComponentTypeErrors.getFirst());
-            } else {
-                final var errorExceptions = mismatchedComponentTypeErrors.stream()
-                        .map(error -> getException(compileUnit, error))
-                        .toList();
-                throw new MultipleWebViewComponentCompileErrorsException(compileUnit, errorExceptions);
-            }
-        }
-
-        // build ast
-        final var tokenList = new TokenList(parseResult.getTokenStream());
-        final var astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList));
-        final var cuNode = (CompilationUnitNode) astBuilder.build(parseResult.getCompilationUnitContext());
+        final CompilationUnitNode cuNode = CompilerPipeline.parseAndBuildAst(compileUnit);
 
         // transpile to Groovy
         final var transpiler = new DefaultGroovyTranspiler();
