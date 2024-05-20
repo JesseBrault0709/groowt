@@ -11,7 +11,7 @@ package com.jessebrault.website
 import groowt.view.component.ComponentTemplate
 import groowt.view.component.context.ComponentContext
 import groowt.view.component.runtime.*
-import groowt.view.web.WebViewComponent
+import groowt.view.component.web.WebViewComponent
 import groowt.view.web.lib.*
 import groowt.view.web.runtime.*
 

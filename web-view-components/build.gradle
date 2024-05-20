@@ -97,8 +97,8 @@ java {
 }
 
 ext {
-    antlrPackageName = 'groowt.view.web.antlr'
-    toolsPackageName = 'groowt.view.web.tools'
+    antlrPackageName = 'groowt.view.component.web.antlr'
+    toolsPackageName = 'groowt.view.component.web.tools'
 }
 
 groowtAntlr {

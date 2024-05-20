@@ -17,7 +17,7 @@ tokens {
 
 @header {
     import java.util.Set;
-    import static groowt.view.web.antlr.LexerSemanticPredicates.*;
+    import static groowt.view.component.web.antlr.LexerSemanticPredicates.*;
 }
 
 @members {

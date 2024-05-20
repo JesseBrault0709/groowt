@@ -1,6 +1,6 @@
 package sketching
 
-import groowt.view.web.BaseWebViewComponent
+import groowt.view.component.web.BaseWebViewComponent
 
 class Greeters {
 
