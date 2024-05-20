@@ -3,16 +3,15 @@ package groowt.view.component.web.ast;
 import groowt.view.component.web.antlr.ParserUtil;
 import groowt.view.component.web.antlr.TokenList;
 
-import java.io.File;
 import java.nio.file.Path;
 
 public class DefaultAstBuilderTests extends AstBuilderTests {
 
     public DefaultAstBuilderTests() {
         super(
-                Path.of(String.join(File.separator, "src", "test", "ast")),
+                Path.of("src", "test", "ast"),
                 "*.wvc",
-                new File(String.join(File.separator, "src", "test", "ast", "trees")),
+                Path.of("src", "test", "ast", "trees"),
                 "_ast.txt"
         );
     }
