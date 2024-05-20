@@ -2,7 +2,6 @@ package groowt.view.web.ast;
 
 import groowt.view.web.antlr.ParserUtil;
 import groowt.view.web.antlr.TokenList;
-import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;

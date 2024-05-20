@@ -5,7 +5,6 @@ import groowt.view.web.ast.extension.NodeExtensionContainer;
 import groowt.view.web.util.TokenRange;
 import org.antlr.v4.runtime.Token;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 public sealed abstract class ComponentTypeNode extends AbstractLeafNode permits

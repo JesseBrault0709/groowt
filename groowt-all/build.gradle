@@ -7,7 +7,7 @@ plugins {
 dependencies {
     api project(':views')
     api project(':view-components')
-    api project(':web-views')
+    api project(':web-view-components')
     api project(':di')
     api project(':extensible')
 }
