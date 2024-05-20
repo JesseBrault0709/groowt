@@ -11,10 +11,11 @@ import groowt.view.component.web.ast.DefaultAstBuilder
 import groowt.view.component.web.ast.DefaultNodeFactory
 import groowt.view.component.web.ast.NodeUtil
 import groowt.view.component.web.ast.node.Node
+import groowt.view.component.web.util.ExtensionUtil
 import org.jetbrains.annotations.Nullable
 
 @InheritConstructors
-final class AstFileMaker extends AbstractTreeFileMaker {
+final class AstFileMaker extends AbstractOutputFileMaker {
 
     protected sealed interface BuildResult permits BuildSuccess, BuildFailure {}
 
@@ -31,22 +32,6 @@ final class AstFileMaker extends AbstractTreeFileMaker {
         @Nullable String message
     }
 
-    private void writeFormatted(String name, String formatted) {
-        this.outputDirectory.mkdirs()
-        def outFile = new File(this.outputDirectory, name + this.suffix + this.extension)
-        if (outFile.exists()) {
-            if (this.getYesNoInput("$outFile already exists. Write over? (y/n)")) {
-                println "Writing to $outFile..."
-                outFile.write(formatted)
-            } else {
-                println "Skipping writing to $outFile."
-            }
-        } else {
-            println "Writing to $outFile..."
-            outFile.write(formatted)
-        }
-    }
-
     private boolean onSuccess(String name, BuildSuccess buildSuccess) {
         def formatted = NodeUtil.formatAst(buildSuccess.node, buildSuccess.tokenList)
         if (!this.autoYes) {
@@ -54,7 +39,7 @@ final class AstFileMaker extends AbstractTreeFileMaker {
             println formatted
         }
         if (this.getYesNoInput('Would you like to write to disk? (y/n)')) {
-            this.writeFormatted(name, formatted)
+            this.writeToDisk(name, formatted)
             return true
         } else {
             return !this.getYesNoInput('Do you wish to redo this file? (y/n)')
@@ -117,7 +102,7 @@ final class AstFileMaker extends AbstractTreeFileMaker {
 
     @Override
     void process(File sourceFile) {
-        def name = this.getNameWithoutExtension(sourceFile)
+        def name = ExtensionUtil.getNameWithoutExtension(sourceFile)
         println "Processing $name"
         boolean doneYet = false
         while (!doneYet) {

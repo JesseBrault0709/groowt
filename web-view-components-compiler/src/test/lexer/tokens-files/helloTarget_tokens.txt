@@ -1,0 +1,4 @@
+RawText[1,0](Hello, )
+DollarReferenceStart[1,7]($)
+GroovyCode[1,8](target)
+RawText[1,14](!\n)

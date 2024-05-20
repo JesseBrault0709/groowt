@@ -1,9 +1,17 @@
 package groowt.view.component.web.antlr;
 
+import groowt.view.component.web.testutil.FileComparisonTestUtil;
+import groowt.view.component.web.util.ExtensionUtil;
+import groowt.view.component.web.util.FileUtil;
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Token;
+import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 
+import java.nio.file.Path;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 import static groowt.view.component.web.antlr.WebViewComponentsLexer.*;
@@ -46,6 +54,27 @@ public class WebViewComponentsLexerTests {
         assertEquals("!", t3.getText());
         assertTokenType(RawText, t3);
         assertTokenType(EOF, t4);
+    }
+
+    @TestFactory
+    public Collection<DynamicTest> lexerFileTests() {
+        return FileComparisonTestUtil.getTestsFor(
+                Path.of("src", "test", "lexer"),
+                "*.wvc",
+                Path.of("src", "test", "lexer", "tokens-files"),
+                sourcePath -> {
+                    final String nameWithoutExtension = ExtensionUtil.getNameWithoutExtension(sourcePath);
+                    return Path.of(nameWithoutExtension + "_tokens.txt");
+                },
+                sourceFile -> {
+                    final CharStream input = CharStreams.fromString(FileUtil.readFile(sourceFile));
+                    final WebViewComponentsLexer lexer = new WebViewComponentsLexer(input);
+                    final WebViewComponentsTokenStream tokenStream = new WebViewComponentsTokenStream(lexer);
+                    return tokenStream.getAllTokensSkipEOF().stream()
+                            .map(TokenUtil::formatToken)
+                            .collect(Collectors.joining("\n"));
+                }
+        );
     }
 
 }

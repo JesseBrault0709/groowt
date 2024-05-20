@@ -3,31 +3,11 @@ package groowt.view.component.web.tools
 import groovy.transform.InheritConstructors
 import groowt.view.component.web.antlr.*
 import groowt.view.component.web.antlr.AntlrUtil.ParseErrorCollector
+import groowt.view.component.web.util.ExtensionUtil
 import org.antlr.v4.runtime.CharStreams
 
 @InheritConstructors
-final class ParseTreeFileMaker extends AbstractTreeFileMaker {
-
-    private void writeFormatted(
-            String name,
-            WebViewComponentsParser parser,
-            WebViewComponentsParser.CompilationUnitContext cu
-    ) {
-        this.outputDirectory.mkdirs()
-        def formatted = ParserUtil.formatTree(parser, cu, false)
-        def out = new File(this.outputDirectory, name + this.suffix + this.extension)
-        if (out.exists()) {
-            if (this.getYesNoInput("${out} already exists. Write over? (y/n)")) {
-                println "Writing to $out..."
-                out.write(formatted)
-            } else {
-                println "Skipping writing to $out."
-            }
-        } else {
-            println "Writing to $out..."
-            out.write(formatted)
-        }
-    }
+final class ParseTreeFileMaker extends AbstractOutputFileMaker {
 
     /**
      * @return true if done now, false if not done yet
@@ -42,7 +22,8 @@ final class ParseTreeFileMaker extends AbstractTreeFileMaker {
             println ParserUtil.formatTree(parser, cu, true)
         }
         if (this.getYesNoInput('Write to disk? (y/n)')) {
-            this.writeFormatted(name, parser, cu)
+            def formatted = ParserUtil.formatTree(parser, cu, false)
+            this.writeToDisk(name, formatted)
             return true
         } else {
             return !this.getYesNoInput('Do you wish to redo this file? (y/n)')
@@ -86,8 +67,8 @@ final class ParseTreeFileMaker extends AbstractTreeFileMaker {
 
     @Override
     void process(File sourceFile) {
-        def name = this.getNameWithoutExtension(sourceFile)
-        println "processing: $name"
+        def name = ExtensionUtil.getNameWithoutExtension(sourceFile)
+        println "Processing: $name"
         boolean doneYet = false
         while (!doneYet) {
             def (parser, cu, errors) = this.parse(sourceFile)

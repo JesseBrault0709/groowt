@@ -190,6 +190,11 @@ class WebViewComponentsTokenStream (private val tokenSource: TokenSource) : Toke
         return this.tokens
     }
 
+    fun getAllTokensSkipEOF(): List<Token> {
+        this.fill()
+        return this.tokens.filter { it.type != Token.EOF }
+    }
+
     private fun fill() {
         val oldIndex = this.currentIndex
         this.initialize()

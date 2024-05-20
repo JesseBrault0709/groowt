@@ -151,7 +151,8 @@ final List<ToolSpec> toolSpecs = [
         toolSpec('groovyWvc', 'GroovyWvcCompiler'),
         toolSpec('lexer', 'LexerTool'),
         toolSpec('parser', 'ParserTool'),
-        toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli')
+        toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli'),
+        toolSpec('tokensFileMaker', 'TokensFileMakerCli')
 ]
 
 toolSpecs.each { spec ->

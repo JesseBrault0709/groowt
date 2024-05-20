@@ -1,10 +1,6 @@
 package groowt.view.component.web.tools
 
-import java.util.regex.Pattern
-
-abstract class AbstractTreeFileMaker implements SourceFileProcessor {
-
-    private static final Pattern withoutExtension = ~/(?<name>.*)\.(?<ext>.+)/
+abstract class AbstractOutputFileMaker implements SourceFileProcessor {
 
     private final Scanner scanner = new Scanner(System.in)
 
@@ -14,15 +10,6 @@ abstract class AbstractTreeFileMaker implements SourceFileProcessor {
     File outputDirectory
     boolean autoYes
     boolean verbose
-
-    protected String getNameWithoutExtension(File file) {
-        def m = withoutExtension.matcher(file.name)
-        if (m.matches()) {
-            return m.group('name')
-        } else {
-            throw new IllegalArgumentException("Could not determine file name without extension for ${file}")
-        }
-    }
 
     protected boolean getYesNoInput(String prompt, boolean force = false) {
         if (this.autoYes && !force) {
@@ -37,6 +24,22 @@ abstract class AbstractTreeFileMaker implements SourceFileProcessor {
                     }
                 }
             }
+        }
+    }
+
+    protected void writeToDisk(String name, String formatted) {
+        this.outputDirectory.mkdirs()
+        def out = new File(this.outputDirectory, name + this.suffix + this.extension)
+        if (out.exists()) {
+            if (this.getYesNoInput("${out} already exists. Write over? (y/n)")) {
+                println "Writing to $out..."
+                out.write(formatted)
+            } else {
+                println "Skipping writing to $out."
+            }
+        } else {
+            println "Writing to $out..."
+            out.write(formatted)
         }
     }
 
