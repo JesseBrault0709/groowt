@@ -7,7 +7,7 @@ import groowt.view.component.compiler.ComponentTemplateCompileUnit;
 import groowt.view.component.compiler.source.ComponentTemplateSource;
 import groowt.view.component.runtime.ComponentWriter;
 import groowt.view.component.runtime.DefaultComponentWriter;
-import groowt.view.component.web.compiler.WebViewComponentTemplateCompileUnit;
+import groowt.view.component.web.compiler.DefaultWebViewComponentTemplateCompileUnit;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -36,7 +36,9 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
     }
 
     public AbstractWebViewComponent(ComponentTemplateSource source) {
-        this(selfClass -> new WebViewComponentTemplateCompileUnit(selfClass, source, selfClass.getPackageName()));
+        this(selfClass -> new DefaultWebViewComponentTemplateCompileUnit(
+                selfClass, source, selfClass.getPackageName())
+        );
     }
 
     @Override

@@ -5,7 +5,7 @@ import groowt.view.component.ComponentRenderException
 import groowt.view.component.context.ComponentContext
 import groowt.view.component.context.ComponentScope.TypeAndFactory
 import groowt.view.component.factory.ComponentFactory
-import groowt.view.component.web.util.WithHtml
+import groowt.view.component.web.WithHtml
 
 class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
 

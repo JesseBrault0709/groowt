@@ -1,6 +1,0 @@
----
-package groowt.view.web.sketching
----
-<>
-    <Greeters.Simple greeting='Hello, one!' />&nbsp;<Greeters.Simple greeting='Hello, two!' />
-</>

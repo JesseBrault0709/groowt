@@ -6,7 +6,7 @@ import groowt.view.component.compiler.source.ComponentTemplateSource
 import groowt.view.component.web.BaseWebViewComponent
 import groowt.view.component.web.DefaultWebViewComponentContext
 import groowt.view.component.web.compiler.AnonymousWebViewComponent
-import groowt.view.component.web.compiler.WebViewComponentTemplateCompileUnit
+import groowt.view.component.web.compiler.DefaultWebViewComponentTemplateCompileUnit
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -51,7 +51,7 @@ class RunTemplate implements Callable<Integer> {
 
     @Override
     Integer call() throws Exception {
-        def compileUnit = new WebViewComponentTemplateCompileUnit(
+        def compileUnit = new DefaultWebViewComponentTemplateCompileUnit(
                 AnonymousWebViewComponent,
                 ComponentTemplateSource.of(this.template),
                 'groowt.view.web.tools'

@@ -1,6 +1,5 @@
 package groowt.view.component.web.lib
 
-
 import org.junit.jupiter.api.Test
 
 class IntrinsicHtmlTests extends AbstractWebViewComponentTests {

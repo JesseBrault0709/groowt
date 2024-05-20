@@ -1,20 +1,18 @@
 package groowt.view.component.web.lib
 
-import groowt.view.component.compiler.DefaultComponentTemplateCompilerConfiguration
 import groowt.view.component.compiler.SimpleComponentTemplateClassFactory
 import groowt.view.component.compiler.source.ComponentTemplateSource
 import groowt.view.component.context.ComponentContext
 import groowt.view.component.runtime.DefaultComponentWriter
-import groowt.view.component.web.compiler.DefaultWebViewComponentTemplateCompiler
+import groowt.view.component.web.compiler.WebViewComponentTemplateCompiler
 
 import static org.junit.jupiter.api.Assertions.assertEquals
 
 abstract class AbstractWebViewComponentTests implements WithContext {
 
     protected void doTest(Reader sourceReader, String expected, ComponentContext context) {
-        def compileResult = new DefaultWebViewComponentTemplateCompiler(
-                new DefaultComponentTemplateCompilerConfiguration()
-        ).compileAnonymous(ComponentTemplateSource.of(sourceReader), this.class.packageName)
+        def compileResult = WebViewComponentTemplateCompiler.get()
+                .compileAnonymous(ComponentTemplateSource.of(sourceReader), this.class.packageName)
 
         def factory = new SimpleComponentTemplateClassFactory()
         def templateClass = factory.getTemplateClass(compileResult)

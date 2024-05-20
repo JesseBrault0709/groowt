@@ -9,7 +9,10 @@ import java.util.Map;
 
 public interface WebViewComponentRenderContext extends RenderContext {
 
+    @SuppressWarnings("unused")
     Map<String, Object> EMPTY_ATTR = Map.of();
+
+    @SuppressWarnings("unused")
     Object[] EMPTY_CONSTRUCTOR_ARGS = {};
 
     WebViewComponent create(

@@ -1,0 +1,15 @@
+---
+package sketching
+
+import groowt.view.component.web.BaseWebViewComponent
+
+class SimpleHello extends BaseWebViewComponent {
+    String target
+
+    SimpleHello(Map attr) {
+        super('Hello, $target!')
+        this.target = attr.target
+    }
+}
+---
+<SimpleHello target='World' />

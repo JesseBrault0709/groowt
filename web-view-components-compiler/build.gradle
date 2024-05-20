@@ -1,4 +1,5 @@
 import groovy.transform.NullCheck
+import groowt.gradle.antlr.GroowtAntlrExecTask
 
 plugins {
     id 'groowt-conventions'
@@ -7,6 +8,7 @@ plugins {
     id 'groowt-publish'
     id 'java-library'
     id 'groovy'
+    id 'org.jetbrains.kotlin.jvm'
     id 'java-test-fixtures'
 }
 
@@ -16,6 +18,9 @@ repositories {
 
 configurations {
     groovyConsole
+    sketchingImplementation {
+        extendsFrom(apiElements, runtimeElements)
+    }
     testFixturesApi {
         extendsFrom configurations.testing
     }
@@ -25,6 +30,19 @@ configurations {
 }
 
 sourceSets {
+    sketching {
+        java {
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
+            srcDirs = [file('sketching/java')]
+        }
+        groovy {
+            srcDirs = [file('sketching/groovy')]
+        }
+        resources {
+            srcDirs = [file('sketching/resources')]
+        }
+    }
     tools {
         java {
             compileClasspath += sourceSets.main.output
@@ -34,23 +52,56 @@ sourceSets {
 }
 
 dependencies {
-    api libs.groovy
-    api project(':view-components')
-    api project(':views')
+    api project(':web-view-components')
+    api libs.antlr.runtime
+    api project(':fp')
 
     compileOnlyApi libs.jetbrains.anotations
 
     implementation libs.slf4j.api
+    implementation libs.kotlin.stdlib
+    implementation libs.jansi
+    implementation libs.asm
+    implementation project(':di')
+    implementation project(':extensible')
 
-    testRuntimeOnly project(':web-view-components-compiler')
+    groowtAntlr libs.antlr
+
+    testing libs.mockito.core, libs.mockito.junit
 
     groovyConsole libs.groovy.console
 
     toolsImplementation libs.picocli
+    toolsImplementation libs.groovy.console
+    toolsImplementation libs.log4j.core
+
+    toolsRuntimeOnly libs.log4j.slf4jBinding
 }
 
 ext {
+    antlrPackageName = 'groowt.view.component.web.antlr'
     toolsPackageName = 'groowt.view.component.web.tools'
+}
+
+groowtAntlr {
+    packageName = project.ext.get('antlrPackageName')
+    visitor = true
+}
+
+tasks.named('generateWebViewComponentsLexerBase', GroowtAntlrExecTask) { task ->
+    doLast {
+        def pattern = ~/public class WebViewComponentsLexerBase(.*)/
+        def lexerSource = task.resolveOutputFile 'WebViewComponentsLexerBase.java'
+        def outLines = lexerSource.readLines().collect {
+            def matcher = pattern.matcher(it)
+            if (matcher.matches()) {
+                return 'public abstract class WebViewComponentsLexerBase' + matcher.group(1)
+            } else {
+                return it
+            }
+        }
+        lexerSource.write(outLines.join('\n'))
+    }
 }
 
 tasks.register('groovyConsole', JavaExec) {
@@ -99,8 +150,7 @@ final List<ToolSpec> toolSpecs = [
         toolSpec('convertToGroovy', 'ConvertToGroovy'),
         toolSpec('lexer', 'LexerTool'),
         toolSpec('parser', 'ParserTool'),
-        toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli'),
-        toolSpec('runTemplate', 'RunTemplate')
+        toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli')
 ]
 
 toolSpecs.each { spec ->
@@ -129,15 +179,28 @@ tasks.register('cleanBin', Delete) {
     delete file('bin')
 }
 
+tasks.register('uberJar', Jar) {
+    group 'groovyc'
+    archiveBaseName = 'web-view-components-uber'
+    from sourceSets.main.output
+    from sourceSets.main.runtimeClasspath.filter(File.&exists).collect { it.isDirectory() ? it : zipTree(it) }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+test {
+    jvmArgs '-XX:+EnableDynamicAgentLoading' // for mockito/bytebuddy
+}
+
 java {
     withSourcesJar()
 }
 
 publishing {
     publications {
-        create('webViewComponents', MavenPublication) {
-            artifactId = 'web-view-components'
+        create('webViewComponentsCompiler', MavenPublication) {
+            artifactId = 'web-view-components-compiler'
             from components.java
         }
     }
 }
+
