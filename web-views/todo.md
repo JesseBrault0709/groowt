@@ -10,9 +10,6 @@
   for differentiating between closures/scriplets that take an `out` (left-shiftable) param and ones that don't take any.
   - This could also make differentiating lazy/eager closures/scriptlets easier.
 - [ ] Check that the lexer/parser can handle `-` dashes in component names/types, so that we can support `data-`, etc.
-- [X] Think more about how to compile templates and components alongside each other. Perhaps we just need to bite
-  the bullet and use a custom Groovy `CompilationUnit` or `CompilerConfiguration` or whatnot to identify `.wvc` files.
-  - Update 5/17/24: This should be solved with the `DelegatingWvcParserPlugin` which just examines the file extension.
 - [ ] Get rid of automatically generated script `main` and `run` methods; replace with a custom `main` method which
   forwards the args to a helper class and then runs the template with the variables similar to the current `runTemplate`
   helper tool.
@@ -21,8 +18,14 @@
 - [ ] Create smoke screen test cases for the compiler.
 - [ ] Separate the api, runtime, and compiler elements. The api/runtime can depend on the compiler. If users really want
   to meddle with the compiler for some reason, they can depend on it directly.
-- [ ] Get rid of sketching source set.
 - [ ] Fix inner class bug.
+
+### Done
+- [X] Get rid of sketching source set.
+  - Update 5/20/24: Done, but moved to `sketching/(java | groovy)/sketching` src set dirs.
+- [X] Think more about how to compile templates and components alongside each other. Perhaps we just need to bite
+  the bullet and use a custom Groovy `CompilationUnit` or `CompilerConfiguration` or whatnot to identify `.wvc` files.
+  - Update 5/17/24: This should be solved with the `DelegatingWvcParserPlugin` which just examines the file extension.
 
 ## Syntax ideas
 - Perhaps we could have a lambda- or closure-like factory at the beginning of a component for creating it. This could

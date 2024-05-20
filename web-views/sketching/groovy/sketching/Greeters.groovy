@@ -1,4 +1,4 @@
-package groowt.view.web.sketching
+package sketching
 
 import groowt.view.web.BaseWebViewComponent
 
