@@ -1,11 +1,10 @@
 package groowt.view.component.web.tools
 
 import groovy.transform.InheritConstructors
-import groowt.view.component.web.antlr.TokenUtil
-import groowt.view.component.web.antlr.WebViewComponentsLexer
-import groowt.view.component.web.antlr.WebViewComponentsTokenStream
+import groowt.view.component.web.antlr.*
 import groowt.view.component.web.util.ExtensionUtil
 import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.ConsoleErrorListener
 import org.antlr.v4.runtime.Token
 
 @InheritConstructors
@@ -22,6 +21,18 @@ class TokensFileMaker extends AbstractOutputFileMaker {
             return true
         } else {
             return !this.getYesNoInput('Do you wish to redo this file? (y/n)')
+        }
+    }
+
+    protected boolean onLexerErrors(String name, List<LexerError> errors) {
+        println "There were lexer errors in $name."
+        errors.each { println LexerError.format(it) }
+        if (this.getYesNoInput('Do you wish to try again? (y/n)', true)) {
+            println "Trying $name again..."
+            return false
+        } else {
+            println "Skipping $name..."
+            return true
         }
     }
 
@@ -46,8 +57,16 @@ class TokensFileMaker extends AbstractOutputFileMaker {
             try {
                 def input = CharStreams.fromString(sourceFile.getText())
                 def lexer = new WebViewComponentsLexer(input)
+                lexer.removeErrorListener(ConsoleErrorListener.INSTANCE)
+                def lexerErrorListener = new LexerErrorListener()
+                lexer.addErrorListener(lexerErrorListener)
                 def tokenStream = new WebViewComponentsTokenStream(lexer)
-                doneYet = this.onSuccess(name, tokenStream.getAllTokensSkipEOF())
+                def allTokens = tokenStream.getAllTokensSkipEOF()
+                if (!lexerErrorListener.errors.isEmpty()) {
+
+                } else {
+                    doneYet = this.onSuccess(name, allTokens)
+                }
             } catch (Exception e) {
                 doneYet = this.onException(name, e)
             }

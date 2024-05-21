@@ -70,7 +70,7 @@ fun isIdentifierStartChar(c: Char): Boolean = Character.isJavaIdentifierStart(c)
 
 fun isIdentifierStartChar(subject: Int) = isIdentifierStartChar(subject.toChar())
 
-fun isIdentifierChar(c: Char): Boolean = Character.isJavaIdentifierPart(c)
+fun isIdentifierChar(c: Char): Boolean = Character.isJavaIdentifierPart(c) || c == '-'
 
 fun isIdentifierChar(subject: Int) = isIdentifierChar(subject.toChar())
 

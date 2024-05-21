@@ -112,11 +112,11 @@ PreambleOpen
     ;
 
 ComponentOpen
-    :   LT -> pushMode(IN_TAG)
+    :   LT -> pushMode(TAG_START)
     ;
 
 ClosingComponentOpen
-    :   LT FS -> pushMode(IN_TAG)
+    :   LT FS -> pushMode(TAG_START)
     ;
 
 EqualsScriptletOpen
@@ -159,34 +159,87 @@ RawText
     ;
 
 // ----------------------------------------
-mode IN_TAG;
+mode TAG_START;
 
-ComponentSelfClose
-    :   FS GT -> popMode
+FragmentClose
+    :   GT -> popMode
     ;
+
+TypedIdentifier
+    :   ( PackageIdentifier DOT )* ClassIdentifier ( DOT ClassIdentifier )* -> mode(IN_TAG)
+    ;
+
+fragment
+PackageIdentifier
+    :   PackageIdentifierStartChar PackageIdentifierChar*
+    ;
+
+fragment
+PackageIdentifierStartChar
+    :   [\p{Ll}]
+    ;
+
+fragment
+PackageIdentifierChar
+    :   [\p{L}_0-9]
+    ;
+
+fragment
+ClassIdentifier
+    :   ClassIdentifierStartChar ClassIdentifierChar*
+    ;
+
+fragment
+ClassIdentifierStartChar
+    :   [\p{Lu}]
+    ;
+
+fragment
+ClassIdentifierChar
+    :   [\p{L}_0-9]
+    ;
+
+StringIdentifier
+    :   StringIdentifierStartChar StringIdentifierChar* -> mode(IN_TAG)
+    ;
+
+fragment
+StringIdentifierStartChar
+    :   [\p{Ll}]
+    ;
+
+fragment
+StringIdentifierChar
+    :   [-_0-9\p{L}]
+    ;
+
+// ----------------------------------------
+mode IN_TAG;
 
 ComponentClose
     :   GT -> popMode
     ;
 
-Identifier
-    :   IdentifierStartChar IdentifierChar*
-    ;
-
-IdentifierStartChar
-    :   ~[.] { isIdentifierStartChar(this.getCurrentChar()) }?
-    ;
-
-IdentifierChar
-    :   ~[.] { isIdentifierChar(this.getCurrentChar()) }?
+ComponentSelfClose
+    :   FS GT -> popMode
     ;
 
 ConstructorOpen
     :   LP { this.enterConstructor(); }
     ;
 
-Dot
-    :   DOT
+AttributeIdentifier
+    :   AttributeIdentifierStartChar AttributeIdentifierChar*
+    ;
+
+fragment
+AttributeIdentifierStartChar
+    :   [\p{L}_$]
+    ;
+
+fragment
+AttributeIdentifierChar
+    :   [\p{L}_$0-9]
     ;
 
 Equals

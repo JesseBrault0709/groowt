@@ -7,7 +7,7 @@ private operator fun Interval.component1(): Int = this.a
 
 private operator fun Interval.component2(): Int = this.b
 
-class WebViewComponentsTokenStream (private val tokenSource: TokenSource) : TokenStream {
+class WebViewComponentsTokenStream(private val tokenSource: TokenSource) : TokenStream {
 
     private val tokens: MutableList<Token> = ArrayList()
 

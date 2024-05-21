@@ -3,17 +3,18 @@ package groowt.view.component.web.antlr
 
 import groowt.view.component.web.antlr.WebViewComponentsLexer.GStringParts
 import groowt.view.component.web.antlr.WebViewComponentsLexer.GroovyTokens
+import groowt.view.component.web.util.SourcePosition
 import org.antlr.v4.runtime.Token
 
 fun isGroovyTokenType(token: Token) = isGroovyTokenType(token.type)
 
 fun isGroovyTokenType(type: Int): Boolean = type in GroovyTokens
 
-fun isGStringPart (token: Token) = isGStringPart(token.type)
+fun isGStringPart(token: Token) = isGStringPart(token.type)
 
 fun isGStringPart(type: Int): Boolean = type in GStringParts
 
-fun getTokenName (token: Token) = getTokenName(token.type)
+fun getTokenName(token: Token) = getTokenName(token.type)
 
 fun getTokenName(type: Int): String = WebViewComponentsLexer.VOCABULARY.getDisplayName(type)
 
@@ -25,15 +26,17 @@ fun interface TokenTextFormatter {
 }
 
 fun formatToken(token: Token, textFormatter: TokenTextFormatter): String =
-    "${getTokenName(token)}[${token.line},${token.charPositionInLine}](${textFormatter.format(token.text)})"
-
-fun shortFormatToken(token: Token): String =
-    "${getTokenName(token)}[${token.line},${token.charPositionInLine},${token.text.length}]"
+    getTokenName(token) + "[${formatTokenPositionShort(token)}](${textFormatter.format(token.text)})"
 
 fun formatTokenText(text: String): String = excerptTokenParts(escapeTokenPartsToList(text))
 
-fun formatTokenPosition(token: Token): String {
-    return "line ${token.line}, column ${token.charPositionInLine + 1}"
+fun formatTokenPositionShort(token: Token): String {
+    val sourcePosition = getTokenSourcePosition(token)
+    return "${sourcePosition.line},${sourcePosition.column}"
+}
+
+fun getTokenSourcePosition(token: Token): SourcePosition {
+    return SourcePosition(token.line, token.charPositionInLine + 1)
 }
 
 fun excerptToken(token: Token) = excerptToken(token, 30, 7, "...")
@@ -42,7 +45,7 @@ fun excerptToken(token: Token, startLength: Int = 30, endLength: Int = 7, separa
     return excerptTokenParts(escapeTokenPartsToList(token.text), startLength, endLength, separator)
 }
 
-fun excerptTokenParts(
+private fun excerptTokenParts(
     parts: List<String>,
     startLength: Int = 30,
     endLength: Int = 7,

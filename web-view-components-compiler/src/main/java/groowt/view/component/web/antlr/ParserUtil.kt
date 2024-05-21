@@ -38,9 +38,6 @@ fun parseCompilationUnit(charStream: CharStream): CompilationUnitParseResult {
     return CompilationUnitParseResult(lexer, tokenStream, parser, cu)
 }
 
-fun parseCompilationUnit(tokenStream: TokenStream): CompilationUnitContext =
-    parse(tokenStream, WebViewComponentsParser::compilationUnit)
-
 fun parseCompilationUnit(
     tokenStream: TokenStream,
     onResult: BiConsumer<CompilationUnitContext, WebViewComponentsParser>

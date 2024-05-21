@@ -3,8 +3,10 @@ package groowt.view.component.web.tools
 import groovy.transform.InheritConstructors
 import groowt.view.component.web.antlr.*
 import groowt.view.component.web.antlr.AntlrUtil.ParseErrorCollector
+import groowt.view.component.web.antlr.WebViewComponentsParser.CompilationUnitContext
 import groowt.view.component.web.util.ExtensionUtil
 import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.ConsoleErrorListener
 
 @InheritConstructors
 final class ParseTreeFileMaker extends AbstractOutputFileMaker {
@@ -36,7 +38,7 @@ final class ParseTreeFileMaker extends AbstractOutputFileMaker {
     private boolean onErrors(
             String name,
             WebViewComponentsParser parser,
-            WebViewComponentsParser.CompilationUnitContext cu,
+            CompilationUnitContext cu,
             ParseErrorCollector errors
     ) {
         def errorCount = errors.errorCount
@@ -53,14 +55,35 @@ final class ParseTreeFileMaker extends AbstractOutputFileMaker {
         }
     }
 
-    private Tuple3<WebViewComponentsParser, WebViewComponentsParser.CompilationUnitContext, ParseErrorCollector> parse(
-            File sourceFile
-    ) {
+    private Tuple3<WebViewComponentsParser, CompilationUnitContext, ParseErrorCollector> parse(File sourceFile) {
         def input = CharStreams.fromFileName(sourceFile.toString())
+
         def lexer = new WebViewComponentsLexer(input)
+        def lexerErrorListener = new LexerErrorListener()
+        lexer.removeErrorListener(ConsoleErrorListener.INSTANCE)
+        lexer.addErrorListener(lexerErrorListener)
+
         def tokenStream = new WebViewComponentsTokenStream(lexer)
+
         def parser = new WebViewComponentsParser(tokenStream)
+        def parserErrorListener = new ParserErrorListener()
+        parser.removeErrorListener(ConsoleErrorListener.INSTANCE)
+        parser.addErrorListener(parserErrorListener)
+
         def cu = parser.compilationUnit()
+
+        if (!lexerErrorListener.errors.isEmpty()) {
+            println 'There were lexer errors.'
+            lexerErrorListener.errors.each { println LexerErrorKt.format(it) }
+            return null
+        }
+
+        if (!parserErrorListener.errors.isEmpty()) {
+            println 'There were parser errors.'
+            parserErrorListener.errors.each { println ParserErrorKt.format(it) }
+            return null
+        }
+
         def errors = AntlrUtil.findErrorNodes(cu)
         new Tuple3<>(parser, cu, errors)
     }
@@ -71,11 +94,27 @@ final class ParseTreeFileMaker extends AbstractOutputFileMaker {
         println "Processing: $name"
         boolean doneYet = false
         while (!doneYet) {
-            def (parser, cu, errors) = this.parse(sourceFile)
-            if (errors.isEmpty()) {
-                doneYet = this.onSuccess(name, parser, cu)
-            } else {
-                doneYet = this.onErrors(name, parser, cu, errors)
+            final WebViewComponentsParser parser
+            final CompilationUnitContext cu
+            final ParseErrorCollector errors
+            try {
+                def result = this.parse(sourceFile)
+                if (result != null) {
+                    (parser, cu, errors) = result
+                    if (errors.isEmpty()) {
+                        doneYet = this.onSuccess(name, parser, cu)
+                    } else {
+                        doneYet = this.onErrors(name, parser, cu, errors)
+                    }
+                } else {
+                    doneYet = !this.getYesNoInput('Would you like to try again? (y/n)', true)
+                }
+            } catch (Exception e) {
+                println "There was an exception: $e"
+                if (this.verbose) {
+                    e.printStackTrace()
+                }
+                doneYet = !this.getYesNoInput('Would you like to try again? (y/n)', true)
             }
         }
     }

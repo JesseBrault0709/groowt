@@ -1,5 +1,6 @@
 package groowt.view.component.web.ast;
 
+import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.antlr.MergedGroovyCodeToken;
 import groowt.view.component.web.antlr.TokenUtil;
 import groowt.view.component.web.antlr.WebViewComponentsParser;
@@ -219,16 +220,18 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
 
     @Override
     public Node visitComponentType(WebViewComponentsParser.ComponentTypeContext ctx) {
-        final var identifiers = ctx.Identifier();
-        if (identifiers.size() == 1) {
-            final TerminalNode first = identifiers.getFirst();
-            if (startsWithLowercaseLetter(first.getText())) {
-                return this.nodeFactory.stringComponentTypeNode(
-                        this.getTokenRange(ctx), first.getSymbol().getTokenIndex()
-                );
-            }
+        final var typedIdentifier = ctx.TypedIdentifier();
+        if (typedIdentifier != null) {
+            return this.nodeFactory.classComponentTypeNode(this.getTokenRange(ctx));
         }
-        return this.nodeFactory.classComponentTypeNode(this.getTokenRange(ctx));
+        final var stringIdentifier = ctx.StringIdentifier();
+        if (stringIdentifier != null) {
+            return this.nodeFactory.stringComponentTypeNode(
+                    this.getTokenRange(ctx),
+                    stringIdentifier.getSymbol().getTokenIndex()
+            );
+        }
+        throw new WebViewComponentBugError("Could not determine type of " + ctx);
     }
 
     @Override
@@ -253,7 +256,7 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
 
     @Override
     public Node visitKeyValueAttr(WebViewComponentsParser.KeyValueAttrContext ctx) {
-        final TerminalNode identifier = ctx.Identifier();
+        final TerminalNode identifier = ctx.AttributeIdentifier();
         final KeyNode keyNode = this.nodeFactory.keyNode(TokenRange.of(
                 identifier.getSymbol(),
                 ctx.Equals().getSymbol()
@@ -264,7 +267,7 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
 
     @Override
     public Node visitBooleanAttr(WebViewComponentsParser.BooleanAttrContext ctx) {
-        final Token identifierToken = ctx.Identifier().getSymbol();
+        final Token identifierToken = ctx.AttributeIdentifier().getSymbol();
         final KeyNode keyNode = this.nodeFactory.keyNode(
                 TokenRange.of(identifierToken),
                 identifierToken.getTokenIndex()

@@ -5,7 +5,6 @@ import groowt.view.component.web.antlr.TokenList;
 import groowt.view.component.web.ast.DefaultAstBuilder;
 import groowt.view.component.web.ast.DefaultNodeFactory;
 import groowt.view.component.web.ast.node.BodyNode;
-import groowt.view.component.web.ast.node.CompilationUnitNode;
 import groowt.view.component.web.ast.node.GStringBodyTextNode;
 import groowt.view.component.web.transpile.GStringTranspiler;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
@@ -34,7 +33,7 @@ public abstract class GStringTranspilerTests {
         final var tokenList = new TokenList(parseResult.getTokenStream());
         final var nodeFactory = new DefaultNodeFactory(tokenList);
         final var astBuilder = new DefaultAstBuilder(nodeFactory);
-        final var cuNode = (CompilationUnitNode) astBuilder.build(parseResult.getCompilationUnitContext());
+        final var cuNode = astBuilder.buildCompilationUnit(parseResult.getCompilationUnitContext());
         return Objects.requireNonNull(cuNode.getBodyNode());
     }
 

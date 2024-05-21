@@ -9,7 +9,6 @@ import groowt.view.component.web.antlr.ParserUtil;
 import groowt.view.component.web.antlr.TokenList;
 import groowt.view.component.web.ast.DefaultAstBuilder;
 import groowt.view.component.web.ast.DefaultNodeFactory;
-import groowt.view.component.web.ast.node.CompilationUnitNode;
 import groowt.view.component.web.compiler.AnonymousWebViewComponent;
 import groowt.view.component.web.compiler.DefaultWebViewComponentTemplateCompileUnit;
 import groowt.view.component.web.transpile.GroovyTranspiler;
@@ -39,7 +38,7 @@ public abstract class GroovyTranspilerTests {
         final var parseResult = ParserUtil.parseCompilationUnit(source);
         final var tokenList = new TokenList(parseResult.getTokenStream());
         final var astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList));
-        final var cuNode = (CompilationUnitNode) astBuilder.build(parseResult.getCompilationUnitContext());
+        final var cuNode = astBuilder.buildCompilationUnit(parseResult.getCompilationUnitContext());
         try {
             this.transpiler.transpile(
                     new DefaultComponentTemplateCompilerConfiguration(),

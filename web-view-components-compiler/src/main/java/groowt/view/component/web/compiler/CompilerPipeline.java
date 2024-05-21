@@ -116,7 +116,7 @@ public final class CompilerPipeline {
         // build ast
         final var tokenList = new TokenList(parseResult.getTokenStream());
         final var astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList));
-        return (CompilationUnitNode) astBuilder.build(parseResult.getCompilationUnitContext());
+        return astBuilder.buildCompilationUnit(parseResult.getCompilationUnitContext());
     }
 
     private CompilerPipeline() {}

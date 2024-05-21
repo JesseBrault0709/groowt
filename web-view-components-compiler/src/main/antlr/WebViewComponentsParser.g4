@@ -67,7 +67,7 @@ componentArgs
     ;
 
 componentType
-    :   Identifier ( Dot Identifier )*
+    :   TypedIdentifier | StringIdentifier
     ;
 
 componentConstructor
@@ -79,11 +79,11 @@ attr
     ;
 
 keyValueAttr
-    :   Identifier Equals value
+    :   AttributeIdentifier Equals value
     ;
 
 booleanAttr
-    :   Identifier
+    :   AttributeIdentifier
     ;
 
 value
