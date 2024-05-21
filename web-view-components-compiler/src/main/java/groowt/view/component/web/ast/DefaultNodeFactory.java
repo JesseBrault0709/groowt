@@ -80,10 +80,6 @@ public class DefaultNodeFactory implements NodeFactory {
     protected void configureFilters(RegistryObjectFactory.Builder<?> builder) {
         builder.addFilterHandler(getAllowsTypesFilterHandler(Node.class));
         builder.addIterableFilterHandler(getIterableElementTypesFilterHandler());
-        builder.addFilterHandler(ExtensionUtil.hasExtensionsFilterHandler);
-        builder.addIterableFilterHandler(ExtensionUtil.iterableHasExtensionsFilterHandler);
-        builder.addFilterHandler(ExtensionUtil.hasExtensionOneOfNodeFilterHandler);
-        builder.addIterableFilterHandler(ExtensionUtil.iterableHasExtensionOneOfFilterHandler);
     }
 
     @Override
