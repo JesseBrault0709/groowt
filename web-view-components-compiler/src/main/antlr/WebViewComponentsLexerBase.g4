@@ -8,11 +8,16 @@ options {
 
 tokens {
     PreambleBreak,
+    ComponentNlws,
     GroovyCode,
     GStringAttrValueEnd,
     JStringAttrValueEnd,
     ClosureAttrValueEnd,
     DollarScriptletClose
+}
+
+channels {
+    ERROR
 }
 
 @header {
@@ -83,6 +88,10 @@ tokens {
         DollarSlashyStringClosureStart
     );
 
+    public WebViewComponentsLexerBase() {
+        _interp = new LexerATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
+    }
+
     private void onPreambleClose() {
         this.setType(PreambleBreak);
         this.exitPreamble();
@@ -112,11 +121,19 @@ PreambleOpen
     ;
 
 ComponentOpen
-    :   LT -> pushMode(TAG_START)
+    :   LT { !isAnyOf(this.getNextChar(), '/', '>') }? -> pushMode(TAG_START)
     ;
 
 ClosingComponentOpen
-    :   LT FS -> pushMode(TAG_START)
+    :   LT FS { !this.isNext('>') }? -> pushMode(TAG_START)
+    ;
+
+FragmentOpen
+    :   LT GT
+    ;
+
+FragmentClose
+    :   LT FS GT
     ;
 
 EqualsScriptletOpen
@@ -160,10 +177,6 @@ RawText
 
 // ----------------------------------------
 mode TAG_START;
-
-FragmentClose
-    :   GT -> popMode
-    ;
 
 TypedIdentifier
     :   ( PackageIdentifier DOT )* ClassIdentifier ( DOT ClassIdentifier )* -> mode(IN_TAG)
@@ -213,6 +226,14 @@ StringIdentifierChar
     :   [-_0-9\p{L}]
     ;
 
+TagStartNlws
+    :   NLWS+ -> type(ComponentNlws), channel(HIDDEN)
+    ;
+
+TagStartError
+    :   . -> channel(ERROR)
+    ;
+
 // ----------------------------------------
 mode IN_TAG;
 
@@ -255,7 +276,7 @@ JStringAttrValueStart
     ;
 
 ClosureAttrValueStart
-    :   LEFT_CURLY ComponentNlws? { !this.isNext('<') }?
+    :   LEFT_CURLY InTagNlws? { !this.isNext('<') }?
         {
             this.curlies.push(() -> {
                 this.setType(ClosureAttrValueEnd);
@@ -267,15 +288,19 @@ ClosureAttrValueStart
     ;
 
 ComponentAttrValueStart
-    :   LEFT_CURLY ComponentNlws? { this.isNext('<') }?
+    :   LEFT_CURLY InTagNlws? { this.isNext('<') }?
     ;
 
 ComponentAttrValueEnd
     :   GT RIGHT_CURLY
     ;
 
-ComponentNlws
-    :   NLWS+
+InTagNlws
+    :   NLWS+ -> type(ComponentNlws), channel(HIDDEN)
+    ;
+
+TagError
+    :   . -> channel(ERROR)
     ;
 
 // ----------------------------------------

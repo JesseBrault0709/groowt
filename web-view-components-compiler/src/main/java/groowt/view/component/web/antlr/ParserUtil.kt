@@ -18,6 +18,8 @@ data class CompilationUnitParseResult(
     val lexer: WebViewComponentsLexer,
     val tokenStream: WebViewComponentsTokenStream,
     val parser: WebViewComponentsParser,
+    val lexerErrors: List<LexerError>,
+    val parserErrors: List<ParserError>,
     val compilationUnitContext: CompilationUnitContext
 )
 
@@ -33,9 +35,21 @@ fun parseCompilationUnit(reader: Reader): CompilationUnitParseResult =
 fun parseCompilationUnit(charStream: CharStream): CompilationUnitParseResult {
     val lexer = WebViewComponentsLexer(charStream)
     val tokenStream = WebViewComponentsTokenStream(lexer)
+
     val parser = WebViewComponentsParser(tokenStream)
+    parser.removeErrorListener(ConsoleErrorListener.INSTANCE)
+    val parserErrorListener = ParserErrorListener()
+    parser.addErrorListener(parserErrorListener)
+
     val cu = parser.compilationUnit()
-    return CompilationUnitParseResult(lexer, tokenStream, parser, cu)
+    return CompilationUnitParseResult(
+        lexer,
+        tokenStream,
+        parser,
+        parserErrorListener.getLexerErrors(),
+        parserErrorListener.getParserErrors(),
+        cu
+    )
 }
 
 fun parseCompilationUnit(

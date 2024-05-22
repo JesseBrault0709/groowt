@@ -17,11 +17,16 @@ import org.codehaus.groovy.control.CompilePhase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import static groowt.view.component.web.antlr.LexerErrorKt.formatLexerError;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 public abstract class GroovyTranspilerTests {
+
+    private static final Logger logger = LoggerFactory.getLogger(GroovyTranspilerTests.class);
 
     protected final GroovyTranspiler transpiler;
     private final CompilationUnit groovyCompilationUnit;
@@ -36,6 +41,15 @@ public abstract class GroovyTranspilerTests {
 
     private void doTranspile(String source) {
         final var parseResult = ParserUtil.parseCompilationUnit(source);
+
+        if (!parseResult.getLexerErrors().isEmpty()) {
+            logger.error("There were lexer errors.");
+            parseResult.getLexerErrors().forEach(error -> {
+                logger.error(formatLexerError(error));
+            });
+            fail("There were lexer errors. See log for more information.");
+        }
+
         final var tokenList = new TokenList(parseResult.getTokenStream());
         final var astBuilder = new DefaultAstBuilder(new DefaultNodeFactory(tokenList));
         final var cuNode = astBuilder.buildCompilationUnit(parseResult.getCompilationUnitContext());

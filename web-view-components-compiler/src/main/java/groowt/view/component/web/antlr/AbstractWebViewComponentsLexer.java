@@ -45,8 +45,8 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
 
     protected record StringClosingEndSpec(int type, int popCount) implements GStringPathEndSpec {}
 
-    protected final PairCounter curlies = new SimplePairCounter(this);
-    protected final PairCounter parentheses = new SimplePairCounter(this);
+    protected PairCounter curlies = new SimplePairCounter();
+    protected PairCounter parentheses = new SimplePairCounter();
 
     private final Logger logger;
 
@@ -57,6 +57,58 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
     public AbstractWebViewComponentsLexer(CharStream input) {
         super(input);
         this.logger = LoggerFactory.getLogger(this.getClass());
+        this.curlies.setLexer(this);
+        this.parentheses.setLexer(this);
+    }
+
+    public AbstractWebViewComponentsLexer() {
+        this.logger = LoggerFactory.getLogger(this.getClass());
+        this.curlies.setLexer(this);
+        this.parentheses.setLexer(this);
+    }
+
+    public PairCounter getCurlies() {
+        return this.curlies;
+    }
+
+    public void setCurlies(PairCounter curlies) {
+        this.curlies = curlies;
+    }
+
+    public PairCounter getParentheses() {
+        return this.parentheses;
+    }
+
+    public void setParentheses(PairCounter parentheses) {
+        this.parentheses = parentheses;
+    }
+
+    public Logger getLogger() {
+        return this.logger;
+    }
+
+    public boolean isCanPreamble() {
+        return this.canPreamble;
+    }
+
+    public void setCanPreamble(boolean canPreamble) {
+        this.canPreamble = canPreamble;
+    }
+
+    public boolean isInPreamble() {
+        return this.inPreamble;
+    }
+
+    public void setInPreamble(boolean inPreamble) {
+        this.inPreamble = inPreamble;
+    }
+
+    public boolean isInConstructor() {
+        return this.inConstructor;
+    }
+
+    public void setInConstructor(boolean inConstructor) {
+        this.inConstructor = inConstructor;
     }
 
     @Override

@@ -52,7 +52,7 @@ open class TokenizeWvc : AbstractSourceTransformerCli() {
 
     protected fun onErrors(errors: List<LexerError>): Boolean {
         println("There were errors during tokenization.")
-        errors.forEach { println(format(it)) }
+        errors.forEach { println(formatLexerError(it)) }
         return this.getYesNo("Do you wish to try again?", false)
     }
 
@@ -99,7 +99,7 @@ open class TokenizeWvc : AbstractSourceTransformerCli() {
                 val errorListener = LexerErrorListener()
                 lexer.addErrorListener(errorListener)
 
-                val tokenStream = WebViewComponentsTokenStream(lexer)
+                val tokenStream = WebViewComponentsTokenStream(lexer, setOf(WebViewComponentsLexer.HIDDEN))
                 val allTokens = tokenStream.getAllTokensSkipEOF()
 
                 val errors = errorListener.getErrors()

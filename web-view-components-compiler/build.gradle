@@ -10,6 +10,7 @@ plugins {
     id 'groovy'
     id 'org.jetbrains.kotlin.jvm'
     id 'java-test-fixtures'
+    id 'distribution'
 }
 
 repositories {
@@ -104,6 +105,12 @@ tasks.named('generateWebViewComponentsLexerBase', GroowtAntlrExecTask) { task ->
     }
 }
 
+tasks.named({ String name ->
+    name in ['compileJava', 'compileGroovy', 'compileKotlin']
+} as Spec<String>).configureEach {
+    dependsOn 'generateAllAntlr'
+}
+
 tasks.register('groovyConsole', JavaExec) {
     group = 'groovy'
     classpath += sourceSets.main.runtimeClasspath + configurations.groovyConsole
@@ -112,14 +119,13 @@ tasks.register('groovyConsole', JavaExec) {
 
 tasks.register('toolsJar', Jar) {
     group 'tools'
-    archiveBaseName = 'web-tools'
+    archiveBaseName = 'web-view-components-compiler-tools'
     exclude { FileTreeElement element ->
         element.file in sourceSets.main.output
     }
     from sourceSets.tools.output
     from sourceSets.tools.runtimeClasspath.filter(File.&exists).collect { it.isDirectory() ? it : zipTree(it) }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    dependsOn tasks.named('jar')
 }
 
 @NullCheck
@@ -161,9 +167,9 @@ toolSpecs.each { spec ->
         group = 'tools'
         outputDir = file('bin')
         applicationName = spec.name
+        classpath = sourceSets.tools.runtimeClasspath
         mainClass = spec.fullMainClass
         unixStartScriptGenerator.template = resources.text.fromFile('src/tools/binTemplate.gst')
-        dependsOn tasks.named('toolsJar')
     }
 }
 
@@ -198,6 +204,12 @@ java {
     withSourcesJar()
 }
 
+tasks.named('sourcesJar', Jar) {
+    from fileTree('src/main/antlr')
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    dependsOn 'generateAllAntlr'
+}
+
 publishing {
     publications {
         create('webViewComponentsCompiler', MavenPublication) {
@@ -206,4 +218,3 @@ publishing {
         }
     }
 }
-

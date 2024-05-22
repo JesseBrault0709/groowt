@@ -90,7 +90,6 @@ compilationUnit[1,1..21,1]
                             componentArgs[12,14..12,35]
                               componentType[12,14..12,14]
                                 TypedIdentifier[12,14](Case)
-                              ComponentNlws[12,18]( )
                               attr[12,19..12,35]
                                 keyValueAttr[12,19..12,35]
                                   AttributeIdentifier[12,19](cond)

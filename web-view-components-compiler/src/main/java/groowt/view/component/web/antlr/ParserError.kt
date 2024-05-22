@@ -14,7 +14,7 @@ class MismatchedInputParserError(
     val expectedTokenTypes: Set<Int>
 ) : ParserError(type, offending, context)
 
-fun format(error: ParserError): String {
+fun formatParserError(error: ParserError): String {
     val sb = StringBuilder()
     val sourcePosition = SourcePosition.fromStartOfToken(error.offending)
     sb.append("At ")

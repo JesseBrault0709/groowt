@@ -49,21 +49,20 @@ openComponent
     ;
 
 closingComponent
-    :   ClosingComponentOpen ComponentNlws?
-        componentType ComponentNlws?
+    :   ClosingComponentOpen
+        componentType
         ComponentClose
     ;
 
 fragmentComponent
-    :   ComponentOpen ComponentClose
-        body
-        ClosingComponentOpen ComponentClose
+    :   FragmentOpen body FragmentClose
     ;
 
 componentArgs
-    :   ComponentNlws? componentType
-        ComponentNlws? componentConstructor?
-        ComponentNlws? ( attr ComponentNlws? )*
+    :   componentType
+        ( attr )*
+        componentConstructor?
+        ( attr )*
     ;
 
 componentType

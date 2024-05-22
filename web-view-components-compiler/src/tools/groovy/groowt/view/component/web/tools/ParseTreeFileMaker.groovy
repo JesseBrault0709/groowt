@@ -74,13 +74,13 @@ final class ParseTreeFileMaker extends AbstractOutputFileMaker {
 
         if (!lexerErrorListener.errors.isEmpty()) {
             println 'There were lexer errors.'
-            lexerErrorListener.errors.each { println LexerErrorKt.format(it) }
+            lexerErrorListener.errors.each { println LexerErrorKt.formatLexerError(it) }
             return null
         }
 
-        if (!parserErrorListener.errors.isEmpty()) {
+        if (!parserErrorListener.parserErrors.isEmpty()) {
             println 'There were parser errors.'
-            parserErrorListener.errors.each { println ParserErrorKt.format(it) }
+            parserErrorListener.parserErrors.each { println ParserErrorKt.formatParserError(it) }
             return null
         }
 

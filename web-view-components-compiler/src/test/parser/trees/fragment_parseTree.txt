@@ -1,0 +1,28 @@
+compilationUnit[1,1..2,1]
+  body[1,1..1,26]
+    component[1,1..1,23]
+      fragmentComponent[1,1..1,23]
+        FragmentOpen[1,1](<>)
+        body[1,3..1,22]
+          component[1,3..1,22]
+            componentWithChildren[1,3..1,22]
+              openComponent[1,3..1,5]
+                ComponentOpen[1,3](<)
+                componentArgs[1,4..1,4]
+                  componentType[1,4..1,4]
+                    StringIdentifier[1,4](p)
+                ComponentClose[1,5](>)
+              body[1,6..1,6]
+                bodyText[1,6..1,6]
+                  jStringBodyText[1,6..1,6]
+                    RawText[1,6](Hello, World!)
+              closingComponent[1,19..1,22]
+                ClosingComponentOpen[1,19](</)
+                componentType[1,21..1,21]
+                  StringIdentifier[1,21](p)
+                ComponentClose[1,22](>)
+        FragmentClose[1,23](</>)
+    bodyText[1,26..1,26]
+      jStringBodyText[1,26..1,26]
+        RawText[1,26](\n)
+  EOF[2,1](<EOF>)

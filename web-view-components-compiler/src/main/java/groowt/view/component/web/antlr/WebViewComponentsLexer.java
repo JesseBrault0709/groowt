@@ -9,6 +9,10 @@ public class WebViewComponentsLexer extends WebViewComponentsLexerBase {
         this._interp = new PositionAdjustingLexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
     }
 
+    public WebViewComponentsLexer() {
+        super();
+    }
+
     @Override
     protected PositionAdjustingLexerATNSimulator getPositionAdjustingInterpreter() {
         return (PositionAdjustingLexerATNSimulator) this.getInterpreter();

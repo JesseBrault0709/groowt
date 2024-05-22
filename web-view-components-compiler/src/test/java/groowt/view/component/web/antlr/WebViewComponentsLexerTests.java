@@ -13,6 +13,7 @@ import org.junit.jupiter.api.TestFactory;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static groowt.view.component.web.antlr.WebViewComponentsLexer.*;
@@ -70,7 +71,10 @@ public class WebViewComponentsLexerTests {
                 sourceFile -> {
                     final CharStream input = CharStreams.fromString(FileUtil.readFile(sourceFile));
                     final WebViewComponentsLexer lexer = new WebViewComponentsLexer(input);
-                    final WebViewComponentsTokenStream tokenStream = new WebViewComponentsTokenStream(lexer);
+                    final WebViewComponentsTokenStream tokenStream = new WebViewComponentsTokenStream(
+                            lexer,
+                            Set.of(WebViewComponentsLexer.HIDDEN) // include bad tokens for testing
+                    );
                     final List<Token> allTokens = tokenStream.getAllTokensSkipEOF();
                     final var sb = new StringBuilder();
                     for (int i = 0; i < allTokens.size(); i++) {

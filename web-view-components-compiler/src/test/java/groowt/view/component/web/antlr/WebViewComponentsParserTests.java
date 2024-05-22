@@ -5,6 +5,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,6 +23,8 @@ import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.*;
 
 public final class WebViewComponentsParserTests {
+
+    private static final Logger logger = LoggerFactory.getLogger(WebViewComponentsParserTests.class);
 
     private static final String parserFileBase = String.join(File.separator, "src", "test", "parser");
     private static final String parserTreeFileBase = String.join(File.separator, parserFileBase, "trees");

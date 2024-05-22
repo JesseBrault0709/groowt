@@ -7,7 +7,15 @@ private operator fun Interval.component1(): Int = this.a
 
 private operator fun Interval.component2(): Int = this.b
 
-class WebViewComponentsTokenStream(private val tokenSource: TokenSource) : TokenStream {
+class WebViewComponentsTokenStream(
+    private val tokenSource: TokenSource,
+    private val ignoreChannels: Set<Int>
+) : TokenStream {
+
+    constructor(lexer: WebViewComponentsLexer) : this(
+        lexer,
+        setOf(WebViewComponentsLexer.HIDDEN, WebViewComponentsLexer.ERROR)
+    )
 
     private val tokens: MutableList<Token> = ArrayList()
 
@@ -67,7 +75,7 @@ class WebViewComponentsTokenStream(private val tokenSource: TokenSource) : Token
                     MergedGroovyCodeToken(groovyTokens, this.tokens.size, this.tokenSource, this.tokenSource.inputStream)
                 )
             }
-            if (followingToken != null) {
+            if (followingToken != null && followingToken.channel !in this.ignoreChannels) {
                 fetched++
                 if (followingToken is WritableToken) {
                     followingToken.tokenIndex = this.tokens.size
@@ -191,8 +199,7 @@ class WebViewComponentsTokenStream(private val tokenSource: TokenSource) : Token
     }
 
     fun getAllTokensSkipEOF(): List<Token> {
-        this.fill()
-        return this.tokens.filter { it.type != Token.EOF }
+        return this.getAllTokens().filter { it.type != Token.EOF }
     }
 
     private fun fill() {

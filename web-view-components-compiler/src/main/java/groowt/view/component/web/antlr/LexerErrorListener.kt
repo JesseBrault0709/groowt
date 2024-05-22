@@ -4,6 +4,7 @@ import groowt.view.component.web.util.SourcePosition
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.atn.ATNConfigSet
 import org.antlr.v4.runtime.dfa.DFA
+import org.antlr.v4.runtime.misc.Interval
 import java.util.*
 
 class LexerErrorListener : ANTLRErrorListener {
@@ -22,7 +23,12 @@ class LexerErrorListener : ANTLRErrorListener {
     ) {
         if (e is LexerNoViableAltException) {
             val sourcePosition = SourcePosition(line, charPositionInLine + 1)
-            val lexerError = LexerError(LexerErrorType.NO_VIABLE_ALTERNATIVE, sourcePosition)
+            val lexerError = LexerError(
+                LexerErrorType.NO_VIABLE_ALTERNATIVE,
+                sourcePosition,
+                e.inputStream.getText(Interval.of(e.startIndex, e.startIndex)),
+                (recognizer as WebViewComponentsLexer)._mode
+            )
             errors.add(lexerError)
         } else {
             throw e
