@@ -3,6 +3,7 @@ package groowt.gradle.antlr;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.tasks.Delete;
 
 import java.io.File;
 
@@ -39,7 +40,7 @@ public final class GroowtAntlrPlugin implements Plugin<Project> {
 
             sourceSet.getJava().srcDir(baseOutputDir);
 
-            final var sourceSetTasks = antlrSourceDirectorySet.getFiles().stream()
+            final var generateTasks = antlrSourceDirectorySet.getFiles().stream()
                     .filter(GroowtAntlrUtil::isAntlrFile)
                     .map(file -> {
                         final var taskProvider = project.getTasks().register(
@@ -64,10 +65,21 @@ public final class GroowtAntlrPlugin implements Plugin<Project> {
                     })
                     .toList();
 
-            if (!sourceSetTasks.isEmpty()) {
+            if (!generateTasks.isEmpty()) {
+                final var cleanAntlr = project.getTasks().register(
+                        sourceSet.getTaskName("clean", "Antlr"),
+                        Delete.class,
+                        deleteTask -> {
+                            deleteTask.setGroup(GROOWT_ANTLR);
+                            deleteTask.delete(baseOutputDir);
+                        }
+                );
+
                 project.getTasks().register(sourceSet.getTaskName("generate", "AllAntlr"), task -> {
-                    task.dependsOn(sourceSetTasks);
                     task.setGroup(GROOWT_ANTLR);
+                    //noinspection ResultOfMethodCallIgnored
+                    task.doFirst(first -> baseOutputDir.get().getAsFile().delete());
+                    task.dependsOn(generateTasks);
                 });
             }
         });

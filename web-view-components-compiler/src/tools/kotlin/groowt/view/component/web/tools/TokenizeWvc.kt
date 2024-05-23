@@ -8,7 +8,6 @@ import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import java.nio.file.Path
-import java.util.*
 import kotlin.io.path.nameWithoutExtension
 import kotlin.system.exitProcess
 
@@ -31,9 +30,9 @@ open class TokenizeWvc : AbstractSourceTransformerCli() {
 
     @Option(
         names = ["-s", "--suffix"],
-        description = ["The suffix (not extension!) to append to the output file names."]
+        description = ["The suffix (not extension!) to append to output file names."]
     )
-    protected lateinit var suffix: Optional<String>
+    protected var suffix: String? = null
 
     @Option(
         names = ["-e", "--extension"],
@@ -48,47 +47,46 @@ open class TokenizeWvc : AbstractSourceTransformerCli() {
         defaultValue = ".",
         paramLabel = "outputDir"
     )
-    private var myOutputDir: Path? = null
+    protected lateinit var myOutputDir: Path
 
     protected fun onErrors(errors: List<LexerError>): Boolean {
-        println("There were errors during tokenization.")
-        errors.forEach { println(formatLexerError(it)) }
+        System.err.println("There were errors during tokenization.")
+        errors.forEach { System.err.println(formatLexerError(it)) }
         return this.getYesNo("Do you wish to try again?", false)
     }
 
-    private fun getOutputPath(target: Path): Path =
-        Path.of(target.nameWithoutExtension + suffix.orElse("") + extension)
+    protected fun getOutputPath(target: Path): Path =
+        Path.of(target.nameWithoutExtension + (suffix ?: "") + extension)
 
     protected fun onSuccess(target: Path, allTokens: List<Token>): Boolean {
         val formatted = allTokens.mapIndexed { index, token ->
             "$index: ${formatToken(token)}"
         }.joinToString(separator = "\n")
-        if (!this.autoYes) {
+        if (interactive) {
             println("Please review the following tokens:\n$formatted")
-            if (this.getYesNo("Write to disk?")) {
-                this.writeToDisk(getOutputPath(target), formatted)
-                return false
-            } else {
-                return this.getYesNo("Do you wish to redo this file?", false)
-            }
-        } else {
+        }
+        if (this.getYesNo("Write to disk?", true)) {
             this.writeToDisk(getOutputPath(target), formatted)
             return false
+        } else {
+            return this.getYesNo("Do you wish to redo this file?", false)
         }
     }
 
     protected fun onException(e: Exception): Boolean {
-        println("There was an exception during processing: $e")
+        System.err.println("There was an exception during processing: $e")
         if (this.verbose) {
-            e.printStackTrace()
+            e.printStackTrace(System.err)
         }
         return this.getYesNo("Do you wish to try again?", false)
     }
 
-    override fun getOutputDir(): Path? = myOutputDir
+    override fun getOutputDir() = myOutputDir
 
     override fun transform(target: Path): Int {
-        println("Processing $target")
+        if (interactive) {
+            println("Tokenizing $target")
+        }
         var code = 0
         while (true) {
             try {
@@ -99,7 +97,7 @@ open class TokenizeWvc : AbstractSourceTransformerCli() {
                 val errorListener = LexerErrorListener()
                 lexer.addErrorListener(errorListener)
 
-                val tokenStream = WebViewComponentsTokenStream(lexer, setOf(WebViewComponentsLexer.HIDDEN))
+                val tokenStream = WebViewComponentsTokenStream(lexer, setOf()) // include everything (ignore nothing)
                 val allTokens = tokenStream.getAllTokensSkipEOF()
 
                 val errors = errorListener.getErrors()

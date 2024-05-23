@@ -18,9 +18,13 @@ public interface NodeFactory {
 
     BodyNode bodyNode(TokenRange tokenRange, List<? extends BodyChildNode> children);
 
-    GStringBodyTextNode gStringBodyTextNode(TokenRange tokenRange, List<? extends Node> children);
+    BodyTextNode bodyTextNode(TokenRange tokenRange, List<? extends BodyTextChild> children);
 
-    JStringBodyTextNode jStringBodyTextNode(TokenRange tokenRange, String content);
+    QuestionNode questionTagNode(TokenRange tokenRange, List<? extends QuestionTagChild> children);
+
+    HtmlCommentNode htmlCommentNode(TokenRange tokenRange, List<? extends HtmlCommentChild> children);
+
+    TextNode textNode(TokenRange tokenRange, String content);
 
     TypedComponentNode typedComponentNode(
             TokenRange tokenRange,
@@ -58,6 +62,8 @@ public interface NodeFactory {
     EmptyClosureValueNode emptyClosureValueNode(TokenRange tokenRange);
 
     ComponentValueNode componentValueNode(TokenRange tokenRange, ComponentNode componentNode);
+
+    EqualsScriptletNode equalsScriptletNode(TokenRange tokenRange, int groovyIndex);
 
     PlainScriptletNode plainScriptletNode(TokenRange tokenRange, int groovyIndex);
 

@@ -16,36 +16,36 @@ abstract class AbstractSourceTransformerCli : Callable<Int> {
     protected lateinit var targets: List<Path>
 
     @Option(
-        names = ["--n", "--dry-run"],
-        description = ["Do a dry run; do not output files to disk."]
+        names = ["-i", "--interactive"],
+        description = ["Allow interactive recovery from errors. If false, implies -W."]
     )
-    protected var dryRun: Boolean = false
+    protected var interactive = false
 
     @Option(
-        names = ["-y", "--yes"],
-        description = ["Automatically write output files if there are no processing errors."]
+        names = ["-P", "--print-only"],
+        description = ["Only print result(s) to stdout; do not write files to disk."]
     )
-    protected var autoYes: Boolean = false
+    protected var printOnly = false
 
     @Option(
         names = ["-W", "--write-over"],
         description = ["If an output file already exists, write over it without asking."]
     )
-    protected var autoWriteOver: Boolean = false
+    protected var autoWriteOver = false
 
     @Option(
         names = ["-v", "--verbose"],
-        description = ["Log verbosely to the console."]
+        description = ["Log exceptions and errors verbosely to stderr."]
     )
-    protected var verbose: Boolean = false
+    protected var verbose = false
 
     private val scanner = Scanner(System.`in`)
 
-    protected fun getYesNo(prompt: String, allowAuto: Boolean = true): Boolean {
-        if (this.autoYes && allowAuto) {
-            return true
+    protected open fun getYesNo(prompt: String, fallback: Boolean): Boolean {
+        if (!interactive) {
+            return fallback
         } else {
-            print("$prompt (y/n) ")
+            print("$prompt (y/n): ")
             while (true) {
                 if (this.scanner.hasNextLine()) {
                     val input = this.scanner.nextLine()
@@ -60,24 +60,21 @@ abstract class AbstractSourceTransformerCli : Callable<Int> {
     }
 
     private fun doWrite(resolvedTarget: Path, text: String) {
-        if (this.dryRun) {
-            println("Dry-run: would write to $resolvedTarget")
-        } else {
-            println("Writing to $resolvedTarget...")
+        if (!this.printOnly) {
             Files.writeString(resolvedTarget, text)
         }
     }
 
-    protected fun writeToDisk(target: Path, text: String) {
+    protected open fun writeToDisk(target: Path, text: String) {
         val outputDir = getOutputDir()
         if (outputDir != null) {
             Files.createDirectories(outputDir)
         }
         val resolvedTarget = outputDir?.resolve(target) ?: target
         if (Files.exists(resolvedTarget) && !autoWriteOver) {
-            if (getYesNo("$resolvedTarget already exists. Write over?")) {
+            if (getYesNo("$resolvedTarget already exists. Write over?", true)) {
                 doWrite(resolvedTarget, text)
-            } else {
+            } else if (interactive) {
                 println("Skipping writing to $resolvedTarget")
             }
         } else {

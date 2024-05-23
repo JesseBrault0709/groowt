@@ -27,7 +27,7 @@ public final class WebViewComponentsParserTests {
     private static final Logger logger = LoggerFactory.getLogger(WebViewComponentsParserTests.class);
 
     private static final String parserFileBase = String.join(File.separator, "src", "test", "parser");
-    private static final String parserTreeFileBase = String.join(File.separator, parserFileBase, "trees");
+    private static final String parserTreeFileBase = String.join(File.separator, parserFileBase, "parse-tree-files");
     private static final String parseTreeFileSuffix = "_parseTree";
     private static final String parseTreeFileExtension = ".txt";
     private static final Set<String> parserFileGlobs = Set.of(

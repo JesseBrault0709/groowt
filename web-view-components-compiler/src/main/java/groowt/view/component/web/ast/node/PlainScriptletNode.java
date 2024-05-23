@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class PlainScriptletNode extends AbstractLeafNode implements BodyChildNode {
+public class PlainScriptletNode extends AbstractLeafNode implements GroovyBodyNode {
 
     private final int groovyIndex;
     private final GroovyCodeNodeExtension groovyCode;
@@ -38,7 +38,7 @@ public class PlainScriptletNode extends AbstractLeafNode implements BodyChildNod
     }
 
     protected String toValidGroovyCode(List<Token> groovyTokens) {
-        return "{ Writer out ->\n" + groovyTokens.stream().map(Token::getText).collect(Collectors.joining()) + "\n}";
+        return "{ Writer out -> " + groovyTokens.stream().map(Token::getText).collect(Collectors.joining()) + " }";
     }
 
     public int getGroovyIndex() {

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+ARGS="-v -d src/test/lexer/tokens-files -s _tokens -e .txt"
+
+if [ "$1" == "--debug" ]; then
+    shift
+    bin/tokenizeWvc --debug $ARGS "$@"
+else
+    bin/tokenizeWvc $ARGS "$@"
+fi

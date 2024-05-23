@@ -14,7 +14,7 @@ class WebViewComponentsTokenStream(
 
     constructor(lexer: WebViewComponentsLexer) : this(
         lexer,
-        setOf(WebViewComponentsLexer.HIDDEN, WebViewComponentsLexer.ERROR)
+        setOf(WebViewComponentsLexer.HIDDEN)
     )
 
     private val tokens: MutableList<Token> = ArrayList()

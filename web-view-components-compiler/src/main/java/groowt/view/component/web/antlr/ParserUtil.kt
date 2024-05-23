@@ -2,6 +2,7 @@
 package groowt.view.component.web.antlr
 
 import groowt.view.component.web.antlr.WebViewComponentsParser.CompilationUnitContext
+import groowt.view.component.web.util.SourcePosition
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.ParseTree
@@ -85,7 +86,7 @@ private fun formatForError(parser: Parser, tree: ParseTree): String {
 }
 
 fun formatTree(parser: Parser, tree: Tree, colors: Boolean, consumer: Consumer<String>): Unit =
-    consumer.accept(formatTree(parser, tree, colors).toString())
+    consumer.accept(formatTree(parser, tree, colors))
 
 fun formatTree(parser: Parser, tree: Tree, colors: Boolean = true): String =
     doFormatTree(parser, tree, colors, 0, "  ", StringBuilder()).toString()
@@ -109,12 +110,10 @@ private fun formatBasicInfo(parser: Parser, tree: Tree, sb: StringBuilder) {
     when (tree) {
         is ParserRuleContext -> {
             sb.append(parser.ruleNames[tree.ruleIndex])
-                .append(
-                    "[${tree.start.line},${tree.start.charPositionInLine + 1}.."
-                        + "${tree.stop.line},${tree.stop.charPositionInLine + 1}]"
-                )
+            val start = SourcePosition.fromStartOfToken(tree.start)
+            val end = SourcePosition.fromEndOfToken(tree.stop)
+            sb.append("[${start.line},${start.column}..${end.line},${end.column}]")
         }
-
         is TerminalNode -> {
             sb.append(parser.vocabulary.getDisplayName(tree.symbol.type))
                 .append("[${tree.symbol.line},${tree.symbol.charPositionInLine + 1}]")
@@ -139,14 +138,14 @@ private fun doFormatTree(
                 sb.append(ansi().fgRed())
             }
         }
-        formatBasicInfo (parser, tree, sb)
+        formatBasicInfo(parser, tree, sb)
         if (e != null) {
             sb.append(": Exception: ${e.javaClass.simpleName}(${escapeChars(tree.text)})")
             if (colors) {
                 sb.append(ansi().reset())
             }
         }
-        sb . append ("\n")
+        sb.append ("\n")
         var i = 0
         while (i < tree.childCount) {
             doFormatTree(parser, tree.getChild(i), colors, indentTimes + 1, indentText, sb)

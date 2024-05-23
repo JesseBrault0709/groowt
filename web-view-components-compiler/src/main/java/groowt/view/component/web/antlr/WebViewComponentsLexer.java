@@ -11,6 +11,7 @@ public class WebViewComponentsLexer extends WebViewComponentsLexerBase {
 
     public WebViewComponentsLexer() {
         super();
+        this._interp = new PositionAdjustingLexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
     }
 
     @Override

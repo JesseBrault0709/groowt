@@ -1,5 +1,6 @@
 0: ComponentOpen[1,1](<)
 1: StringIdentifier[1,2](bad)
 2: TagError[1,5](!)
-3: ComponentSelfClose[1,7](/>)
-4: RawText[1,9](\n)
+3: Nlws[1,6]( )
+4: ComponentSelfClose[1,7](/>)
+5: RawText[1,9](\n)

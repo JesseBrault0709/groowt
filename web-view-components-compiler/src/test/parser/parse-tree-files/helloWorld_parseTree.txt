@@ -1,0 +1,6 @@
+compilationUnit[1,1..2,1]
+  body[1,1..2,1]
+    bodyText[1,1..2,1]
+      text[1,1..2,1]
+        RawText[1,1](Hello, World!\n)
+  EOF[2,1](<EOF>)

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+ARGS="-v -d src/test/parser/parse-tree-files -s _parseTree -e .txt"
+
+if [ "$1" == "--debug" ]; then
+    shift
+    bin/parseWvc --debug $ARGS "$@"
+else
+    bin/parseWvc $ARGS "$@"
+fi

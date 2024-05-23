@@ -8,6 +8,7 @@ import jakarta.inject.Inject;
 
 import java.util.List;
 
+@Deprecated
 public class GStringBodyTextNode extends AbstractTreeNode implements BodyChildNode {
 
     protected static List<? extends Node> checkChildren(List<? extends Node> children) {

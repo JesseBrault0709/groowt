@@ -4,6 +4,7 @@ package groowt.view.component.web.antlr
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.invoke.MethodHandles
+import java.util.regex.Pattern
 
 private val logger: Logger = LoggerFactory.getLogger(
     MethodHandles.lookup().lookupClass()
@@ -64,6 +65,13 @@ fun canFollowGStringOpening(nextTwo: String): Boolean {
     val result = nextTwo[0] != '"' || nextTwo[1] != '"'
     logDebug("nextTwo: {}, result: {}", nextTwo, result)
     return result
+}
+
+private val notAllowedAfterLessThan = Pattern.compile("[\\p{L}%/>]")
+
+fun canFollowLessThan(subject: String): Boolean {
+    val m = notAllowedAfterLessThan.matcher(subject)
+    return !m.matches()
 }
 
 fun isIdentifierStartChar(c: Char): Boolean = Character.isJavaIdentifierStart(c)

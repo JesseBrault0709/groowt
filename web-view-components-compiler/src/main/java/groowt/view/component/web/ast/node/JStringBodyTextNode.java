@@ -5,6 +5,7 @@ import groowt.view.component.web.ast.extension.NodeExtensionContainer;
 import groowt.view.component.web.util.TokenRange;
 import jakarta.inject.Inject;
 
+@Deprecated
 public class JStringBodyTextNode extends AbstractLeafNode implements BodyChildNode {
 
     private final String content;

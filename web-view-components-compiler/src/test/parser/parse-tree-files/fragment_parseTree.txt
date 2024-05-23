@@ -1,0 +1,14 @@
+compilationUnit[1,1..2,1]
+  body[1,1..1,19]
+    component[1,1..1,19]
+      fragmentComponent[1,1..1,19]
+        FragmentOpen[1,1](<>)
+        body[1,3..1,16]
+          bodyText[1,3..1,16]
+            text[1,3..1,16]
+              RawText[1,3](Hello, World!)
+        FragmentClose[1,16](</>)
+    bodyText[1,19..1,19]
+      text[1,19..1,19]
+        RawText[1,19](\n)
+  EOF[2,1](<EOF>)

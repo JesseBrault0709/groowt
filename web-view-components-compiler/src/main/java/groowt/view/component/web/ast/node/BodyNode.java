@@ -21,7 +21,11 @@ public class BodyNode extends AbstractTreeNode {
     }
 
     @Inject
-    public BodyNode(NodeExtensionContainer extensionContainer, @Given TokenRange tokenRange, @Given List<? extends BodyChildNode> children) {
+    public BodyNode(
+            NodeExtensionContainer extensionContainer,
+            @Given TokenRange tokenRange,
+            @Given List<? extends BodyChildNode> children
+    ) {
         super(tokenRange, extensionContainer, childrenAsNodes(checkChildren(children)));
     }
 

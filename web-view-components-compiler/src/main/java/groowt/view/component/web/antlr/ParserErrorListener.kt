@@ -18,7 +18,7 @@ class ParserErrorListener : BaseErrorListener() {
         line: Int,
         charPositionInLine: Int,
         msg: String,
-        e: RecognitionException
+        e: RecognitionException?
     ) {
         val parser = recognizer as WebViewComponentsParser
         when (e) {
@@ -30,20 +30,41 @@ class ParserErrorListener : BaseErrorListener() {
                 this.lexerErrors.add(error)
             }
             is NoViableAltException -> {
-                val error = ParserError(ParserErrorType.NO_VIABLE_ALTERNATIVE, e.offendingToken, parser.context)
+                val error = ParserError(
+                    ParserErrorType.NO_VIABLE_ALTERNATIVE,
+                    e.offendingToken,
+                    SourcePosition.fromStartOfToken(e.offendingToken),
+                    parser.context
+                )
                 parserErrors.add(error)
             }
             is InputMismatchException -> {
                 val error = MismatchedInputParserError(
                     ParserErrorType.INPUT_MISMATCH,
                     e.offendingToken,
+                    SourcePosition.fromStartOfToken(e.offendingToken),
                     parser.context,
                     e.expectedTokens.toSet()
                 )
                 parserErrors.add(error)
             }
             is FailedPredicateException -> {
-                val error = ParserError(ParserErrorType.FAILED_PREDICATE, e.offendingToken, parser.context)
+                val error = ParserError(
+                    ParserErrorType.FAILED_PREDICATE,
+                    e.offendingToken,
+                    SourcePosition.fromStartOfToken(e.offendingToken),
+                    parser.context
+                )
+                parserErrors.add(error)
+            }
+            else -> {
+                val error = ParserError(
+                    ParserErrorType.UNKNOWN,
+                    offendingSymbol,
+                    msg,
+                    SourcePosition(line, charPositionInLine + 1),
+                    parser.context
+                )
                 parserErrors.add(error)
             }
         }

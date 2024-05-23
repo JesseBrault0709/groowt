@@ -8,12 +8,13 @@ options {
 
 tokens {
     PreambleBreak,
-    ComponentNlws,
     GroovyCode,
     GStringAttrValueEnd,
     JStringAttrValueEnd,
     ClosureAttrValueEnd,
-    DollarScriptletClose
+    DollarScriptletClose,
+    Nlws,
+    ErrorChar
 }
 
 channels {
@@ -88,14 +89,12 @@ channels {
         DollarSlashyStringClosureStart
     );
 
-    public WebViewComponentsLexerBase() {
-        _interp = new LexerATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
-    }
+    public WebViewComponentsLexerBase() {}
 
     private void onPreambleClose() {
         this.setType(PreambleBreak);
         this.exitPreamble();
-        this.popMode();
+        this.mode(MAIN);
     }
 
     private void onGStringClosure() {
@@ -116,9 +115,20 @@ channels {
 // DEFAULT_MODE
 
 PreambleOpen
-    :   THREE_DASH ( NL | WS+ )? { this.canPreamble() }? { this.enterPreamble(); }
+    :   THREE_DASH ( NL | WS+ )? { this.enterPreamble(); }
         -> type(PreambleBreak), pushMode(GROOVY_CODE)
     ;
+
+NotPreambleOpen
+    :   .
+        {
+            this.rollbackOne();
+            this.setCanPreamble(false);
+        } -> skip, mode(MAIN)
+    ;
+
+// ----------------------------------------
+mode MAIN;
 
 ComponentOpen
     :   LT { !isAnyOf(this.getNextChar(), '/', '>') }? -> pushMode(TAG_START)
@@ -156,23 +166,37 @@ DollarScriptletOpen
     ;
 
 DollarReferenceStart
-    :   DOLLAR { isIdentifierStartChar(this.getNextChar()) }? -> pushMode(IN_G_STRING_PATH)
+    :   DOLLAR { isGStringIdentifierStartChar(this.getNextChar()) }? -> pushMode(IN_G_STRING_PATH)
     ;
 
-QuestionTag
-    :   LT QUESTION .*? QUESTION GT
+QuestionTagOpen
+    :   LT QUESTION
     ;
 
-HtmlComment
-    :   LT BANG TWO_DASH .*? TWO_DASH GT
+QuestionTagClose
+    :   QUESTION GT
+    ;
+
+HtmlCommentOpen
+    :   LT BANG TWO_DASH
+    ;
+
+HtmlCommentClose
+    :   TWO_DASH GT
     ;
 
 RawText
-    :   (   ~[-<$] // n.b.: LT cannot be escaped, only via &lt;
-        |   MINUS { !this.isNext("--") }?
-        |   DOLLAR { !this.isNext('{') && !isIdentifierStartChar(this.getNextChar()) }?
+    :   (   ~[-<$?]
+        |   MINUS { !this.isNext("->") }?
+        |   LT { canFollowLessThan(this.getNextCharAsString()) }?
         |   LT BANG { !this.isNext("--") }?
+        |   DOLLAR { !(this.isNext('{') || isIdentifierStartChar(this.getNextChar())) }?
+        |   QUESTION { !this.isNext('>') }?
         )+
+    ;
+
+MainError
+    :   .   -> type(ErrorChar), channel(ERROR)
     ;
 
 // ----------------------------------------
@@ -227,11 +251,11 @@ StringIdentifierChar
     ;
 
 TagStartNlws
-    :   NLWS+ -> type(ComponentNlws), channel(HIDDEN)
+    :   NLWS+ -> type(Nlws), channel(HIDDEN)
     ;
 
 TagStartError
-    :   . -> channel(ERROR)
+    :   . -> type(ErrorChar), channel(ERROR)
     ;
 
 // ----------------------------------------
@@ -276,7 +300,7 @@ JStringAttrValueStart
     ;
 
 ClosureAttrValueStart
-    :   LEFT_CURLY InTagNlws? { !this.isNext('<') }?
+    :   LEFT_CURLY { !this.isNextIgnoreNlws('<') }?
         {
             this.curlies.push(() -> {
                 this.setType(ClosureAttrValueEnd);
@@ -296,7 +320,7 @@ ComponentAttrValueEnd
     ;
 
 InTagNlws
-    :   NLWS+ -> type(ComponentNlws), channel(HIDDEN)
+    :   NLWS+ -> type(Nlws), channel(HIDDEN)
     ;
 
 TagError
@@ -307,10 +331,7 @@ TagError
 mode GROOVY_CODE;
 
 PreambleClose
-    :   NL? THREE_DASH ( NL | WS+ )? { this.inPreamble() }?
-        {
-            this.onPreambleClose();
-        }
+    :   THREE_DASH { this.inPreamble() && this.getCharPositionInLine() == 3 }? { this.onPreambleClose(); }
     ;
 
 ScriptletClose
@@ -318,10 +339,9 @@ ScriptletClose
     ;
 
 GroovyCodeChars
-    :   (   ~[/\n\r\-$%(){}'"]
-        |   FS { !isAnyOf(this.getNextChar(), '/', '*') }?
-        |   NL { !this.inPreamble() || !this.isNext("---") }?
+    :   (   ~[-/$%(){}'"]
         |   MINUS { !(this.getCharPositionInLine() == 1 && this.isNext("--")) }?
+        |   FS { !isAnyOf(this.getNextChar(), '/', '*') }?
         |   DOLLAR { !this.isNext('/') }?
         |   PERCENT { !this.isNext('>') }?
         )+
@@ -418,7 +438,7 @@ LineCommentEnd
 mode IN_STAR_COMMENT;
 
 StarCommentChars
-    :   ~'*'+
+    :   ~'*' | ( '*' { !this.isNext('/') }? )
     ;
 
 StarCommentEnd
@@ -449,11 +469,12 @@ GStringText
     :   (   ~[\n\r"$]
         |   BS DQ
         |   BS DOLLAR
+        |   DOLLAR { !isGStringIdentifierStartChar(this.getNextChar()) }?
         )+
     ;
 
 GStringDollarValueStart
-    :   DOLLAR { !this.isNext('{') }? -> pushMode(IN_G_STRING_PATH)
+    :   DOLLAR { !this.isNext('{') && isGStringIdentifierStartChar(this.getNextChar()) }? -> pushMode(IN_G_STRING_PATH)
     ;
 
 GStringClosureStart
@@ -521,13 +542,14 @@ GStringPathEnd
                         yield new StringContinueEndSpec();
                     }
                 }
-                case DEFAULT_MODE -> new StringContinueEndSpec();
+                case MAIN -> new StringContinueEndSpec();
                 default -> throw new IllegalStateException("not a valid gString context: " + this.getModeName(this.peekMode(1)));
             };
             switch (endSpec) {
                 case StringContinueEndSpec ignored -> {
                     this.popMode();
-                    this.rollbackOne();
+                    this.rollbackOne(true);
+                    this.skip();
                 }
                 case StringClosingEndSpec closingEndSpec -> {
                     this.setType(closingEndSpec.type());
@@ -550,21 +572,21 @@ GStringIdentifierChar
 // ----------------------------------------
 mode IN_TRIPLE_J_STRING;
 
-// TODO: check for unescaped SQ, I think groovy allows them
 TripleJStringContent
-    :   ( ~['] | BS SQ )+
+    :   (   ~[']
+        |   SQ { !(this.isNext("''") && this._input.LA(3) != '\'') }?
+        )+
     ;
 
 TripleJStringEnd
-    :   SQ SQ SQ -> popMode
+    :   SQ SQ SQ { !this.isNext('\'') }? -> popMode
     ;
 
 // ----------------------------------------
 mode IN_TRIPLE_G_STRING;
 
-// TODO: check for unescaped DQ, I think groovy allows them
 TripleGStringDollarValueStart
-    :   DOLLAR { !this.isNext('{') }? -> pushMode(IN_G_STRING_PATH)
+    :   DOLLAR { isGStringIdentifierStartChar(this.getNextChar()) }? -> pushMode(IN_G_STRING_PATH)
     ;
 
 TripleGStringClosureStart
@@ -572,11 +594,15 @@ TripleGStringClosureStart
     ;
 
 TripleGStringText
-    :   ( ~["$] | BS DQ | BS DOLLAR )+
+    :   (   ~["$]
+        |   DQ { !(this.isNext("\"\"") && this._input.LA(3) != '"') }?
+        |   BS DOLLAR
+        |   DOLLAR { !isGStringIdentifierStartChar(this.getNextChar()) }?
+        )+
     ;
 
 TripleGStringEnd
-    :   DQ DQ DQ -> popMode
+    :   DQ DQ DQ { !this.isNext('"') }? -> popMode
     ;
 
 // ----------------------------------------
@@ -587,8 +613,9 @@ ParenthesesSlashyStringText
     ;
 
 ParenthesesSlashyStringDollarValueStart
-    :   DOLLAR { !this.isNext('{') }? -> pushMode(IN_G_STRING_PATH)
+    :   DOLLAR { isGStringIdentifierStartChar(this.getNextChar()) }? -> pushMode(IN_G_STRING_PATH)
     ;
+
 ParenthesesSlashyStringClosureStart
     :   DOLLAR LEFT_CURLY { this.onGStringClosure(); }
     ;
@@ -603,13 +630,14 @@ mode IN_DOLLAR_SLASHY_STRING;
 DollarSlashyStringText
     :   (   ~[$/]
         |   DOLLAR DOLLAR
-        |   DOLLAR FS
-        |   FS DOLLAR DOLLAR
+        |   DOLLAR { !isGStringIdentifierStartChar(this.getNextChar()) }?
+        |   FS { !this.isNext('$') }?
         )+
     ;
 
 DollarSlashyStringDollarValueStart
-    :   DOLLAR { !isAnyOf(this.getNextChar(), '/', '$', '{') }? -> pushMode(IN_G_STRING_PATH)
+    :   DOLLAR { isGStringIdentifierStartChar(this.getNextChar()) }?
+            -> pushMode(IN_G_STRING_PATH)
     ;
 
 DollarSlashyStringClosureStart

@@ -17,18 +17,22 @@ body
     ;
 
 bodyText
-    :   gStringBodyText | jStringBodyText
+    :   ( questionTag | htmlComment | text | bodyTextGroovyElement )+
     ;
 
-gStringBodyText
-    :   jStringBodyText? ( gStringBodyTextGroovyElement jStringBodyText? )+
+questionTag
+    :   QuestionTagOpen ( text | bodyTextGroovyElement )* QuestionTagClose
     ;
 
-jStringBodyText
-    :   ( QuestionTag | HtmlComment | RawText )+
+htmlComment
+    :   HtmlCommentOpen ( text | bodyTextGroovyElement )* HtmlCommentClose
     ;
 
-gStringBodyTextGroovyElement
+text
+    :   RawText
+    ;
+
+bodyTextGroovyElement
     :   plainScriptlet | equalsScriptlet | dollarScriptlet | dollarReference
     ;
 

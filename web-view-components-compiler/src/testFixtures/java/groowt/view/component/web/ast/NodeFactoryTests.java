@@ -1,6 +1,5 @@
 package groowt.view.component.web.ast;
 
-import groowt.view.component.web.ast.extension.GStringNodeExtension;
 import groowt.view.component.web.ast.node.*;
 import groowt.view.component.web.util.TokenRange;
 import org.antlr.v4.runtime.Token;
@@ -75,14 +74,26 @@ public abstract class NodeFactoryTests {
     }
 
     @Test
-    public void gStringBodyTextNode(@Mock LeafNode child) {
-        when(child.hasExtension(GStringNodeExtension.class)).thenReturn(true);
-        assertNotNull(this.nodeFactory.gStringBodyTextNode(this.getTokenRange(), List.of(child)));
+    public void bodyTextNode(@Mock BodyTextChild child, @Mock TreeNode childAsNode) {
+        when(child.asNode()).thenReturn(childAsNode);
+        assertNotNull(this.nodeFactory.bodyTextNode(this.getTokenRange(), List.of(child)));
     }
 
     @Test
-    public void jStringBodyTextNode() {
-        assertNotNull(this.nodeFactory.jStringBodyTextNode(this.getTokenRange(), "Hello!"));
+    public void questionTagNode(@Mock QuestionTagChild child, @Mock TreeNode childAsNode) {
+        when(child.asNode()).thenReturn(childAsNode);
+        assertNotNull(this.nodeFactory.questionTagNode(this.getTokenRange(), List.of(child)));
+    }
+
+    @Test
+    public void htmlCommentNode(@Mock HtmlCommentChild child, @Mock TreeNode childAsNode) {
+        when(child.asNode()).thenReturn(childAsNode);
+        assertNotNull(this.nodeFactory.htmlCommentNode(this.getTokenRange(), List.of(child)));
+    }
+
+    @Test
+    public void textNode() {
+        assertNotNull(this.nodeFactory.textNode(this.getTokenRange(), "Hello, World!"));
     }
 
     @Test

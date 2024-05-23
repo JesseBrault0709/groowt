@@ -1,5 +1,0 @@
----
-class Greeting {
-    String myGreeting
-}
----

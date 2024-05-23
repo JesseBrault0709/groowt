@@ -1,94 +1,93 @@
 compilationUnit[1,1..21,1]
-  preamble[1,1..4,31]
+  preamble[1,1..5,4]
     PreambleBreak[1,1](---\n)
-    GroovyCode[2,1](import some.Thing // a comment\n\ndef greeting = 'Hello, World!')
-    PreambleBreak[4,31](\n---\n)
-  body[6,1..20,8]
-    bodyText[6,1..6,1]
-      jStringBodyText[6,1..6,1]
-        RawText[6,1](<!DOCTYPE html>\n)
+    GroovyCode[2,1](import some.Thing // a comment\n\ndef greeting = 'Hello, World!'\n)
+    PreambleBreak[5,1](---)
+  body[5,4..20,8]
+    bodyText[5,4..7,1]
+      text[5,4..7,1]
+        RawText[5,4](\n<!DOCTYPE html>\n)
     component[7,1..20,7]
       componentWithChildren[7,1..20,7]
         openComponent[7,1..7,6]
           ComponentOpen[7,1](<)
-          componentArgs[7,2..7,2]
-            componentType[7,2..7,2]
+          componentArgs[7,2..7,6]
+            componentType[7,2..7,6]
               StringIdentifier[7,2](html)
           ComponentClose[7,6](>)
         body[7,7..19,12]
-          bodyText[7,7..7,7]
-            jStringBodyText[7,7..7,7]
+          bodyText[7,7..8,5]
+            text[7,7..8,5]
               RawText[7,7](\n    )
           component[8,5..8,17]
             componentWithChildren[8,5..8,17]
               openComponent[8,5..8,10]
                 ComponentOpen[8,5](<)
-                componentArgs[8,6..8,6]
-                  componentType[8,6..8,6]
+                componentArgs[8,6..8,10]
+                  componentType[8,6..8,10]
                     StringIdentifier[8,6](head)
                 ComponentClose[8,10](>)
               closingComponent[8,11..8,17]
                 ClosingComponentOpen[8,11](</)
-                componentType[8,13..8,13]
+                componentType[8,13..8,17]
                   StringIdentifier[8,13](head)
                 ComponentClose[8,17](>)
-          bodyText[8,18..8,18]
-            jStringBodyText[8,18..8,18]
+          bodyText[8,18..9,5]
+            text[8,18..9,5]
               RawText[8,18](\n    )
           component[9,5..19,11]
             componentWithChildren[9,5..19,11]
               openComponent[9,5..9,10]
                 ComponentOpen[9,5](<)
-                componentArgs[9,6..9,6]
-                  componentType[9,6..9,6]
+                componentArgs[9,6..9,10]
+                  componentType[9,6..9,10]
                     StringIdentifier[9,6](body)
                 ComponentClose[9,10](>)
-              body[9,11..18,34]
-                bodyText[9,11..9,11]
-                  jStringBodyText[9,11..9,11]
+              body[9,11..19,5]
+                bodyText[9,11..10,9]
+                  text[9,11..10,9]
                     RawText[9,11](\n        )
                 component[10,9..10,28]
                   componentWithChildren[10,9..10,28]
                     openComponent[10,9..10,12]
                       ComponentOpen[10,9](<)
-                      componentArgs[10,10..10,10]
-                        componentType[10,10..10,10]
+                      componentArgs[10,10..10,12]
+                        componentType[10,10..10,12]
                           StringIdentifier[10,10](h1)
                       ComponentClose[10,12](>)
                     body[10,13..10,23]
                       bodyText[10,13..10,23]
-                        gStringBodyText[10,13..10,23]
-                          gStringBodyTextGroovyElement[10,13..10,23]
-                            dollarScriptlet[10,13..10,23]
-                              DollarScriptletOpen[10,13](${)
-                              GroovyCode[10,15](greeting)
-                              DollarScriptletClose[10,23](})
+                        bodyTextGroovyElement[10,13..10,23]
+                          dollarScriptlet[10,13..10,23]
+                            DollarScriptletOpen[10,13](${)
+                            GroovyCode[10,15](greeting)
+                            DollarScriptletClose[10,23](})
                     closingComponent[10,24..10,28]
                       ClosingComponentOpen[10,24](</)
-                      componentType[10,26..10,26]
+                      componentType[10,26..10,28]
                         StringIdentifier[10,26](h1)
                       ComponentClose[10,28](>)
-                bodyText[10,29..10,29]
-                  jStringBodyText[10,29..10,29]
+                bodyText[10,29..11,9]
+                  text[10,29..11,9]
                     RawText[10,29](\n        )
                 component[11,9..18,33]
                   componentWithChildren[11,9..18,33]
                     openComponent[11,9..11,32]
                       ComponentOpen[11,9](<)
-                      componentArgs[11,10..11,10]
-                        componentType[11,10..11,10]
+                      componentArgs[11,10..11,32]
+                        componentType[11,10..11,32]
                           TypedIdentifier[11,10](groowt.view.web.Select)
                       ComponentClose[11,32](>)
-                    body[11,33..17,23]
-                      bodyText[11,33..11,33]
-                        jStringBodyText[11,33..11,33]
+                    body[11,33..18,9]
+                      bodyText[11,33..12,13]
+                        text[11,33..12,13]
                           RawText[11,33](\n            )
                       component[12,13..14,19]
                         componentWithChildren[12,13..14,19]
                           openComponent[12,13..12,36]
                             ComponentOpen[12,13](<)
                             componentArgs[12,14..12,35]
-                              componentType[12,14..12,14]
+                              componentType[12,14..12,18]
                                 TypedIdentifier[12,14](Case)
                               attr[12,19..12,35]
                                 keyValueAttr[12,19..12,35]
@@ -100,9 +99,9 @@ compilationUnit[1,1..21,1]
                                       GroovyCode[12,25](isItTrue())
                                       ClosureAttrValueEnd[12,35](})
                             ComponentClose[12,36](>)
-                          body[12,37..13,37]
-                            bodyText[12,37..12,37]
-                              jStringBodyText[12,37..12,37]
+                          body[12,37..14,13]
+                            bodyText[12,37..13,17]
+                              text[12,37..13,17]
                                 RawText[12,37](\n                )
                             component[13,17..13,36]
                               componentWithChildren[13,17..13,36]
@@ -112,37 +111,37 @@ compilationUnit[1,1..21,1]
                                     componentType[13,18..13,18]
                                       StringIdentifier[13,18](p)
                                   ComponentClose[13,19](>)
-                                body[13,20..13,20]
-                                  bodyText[13,20..13,20]
-                                    jStringBodyText[13,20..13,20]
+                                body[13,20..13,33]
+                                  bodyText[13,20..13,33]
+                                    text[13,20..13,33]
                                       RawText[13,20](It's true! :))
                                 closingComponent[13,33..13,36]
                                   ClosingComponentOpen[13,33](</)
                                   componentType[13,35..13,35]
                                     StringIdentifier[13,35](p)
                                   ComponentClose[13,36](>)
-                            bodyText[13,37..13,37]
-                              jStringBodyText[13,37..13,37]
+                            bodyText[13,37..14,13]
+                              text[13,37..14,13]
                                 RawText[13,37](\n            )
                           closingComponent[14,13..14,19]
                             ClosingComponentOpen[14,13](</)
-                            componentType[14,15..14,15]
+                            componentType[14,15..14,19]
                               TypedIdentifier[14,15](Case)
                             ComponentClose[14,19](>)
-                      bodyText[14,20..14,20]
-                        jStringBodyText[14,20..14,20]
+                      bodyText[14,20..15,13]
+                        text[14,20..15,13]
                           RawText[14,20](\n            )
                       component[15,13..17,22]
                         componentWithChildren[15,13..17,22]
                           openComponent[15,13..15,21]
                             ComponentOpen[15,13](<)
-                            componentArgs[15,14..15,14]
-                              componentType[15,14..15,14]
+                            componentArgs[15,14..15,21]
+                              componentType[15,14..15,21]
                                 TypedIdentifier[15,14](Default)
                             ComponentClose[15,21](>)
-                          body[15,22..16,40]
-                            bodyText[15,22..15,22]
-                              jStringBodyText[15,22..15,22]
+                          body[15,22..17,13]
+                            bodyText[15,22..16,17]
+                              text[15,22..16,17]
                                 RawText[15,22](\n                )
                             component[16,17..16,39]
                               componentWithChildren[16,17..16,39]
@@ -152,48 +151,48 @@ compilationUnit[1,1..21,1]
                                     componentType[16,18..16,18]
                                       StringIdentifier[16,18](p)
                                   ComponentClose[16,19](>)
-                                body[16,20..16,20]
-                                  bodyText[16,20..16,20]
-                                    jStringBodyText[16,20..16,20]
+                                body[16,20..16,36]
+                                  bodyText[16,20..16,36]
+                                    text[16,20..16,36]
                                       RawText[16,20](It's false... :()
                                 closingComponent[16,36..16,39]
                                   ClosingComponentOpen[16,36](</)
                                   componentType[16,38..16,38]
                                     StringIdentifier[16,38](p)
                                   ComponentClose[16,39](>)
-                            bodyText[16,40..16,40]
-                              jStringBodyText[16,40..16,40]
+                            bodyText[16,40..17,13]
+                              text[16,40..17,13]
                                 RawText[16,40](\n            )
                           closingComponent[17,13..17,22]
                             ClosingComponentOpen[17,13](</)
-                            componentType[17,15..17,15]
+                            componentType[17,15..17,22]
                               TypedIdentifier[17,15](Default)
                             ComponentClose[17,22](>)
-                      bodyText[17,23..17,23]
-                        jStringBodyText[17,23..17,23]
+                      bodyText[17,23..18,9]
+                        text[17,23..18,9]
                           RawText[17,23](\n        )
                     closingComponent[18,9..18,33]
                       ClosingComponentOpen[18,9](</)
-                      componentType[18,11..18,11]
+                      componentType[18,11..18,33]
                         TypedIdentifier[18,11](groowt.view.web.Select)
                       ComponentClose[18,33](>)
-                bodyText[18,34..18,34]
-                  jStringBodyText[18,34..18,34]
+                bodyText[18,34..19,5]
+                  text[18,34..19,5]
                     RawText[18,34](\n    )
               closingComponent[19,5..19,11]
                 ClosingComponentOpen[19,5](</)
-                componentType[19,7..19,7]
+                componentType[19,7..19,11]
                   StringIdentifier[19,7](body)
                 ComponentClose[19,11](>)
           bodyText[19,12..19,12]
-            jStringBodyText[19,12..19,12]
+            text[19,12..19,12]
               RawText[19,12](\n)
         closingComponent[20,1..20,7]
           ClosingComponentOpen[20,1](</)
-          componentType[20,3..20,3]
+          componentType[20,3..20,7]
             StringIdentifier[20,3](html)
           ComponentClose[20,7](>)
     bodyText[20,8..20,8]
-      jStringBodyText[20,8..20,8]
+      text[20,8..20,8]
         RawText[20,8](\n)
   EOF[21,1](<EOF>)

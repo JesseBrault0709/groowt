@@ -1,5 +1,6 @@
 package groowt.view.component.web.antlr;
 
+import groovyjarjarantlr4.runtime.Token;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.atn.ATN;
@@ -15,6 +16,7 @@ import java.util.LinkedList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static groowt.view.component.web.antlr.LexerSemanticPredicates.isAnyOf;
 import static groowt.view.component.web.antlr.TokenUtil.escapeChars;
 
 public abstract class AbstractWebViewComponentsLexer extends Lexer {
@@ -30,11 +32,13 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
             super(recognizer, atn, decisionToDFA, sharedContextCache);
         }
 
-        public void resetAcceptPosition(CharStream input, int index, int line, int charPositionInLine) {
+        public void resetAcceptPosition(CharStream input, int index, int line, int charPositionInLine, boolean consume) {
             input.seek(index);
             this.line = line;
             this.charPositionInLine = charPositionInLine;
-            this.consume(input);
+            if (consume) {
+                this.consume(input);
+            }
         }
 
     }
@@ -87,7 +91,7 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         return this.logger;
     }
 
-    public boolean isCanPreamble() {
+    public boolean canPreamble() {
         return this.canPreamble;
     }
 
@@ -95,7 +99,7 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.canPreamble = canPreamble;
     }
 
-    public boolean isInPreamble() {
+    public boolean inPreamble() {
         return this.inPreamble;
     }
 
@@ -103,7 +107,7 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.inPreamble = inPreamble;
     }
 
-    public boolean isInConstructor() {
+    public boolean inConstructor() {
         return this.inConstructor;
     }
 
@@ -176,17 +180,9 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         }
     }
 
-    protected boolean canPreamble() {
-        return this.canPreamble;
-    }
-
     protected void enterPreamble() {
         this.inPreamble = true;
         this.canPreamble = false;
-    }
-
-    protected boolean inPreamble() {
-        return this.inPreamble;
     }
 
     protected void exitPreamble() {
@@ -197,10 +193,6 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.parentheses.push(this::popMode);
         this.parentheses.increment();
         this.inConstructor = true;
-    }
-
-    protected boolean inConstructor() {
-        return this.inConstructor;
     }
 
     protected boolean canExitConstructor() {
@@ -220,6 +212,10 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         return b.toString();
     }
 
+    protected String getNextCharAsString() {
+        return Character.toString((char) this.getNextChar());
+    }
+
     protected int getCurrentChar() {
         return this._input.LA(-1);
     }
@@ -236,6 +232,16 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         return this.getNextCharsAsString(test.length()).equals(test);
     }
 
+    protected boolean isNextIgnoreNlws(char test) {
+        for (int i = 1; this._input.LA(i) != Token.EOF; i++) {
+            final char subject = (char) this._input.LA(i);
+            if (!isAnyOf(subject, ' ', '\t', '\n', '\r')) {
+                return subject == test;
+            }
+        }
+        return false;
+    }
+
     @Override
     public final LexerATNSimulator getInterpreter() {
         return this._interp;
@@ -244,11 +250,16 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
     protected abstract PositionAdjustingLexerATNSimulator getPositionAdjustingInterpreter();
 
     protected void rollbackOne() {
+        this.rollbackOne(false);
+    }
+
+    protected void rollbackOne(boolean consume) {
         this.getPositionAdjustingInterpreter().resetAcceptPosition(
                 this._input,
-                this._tokenStartCharIndex - 1,
+                Math.max(this._tokenStartCharIndex - 1, 0),
                 this._tokenStartLine,
-                this._tokenStartCharIndex - 1
+                Math.max(this._tokenStartCharIndex - 1, 0),
+                consume
         );
     }
 

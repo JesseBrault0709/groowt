@@ -7,7 +7,7 @@ import groowt.view.component.web.ast.extension.NodeExtensionContainer;
 import groowt.view.component.web.util.TokenRange;
 import jakarta.inject.Inject;
 
-public class DollarScriptletNode extends AbstractLeafNode {
+public class DollarScriptletNode extends AbstractLeafNode implements GroovyBodyNode {
 
     private final GStringScriptletExtension gStringScriptlet;
 

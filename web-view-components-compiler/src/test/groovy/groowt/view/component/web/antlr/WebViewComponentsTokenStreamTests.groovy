@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import static groowt.view.component.web.antlr.TokenUtil.getTokenName
 import static groowt.view.component.web.antlr.WebViewComponentsLexer.GroovyCode
 import static groowt.view.component.web.antlr.WebViewComponentsLexer.PreambleBreak
+import static groowt.view.component.web.antlr.WebViewComponentsLexerBase.RawText
 import static org.antlr.v4.runtime.Recognizer.EOF
 import static org.junit.jupiter.api.Assertions.*
 
@@ -50,11 +51,11 @@ class WebViewComponentsTokenStreamTests {
         def lexer = new WebViewComponentsLexer(input)
         def tokenStream = new WebViewComponentsTokenStream(lexer)
         def tokens = tokenStream.allTokens
-        assertTypes([PreambleBreak, GroovyCode, PreambleBreak, EOF], tokens)
+        assertTypes([PreambleBreak, GroovyCode, PreambleBreak, RawText, EOF], tokens)
         assertMergedGroovyCodeToken(tokens[1]) {
             assertEquals('println \'Hello, World!\' // comment\n', it.text)
         }
-        assertIterableEquals(0..3, tokens*.tokenIndex)
+        assertIterableEquals(0..4, tokens*.tokenIndex)
     }
 
 }

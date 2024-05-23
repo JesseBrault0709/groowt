@@ -1,4 +1,5 @@
 0: ComponentOpen[1,1](<)
 1: StringIdentifier[1,2](data-test)
-2: ComponentSelfClose[1,12](/>)
-3: RawText[1,14](\n)
+2: Nlws[1,11]( )
+3: ComponentSelfClose[1,12](/>)
+4: RawText[1,14](\n)

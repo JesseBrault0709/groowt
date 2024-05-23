@@ -22,8 +22,10 @@ public class DefaultNodeFactory implements NodeFactory {
             CompilationUnitNode.class,
             PreambleNode.class,
             BodyNode.class,
-            GStringBodyTextNode.class,
-            JStringBodyTextNode.class,
+            BodyTextNode.class,
+            QuestionNode.class,
+            HtmlCommentNode.class,
+            TextNode.class,
             TypedComponentNode.class,
             FragmentComponentNode.class,
             ComponentArgsNode.class,
@@ -102,13 +104,23 @@ public class DefaultNodeFactory implements NodeFactory {
     }
 
     @Override
-    public GStringBodyTextNode gStringBodyTextNode(TokenRange tokenRange, List<? extends Node> children) {
-        return this.objectFactory.get(GStringBodyTextNode.class, tokenRange, children);
+    public BodyTextNode bodyTextNode(TokenRange tokenRange, List<? extends BodyTextChild> children) {
+        return this.objectFactory.get(BodyTextNode.class, tokenRange, children);
     }
 
     @Override
-    public JStringBodyTextNode jStringBodyTextNode(TokenRange tokenRange, String content) {
-        return this.objectFactory.get(JStringBodyTextNode.class, tokenRange, content);
+    public QuestionNode questionTagNode(TokenRange tokenRange, List<? extends QuestionTagChild> children) {
+        return this.objectFactory.get(QuestionNode.class, tokenRange, children);
+    }
+
+    @Override
+    public HtmlCommentNode htmlCommentNode(TokenRange tokenRange, List<? extends HtmlCommentChild> children) {
+        return this.objectFactory.get(HtmlCommentNode.class, tokenRange, children);
+    }
+
+    @Override
+    public TextNode textNode(TokenRange tokenRange, String content) {
+        return this.objectFactory.get(TextNode.class, tokenRange, content);
     }
 
     @Override
@@ -194,6 +206,11 @@ public class DefaultNodeFactory implements NodeFactory {
     @Override
     public ComponentValueNode componentValueNode(TokenRange tokenRange, ComponentNode componentNode) {
         return this.objectFactory.get(ComponentValueNode.class, tokenRange, componentNode);
+    }
+
+    @Override
+    public EqualsScriptletNode equalsScriptletNode(TokenRange tokenRange, int groovyIndex) {
+        return this.objectFactory.get(EqualsScriptletNode.class, tokenRange, groovyIndex);
     }
 
     @Override

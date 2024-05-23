@@ -6,9 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public sealed abstract class ComponentNode extends AbstractTreeNode implements BodyChildNode permits
-        FragmentComponentNode,
-        TypedComponentNode {
+public sealed abstract class ComponentNode extends AbstractTreeNode implements BodyChildNode
+        permits FragmentComponentNode, TypedComponentNode {
 
     private final BodyNode bodyNode;
 

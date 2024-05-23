@@ -7,7 +7,7 @@ import groowt.view.component.web.ast.extension.NodeExtensionContainer;
 import groowt.view.component.web.util.TokenRange;
 import jakarta.inject.Inject;
 
-public class DollarReferenceNode extends AbstractLeafNode {
+public class DollarReferenceNode extends AbstractLeafNode implements GroovyBodyNode {
 
     private final int groovyTokenIndex;
 

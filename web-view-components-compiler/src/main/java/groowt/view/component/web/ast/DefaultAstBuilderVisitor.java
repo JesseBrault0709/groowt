@@ -4,6 +4,7 @@ import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.antlr.MergedGroovyCodeToken;
 import groowt.view.component.web.antlr.TokenUtil;
 import groowt.view.component.web.antlr.WebViewComponentsParser;
+import groowt.view.component.web.antlr.WebViewComponentsParser.BodyTextContext;
 import groowt.view.component.web.antlr.WebViewComponentsParserBaseVisitor;
 import groowt.view.component.web.ast.node.*;
 import groowt.view.component.web.util.TokenRange;
@@ -18,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor<Node> {
 
@@ -73,16 +73,8 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
         return ctx.getChild(0).accept(this);
     }
 
-    protected <R extends Node> R getSingleChildAs(ParserRuleContext ctx, Class<R> type) {
-        return type.cast(this.getSingleChild(ctx));
-    }
-
     protected TokenRange getTokenRange(ParserRuleContext ctx) {
         return TokenRange.of(ctx.start, ctx.stop);
-    }
-
-    protected TerminalNode getSingleChildTerminalNode(WebViewComponentsParser.JStringBodyTextContext ctx) {
-        return ctx.getChild(TerminalNode.class, 0);
     }
 
     @Override
@@ -119,37 +111,57 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
     }
 
     @Override
-    public Node visitBodyText(WebViewComponentsParser.BodyTextContext ctx) {
-        return this.getSingleChild(ctx);
-    }
-
-    @Override
-    public Node visitGStringBodyText(WebViewComponentsParser.GStringBodyTextContext ctx) {
-        final List<Node> children = new ArrayList<>();
+    public @Nullable Node visitBodyText(BodyTextContext ctx) {
+        final List<BodyTextChild> children = new ArrayList<>();
         for (final var child : ctx.children) {
             final @Nullable Node childResult = child.accept(this);
             if (childResult != null) {
-                children.add(childResult);
+                children.add((BodyTextChild) childResult);
             }
         }
-        return this.nodeFactory.gStringBodyTextNode(this.getTokenRange(ctx), children);
+        if (children.isEmpty()) {
+            return null;
+        } else {
+            return this.nodeFactory.bodyTextNode(this.getTokenRange(ctx), children);
+        }
     }
 
     @Override
-    public @Nullable Node visitJStringBodyText(WebViewComponentsParser.JStringBodyTextContext ctx) {
-        final String text = ctx.getText();
-        if (isNotBlankNotEmpty(text)) {
-            return this.nodeFactory.jStringBodyTextNode(
-                    this.getTokenRange(ctx),
-                    text
-            );
+    public @Nullable Node visitQuestionTag(WebViewComponentsParser.QuestionTagContext ctx) {
+        final List<QuestionTagChild> children = new ArrayList<>();
+        for (final var child : ctx.children) {
+            final @Nullable Node childResult = child.accept(this);
+            if (childResult != null) {
+                children.add((QuestionTagChild) childResult);
+            }
+        }
+        return this.nodeFactory.questionTagNode(this.getTokenRange(ctx), children);
+    }
+
+    @Override
+    public Node visitHtmlComment(WebViewComponentsParser.HtmlCommentContext ctx) {
+        final List<HtmlCommentChild> children = new ArrayList<>();
+        for (final var child : ctx.children) {
+            final @Nullable Node childResult = child.accept(this);
+            if (childResult != null) {
+                children.add((HtmlCommentChild) childResult);
+            }
+        }
+        return this.nodeFactory.htmlCommentNode(this.getTokenRange(ctx), children);
+    }
+
+    @Override
+    public @Nullable Node visitText(WebViewComponentsParser.TextContext ctx) {
+        final String content = ctx.getText();
+        if (isNotBlankNotEmpty(content)) {
+            return this.nodeFactory.textNode(this.getTokenRange(ctx), content);
         } else {
             return null;
         }
     }
 
     @Override
-    public Node visitGStringBodyTextGroovyElement(WebViewComponentsParser.GStringBodyTextGroovyElementContext ctx) {
+    public Node visitBodyTextGroovyElement(WebViewComponentsParser.BodyTextGroovyElementContext ctx) {
         return this.getSingleChild(ctx);
     }
 
@@ -206,16 +218,6 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
             attrNodes.add(this.getSingleAsNonNull(attrCtx, AttrNode.class));
         }
         return this.nodeFactory.componentArgsNode(this.getTokenRange(ctx), typeNode, constructorNode, attrNodes);
-    }
-
-    private static final Pattern lowercaseLetterPattern = Pattern.compile("\\p{Ll}");
-
-    protected boolean startsWithLowercaseLetter(String subject) {
-        if (subject.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Cannot test for starting lowercase letter when the subject length is 0; given: " + subject);
-        }
-        return lowercaseLetterPattern.matcher(subject.substring(0, 1)).matches();
     }
 
     @Override
@@ -291,7 +293,6 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
         if (groovyCode != null) {
             final MergedGroovyCodeToken groovyCodeToken = (MergedGroovyCodeToken) groovyCode.getSymbol();
             if (canBeGString(groovyCodeToken.getOriginals())) {
-                // TODO: we need to set the appropriate type: slashy, dollar slashy, etc.
                 return this.nodeFactory.gStringValueNode(ctxTokenRange, groovyCodeToken.getTokenIndex());
             } else {
                 return this.nodeFactory.jStringValueNode(ctxTokenRange, groovyCode.getText());
@@ -337,7 +338,7 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
     public @Nullable Node visitEqualsScriptlet(WebViewComponentsParser.EqualsScriptletContext ctx) {
         final TerminalNode groovyCode = ctx.GroovyCode();
         if (groovyCode != null) {
-            return this.nodeFactory.dollarScriptletNode(
+            return this.nodeFactory.equalsScriptletNode(
                     this.getTokenRange(ctx),
                     ctx.GroovyCode().getSymbol().getTokenIndex()
             );
@@ -384,12 +385,12 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
 
     @Override
     public Node visitTerminal(TerminalNode node) {
-        throw new UnsupportedOperationException();
+        throw new WebViewComponentBugError("Should not be visiting terminal nodes.");
     }
 
     @Override
     public Node visitErrorNode(ErrorNode node) {
-        throw new IllegalStateException("Found an ErrorNode: " + node);
+        throw new WebViewComponentBugError("Should not have found an ErrorNode by this point: " + node);
     }
 
 }

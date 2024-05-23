@@ -152,14 +152,15 @@ def toolSpec = { String name, String mainClass ->
 }
 
 final List<ToolSpec> toolSpecs = [
-        toolSpec('astFileMaker', 'AstFileMakerCli'),
+        toolSpec('astFileMaker', 'AstFileMakerCli'), // deprecated
         toolSpec('convertToGroovy', 'ConvertToGroovy'),
         toolSpec('groovyWvc', 'GroovyWvcCompiler'),
-        toolSpec('lexer', 'LexerTool'),
-        toolSpec('parser', 'ParserTool'),
-        toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli'),
+        toolSpec('lexer', 'LexerTool'), // deprecated
+        toolSpec('parser', 'ParserTool'), // deprecated
+        toolSpec('parseTreeFileMaker', 'ParseTreeFileMakerCli'), // deprecated
+        toolSpec('parseWvc', 'ParseWvc'),
         toolSpec('tokenizeWvc', 'TokenizeWvc'),
-        toolSpec('tokensFileMaker', 'TokensFileMakerCli')
+        toolSpec('tokensFileMaker', 'TokensFileMakerCli') // deprecated
 ]
 
 toolSpecs.each { spec ->

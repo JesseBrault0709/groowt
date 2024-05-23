@@ -4,16 +4,16 @@ compilationUnit[1,1..2,1]
       componentWithChildren[1,1..1,13]
         openComponent[1,1..1,6]
           ComponentOpen[1,1](<)
-          componentArgs[1,2..1,2]
-            componentType[1,2..1,2]
+          componentArgs[1,2..1,6]
+            componentType[1,2..1,6]
               StringIdentifier[1,2](html)
           ComponentClose[1,6](>)
         closingComponent[1,7..1,13]
           ClosingComponentOpen[1,7](</)
-          componentType[1,9..1,9]
+          componentType[1,9..1,13]
             StringIdentifier[1,9](html)
           ComponentClose[1,13](>)
     bodyText[1,14..1,14]
-      jStringBodyText[1,14..1,14]
+      text[1,14..1,14]
         RawText[1,14](\n)
   EOF[2,1](<EOF>)
