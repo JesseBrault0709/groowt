@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+ARGS="-v -d src/test/ast/ast-files -s _ast -e .txt"
+
+if [ "$1" == "--debug" ]; then
+    shift
+    bin/astBuilder --debug $ARGS "$@"
+else
+    bin/astBuilder $ARGS "$@"
+fi

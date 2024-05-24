@@ -157,6 +157,7 @@ def toolSpec = { String name, String mainClass ->
 }
 
 final List<ToolSpec> toolSpecs = [
+        toolSpec('astBuilder', 'AstBuilder'),
         toolSpec('astFileMaker', 'AstFileMakerCli'), // deprecated
         toolSpec('convertToGroovy', 'ConvertToGroovy'),
         toolSpec('groovyWvc', 'GroovyWvcCompiler'),

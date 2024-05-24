@@ -1,4 +1,3 @@
 0: PreambleBreak[1,1](---)
 1: GroovyCode[1,4](-\n)
-2: PreambleBreak[2,1](---)
-3: RawText[2,4](\n)
+2: PreambleBreak[2,1](---\n)

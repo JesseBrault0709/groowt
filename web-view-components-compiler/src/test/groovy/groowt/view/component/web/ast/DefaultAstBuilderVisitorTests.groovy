@@ -8,6 +8,7 @@ import groowt.view.component.web.antlr.WebViewComponentsParser
 import groowt.view.component.web.antlr.WebViewComponentsTokenStream
 import groowt.view.component.web.ast.node.*
 import org.antlr.v4.runtime.CharStreams
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 import static groowt.view.component.web.antlr.WebViewComponentsParser.CompilationUnitContext
@@ -52,6 +53,7 @@ class DefaultAstBuilderVisitorTests {
     }
 
     @Test
+    @Disabled('Move to file tests.')
     void helloTarget() {
         def (node, tokenList) = this.doBuild('Hello, $target!')
         assertNodeWith(CompilationUnitNode, node) {

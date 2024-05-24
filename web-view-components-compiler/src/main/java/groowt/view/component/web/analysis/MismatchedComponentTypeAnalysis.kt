@@ -50,7 +50,7 @@ private fun doCheck(tree: ParseTree, destination: MutableList<MismatchedComponen
 
 data class MismatchedComponentTypeError(val component: ComponentWithChildrenContext, val message: String)
 
-fun check(tree: ParseTree): List<MismatchedComponentTypeError> {
+fun checkForMismatchedComponentTypeErrors(tree: ParseTree): List<MismatchedComponentTypeError> {
     val result: MutableList<MismatchedComponentTypeError> = ArrayList()
     doCheck(tree, result)
     return result

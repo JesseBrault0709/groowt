@@ -80,7 +80,7 @@ final class AstFileMaker extends AbstractOutputFileMaker {
                 )
             }
 
-            def mismatchedTypeErrors = MismatchedComponentTypeAnalysis.check(cuContext)
+            def mismatchedTypeErrors = MismatchedComponentTypeAnalysis.checkForMismatchedComponentTypeErrors(cuContext)
 
             if (!mismatchedTypeErrors.isEmpty()) {
                 def message = 'There were mismatched type errors: \n' + mismatchedTypeErrors.collect {

@@ -87,7 +87,6 @@ open class TokenizeWvc : AbstractSourceTransformerCli() {
         if (interactive) {
             println("Tokenizing $target")
         }
-        var code = 0
         while (true) {
             try {
                 val input = CharStreams.fromPath(target)
@@ -104,24 +103,21 @@ open class TokenizeWvc : AbstractSourceTransformerCli() {
                 if (errors.isNotEmpty()) {
                     val recover = this.onErrors(errors)
                     if (!recover) {
-                        code = 1
-                        break
+                        return 1
                     }
                 } else {
                     val redo = this.onSuccess(target, allTokens)
                     if (!redo) {
-                        break
+                        return 0
                     }
                 }
             } catch (e: Exception) {
                 val recover = this.onException(e)
                 if (!recover) {
-                    code = 1
-                    break
+                    return 1
                 }
             }
         }
-        return code
     }
 
 }

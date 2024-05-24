@@ -1,7 +1,7 @@
 lexer grammar LexerFragments;
 
 fragment
-NL : [\n\r] ;
+NL : '\n' | '\r\n' ;
 
 fragment
 WS : [ \t] ;

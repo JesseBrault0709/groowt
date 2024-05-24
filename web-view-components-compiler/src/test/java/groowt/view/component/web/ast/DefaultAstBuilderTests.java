@@ -19,7 +19,7 @@ public class DefaultAstBuilderTests extends AstBuilderTests {
         super(
                 Path.of("src", "test", "ast"),
                 "*.wvc",
-                Path.of("src", "test", "ast", "trees"),
+                Path.of("src", "test", "ast", "ast-files"),
                 "_ast.txt"
         );
     }

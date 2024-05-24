@@ -97,7 +97,7 @@ public final class CompilerPipeline {
 
         // check for mismatched type errors
         final List<MismatchedComponentTypeError> mismatchedComponentTypeErrors =
-                MismatchedComponentTypeAnalysis.check(parseResult.getCompilationUnitContext());
+                MismatchedComponentTypeAnalysis.checkForMismatchedComponentTypeErrors(parseResult.getCompilationUnitContext());
 
         if (!mismatchedComponentTypeErrors.isEmpty()) {
             if (mismatchedComponentTypeErrors.size() == 1) {

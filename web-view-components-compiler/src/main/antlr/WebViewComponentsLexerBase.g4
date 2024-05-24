@@ -331,7 +331,7 @@ TagError
 mode GROOVY_CODE;
 
 PreambleClose
-    :   THREE_DASH { this.inPreamble() && this.getCharPositionInLine() == 3 }? { this.onPreambleClose(); }
+    :   THREE_DASH { this.inPreamble() && this.getCharPositionInLine() == 3 }? WS* NL? { this.onPreambleClose(); }
     ;
 
 ScriptletClose

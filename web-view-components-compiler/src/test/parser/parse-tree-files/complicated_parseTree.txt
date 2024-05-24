@@ -1,12 +1,12 @@
 compilationUnit[1,1..21,1]
-  preamble[1,1..5,4]
+  preamble[1,1..6,1]
     PreambleBreak[1,1](---\n)
     GroovyCode[2,1](import some.Thing // a comment\n\ndef greeting = 'Hello, World!'\n)
-    PreambleBreak[5,1](---)
-  body[5,4..20,8]
-    bodyText[5,4..7,1]
-      text[5,4..7,1]
-        RawText[5,4](\n<!DOCTYPE html>\n)
+    PreambleBreak[5,1](---\n)
+  body[6,1..20,8]
+    bodyText[6,1..7,1]
+      text[6,1..7,1]
+        RawText[6,1](<!DOCTYPE html>\n)
     component[7,1..20,7]
       componentWithChildren[7,1..20,7]
         openComponent[7,1..7,6]
