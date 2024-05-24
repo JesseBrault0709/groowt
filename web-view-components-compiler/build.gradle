@@ -90,6 +90,7 @@ groowtAntlr {
 }
 
 tasks.named('generateWebViewComponentsLexerBase', GroowtAntlrExecTask) { task ->
+    dependsOn('generateLexerFragments')
     doLast {
         def pattern = ~/public class WebViewComponentsLexerBase(.*)/
         def lexerSource = task.resolveOutputFile 'WebViewComponentsLexerBase.java'
@@ -103,6 +104,10 @@ tasks.named('generateWebViewComponentsLexerBase', GroowtAntlrExecTask) { task ->
         }
         lexerSource.write(outLines.join('\n'))
     }
+}
+
+tasks.named('generateWebViewComponentsParser', GroowtAntlrExecTask) {
+    dependsOn('generateWebViewComponentsLexerBase')
 }
 
 tasks.named({ String name ->
