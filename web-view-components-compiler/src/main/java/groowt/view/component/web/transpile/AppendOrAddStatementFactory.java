@@ -1,7 +1,6 @@
 package groowt.view.component.web.transpile;
 
 import groowt.view.component.web.ast.node.BodyChildNode;
-import groowt.view.component.web.transpile.TranspilerUtil.TranspilerState;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
 

@@ -2,7 +2,6 @@ package groowt.view.component.web.transpile;
 
 import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.ast.node.*;
-import groowt.view.component.web.transpile.TranspilerUtil.TranspilerState;
 import groowt.view.component.web.transpile.groovy.GroovyUtil;
 import groowt.view.component.web.transpile.groovy.GroovyUtil.ConvertResult;
 import org.codehaus.groovy.ast.Parameter;

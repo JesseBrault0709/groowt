@@ -2,7 +2,6 @@ package groowt.view.component.web.transpile;
 
 import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.ast.node.*;
-import groowt.view.component.web.transpile.TranspilerUtil.TranspilerState;
 import jakarta.inject.Inject;
 import org.codehaus.groovy.ast.expr.GStringExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;

@@ -2,7 +2,6 @@ package groowt.view.component.web.transpile;
 
 import groovy.lang.Tuple2;
 import groowt.view.component.web.ast.node.BodyChildNode;
-import groowt.view.component.web.transpile.TranspilerUtil.TranspilerState;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
