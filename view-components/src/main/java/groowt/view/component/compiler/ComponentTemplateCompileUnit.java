@@ -5,6 +5,7 @@ import groowt.view.component.compiler.source.ComponentTemplateSource;
 
 public interface ComponentTemplateCompileUnit {
 
+    String getDescriptiveName();
     Class<? extends ViewComponent> getForClass();
     String getDefaultPackageName();
     ComponentTemplateSource getSource();

@@ -19,6 +19,24 @@ public class SimplePositionSetter implements PositionSetter {
     }
 
     @Override
+    public void setPositionOffsetInContainer(ASTNode target, Node container) {
+        final SourcePosition containerStart = container.getTokenRange().getStartPosition();
+        final SourcePosition startPosition = new SourcePosition(
+                containerStart.line() + target.getLineNumber() - 1,
+                target.getLineNumber() == 1
+                        ? containerStart.column() + target.getColumnNumber() - 1
+                        : target.getColumnNumber()
+        );
+        final SourcePosition endPosition = new SourcePosition(
+                containerStart.line() + target.getLastLineNumber() - 1,
+                target.getLastLineNumber() == 1
+                        ? containerStart.column() + target.getLastColumnNumber() - 1
+                        : target.getLastColumnNumber()
+        );
+        this.set(target, startPosition, endPosition);
+    }
+
+    @Override
     public void setPosition(ASTNode target, TokenRange tokenRange) {
         this.set(target, tokenRange.getStartPosition(), tokenRange.getEndPosition());
     }

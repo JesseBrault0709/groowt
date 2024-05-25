@@ -21,7 +21,7 @@ public class URISource implements ComponentTemplateSource {
     }
 
     @Override
-    public String getDescription() {
+    public String getDescriptiveName() {
         return this.templateURI.toString();
     }
 

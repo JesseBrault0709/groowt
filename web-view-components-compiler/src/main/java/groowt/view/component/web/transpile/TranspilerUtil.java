@@ -5,7 +5,7 @@ import groowt.view.component.ComponentTemplate;
 import groowt.view.component.compiler.ComponentTemplateCompileException;
 import groowt.view.component.context.ComponentContext;
 import groowt.view.component.runtime.ComponentWriter;
-import groowt.view.component.web.WebViewComponent;
+import groowt.view.component.web.runtime.DefaultWebViewRenderContext;
 import groowt.view.component.web.runtime.WebViewComponentRenderContext;
 import groowt.view.component.web.util.SourcePosition;
 import org.codehaus.groovy.ast.*;
@@ -23,8 +23,10 @@ public final class TranspilerUtil {
     public static final ClassNode COMPONENT_TEMPLATE = ClassHelper.make(ComponentTemplate.class);
     public static final ClassNode COMPONENT_CONTEXT_TYPE = ClassHelper.make(ComponentContext.class);
     public static final ClassNode COMPONENT_WRITER_TYPE = ClassHelper.make(ComponentWriter.class);
-    public static final ClassNode WEB_VIEW_COMPONENT_RENDER_CONTEXT_TYPE = ClassHelper.make(WebViewComponentRenderContext.class);
-    public static final ClassNode WEB_VIEW_COMPONENT_TYPE = ClassHelper.make(WebViewComponent.class);
+    public static final ClassNode WEB_VIEW_COMPONENT_RENDER_CONTEXT_TYPE =
+            ClassHelper.make(WebViewComponentRenderContext.class);
+    public static final ClassNode DEFAULT_RENDER_CONTEXT_IMPLEMENTATION =
+            ClassHelper.make(DefaultWebViewRenderContext.class);
 
     public static final String GROOWT_VIEW_COMPONENT_WEB = "groowt.view.component.web";
     public static final String COMPONENT_CONTEXT_NAME = "componentContext";

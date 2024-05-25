@@ -11,13 +11,6 @@ import java.util.*;
 
 public class WebViewComponentModuleNode extends ModuleNode {
 
-    public static void copyTo(ModuleNode from, WebViewComponentModuleNode to) {
-        from.getImports().forEach(to::addImport);
-        from.getStarImports().forEach(to::addStarImport);
-        from.getStaticImports().forEach(to::addStaticImport);
-        from.getStaticStarImports().forEach(to::addStaticStarImport);
-    }
-
     protected final List<ImportNode> imports = new ArrayList<>();
     protected final List<ImportNode> starImports = new ArrayList<>();
     protected final Map<String, ImportNode> staticImports = new LinkedHashMap<>();

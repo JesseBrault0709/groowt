@@ -57,6 +57,7 @@ public abstract class GroovyTranspilerTests {
             this.transpiler.transpile(
                     new DefaultComponentTemplateCompilerConfiguration(),
                     new DefaultWebViewComponentTemplateCompileUnit(
+                            "<anonymous string source>",
                             AnonymousWebViewComponent.class,
                             new StringSource(source, null),
                             "groowt.view.component.web.transpiler"

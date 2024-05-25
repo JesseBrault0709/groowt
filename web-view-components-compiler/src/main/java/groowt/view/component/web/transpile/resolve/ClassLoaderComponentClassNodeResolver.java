@@ -3,7 +3,6 @@ package groowt.view.component.web.transpile.resolve;
 import groowt.util.fp.either.Either;
 import groowt.view.component.web.compiler.WebViewComponentTemplateCompileUnit;
 import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ModuleNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +14,9 @@ public class ClassLoaderComponentClassNodeResolver extends ModuleNodeComponentCl
 
     public ClassLoaderComponentClassNodeResolver(
             WebViewComponentTemplateCompileUnit compileUnit,
-            ModuleNode moduleNode,
             ClassLoader classLoader
     ) {
-        super(compileUnit, moduleNode);
+        super(compileUnit);
         this.classLoader = classLoader;
     }
 

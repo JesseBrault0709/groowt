@@ -21,7 +21,7 @@ public class FileSource implements ComponentTemplateSource {
     }
 
     @Override
-    public String getDescription() {
+    public String getDescriptiveName() {
         return this.templateFile.toString();
     }
 

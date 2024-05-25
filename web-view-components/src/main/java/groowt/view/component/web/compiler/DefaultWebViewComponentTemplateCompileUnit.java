@@ -24,11 +24,12 @@ public class DefaultWebViewComponentTemplateCompileUnit extends AbstractComponen
     private final CompilationUnit groovyCompilationUnit = new CompilationUnit();
 
     public DefaultWebViewComponentTemplateCompileUnit(
+            String descriptiveName,
             Class<? extends ViewComponent> forClass,
             ComponentTemplateSource source,
             String defaultPackageName
     ) {
-        super(forClass, source);
+        super(descriptiveName, forClass, source);
         if (!defaultPackageName.isEmpty() && !defaultPackageName.endsWith(".")) {
             this.defaultPackageName = defaultPackageName + ".";
         } else {

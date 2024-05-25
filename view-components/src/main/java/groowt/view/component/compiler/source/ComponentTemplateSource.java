@@ -46,7 +46,7 @@ public interface ComponentTemplateSource {
     }
 
     Reader toReader() throws Exception;
-    String getDescription();
+    String getDescriptiveName();
     boolean canReopen();
     List<String> getLines();
 

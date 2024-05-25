@@ -5,30 +5,36 @@ import groowt.view.component.web.compiler.WebViewComponentTemplateCompileUnit;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.ModuleNode;
 
+import java.util.Objects;
+
 public class ModuleNodeComponentClassNodeResolver extends CachingComponentClassNodeResolver {
 
-    private final ModuleNode moduleNode;
+    private ModuleNode moduleNode;
 
-    public ModuleNodeComponentClassNodeResolver(
-            WebViewComponentTemplateCompileUnit compileUnit,
-            ModuleNode moduleNode
-    ) {
+    public ModuleNodeComponentClassNodeResolver(WebViewComponentTemplateCompileUnit compileUnit) {
         super(compileUnit);
-        this.moduleNode = moduleNode;
+    }
+
+    public ModuleNode getModuleNode() {
+        return Objects.requireNonNull(this.moduleNode);
+    }
+
+    public void setModuleNode(ModuleNode moduleNode) {
+        this.moduleNode = Objects.requireNonNull(moduleNode);
     }
 
     @Override
     public Either<ClassNodeResolveException, ClassNode> getClassForNameWithoutPackage(String nameWithoutPackage) {
         return super.getClassForNameWithoutPackage(nameWithoutPackage).flatMapLeft(ignored -> {
             // try regular imports first
-            final var importedClassNode = this.moduleNode.getImportType(nameWithoutPackage);
+            final var importedClassNode = this.getModuleNode().getImportType(nameWithoutPackage);
             if (importedClassNode != null) {
                 this.addClassNode(importedClassNode);
                 return Either.right(importedClassNode);
             }
 
             // try star imports
-            final var starImports = this.moduleNode.getStarImports();
+            final var starImports = this.getModuleNode().getStarImports();
             for (final var starImport : starImports) {
                 final var packageName = starImport.getPackageName();
                 final String fqn;
@@ -44,7 +50,7 @@ public class ModuleNodeComponentClassNodeResolver extends CachingComponentClassN
             }
 
             // try pre-pending package and asking for fqn
-            final String moduleNodePackageName = this.moduleNode.getPackageName();
+            final String moduleNodePackageName = this.getModuleNode().getPackageName();
             final String packageName;
             if (moduleNodePackageName != null) {
                 packageName = moduleNodePackageName;

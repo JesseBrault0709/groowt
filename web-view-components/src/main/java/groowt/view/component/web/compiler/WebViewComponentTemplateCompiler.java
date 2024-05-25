@@ -26,6 +26,7 @@ public interface WebViewComponentTemplateCompiler
     default ComponentTemplateCompileResult compileAnonymous(ComponentTemplateSource source, String packageName)
             throws ComponentTemplateCompileException {
         return this.compile(new DefaultWebViewComponentTemplateCompileUnit(
+                source.getDescriptiveName(),
                 AnonymousWebViewComponent.class,
                 source,
                 packageName

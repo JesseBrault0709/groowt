@@ -22,7 +22,7 @@ public class ComponentTemplateCompileException extends Exception {
 
     @Override
     public String getMessage() {
-        final var sb = new StringBuilder("Error in ").append(compileUnit.getSource().getDescription());
+        final var sb = new StringBuilder("Error in ").append(compileUnit.getSource().getDescriptiveName());
         final @Nullable String position = this.formatPosition();
         if (position != null) {
             sb.append(" at ").append(position);

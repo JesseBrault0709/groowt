@@ -21,7 +21,7 @@ public class ReaderSource implements ComponentTemplateSource {
     }
 
     @Override
-    public String getDescription() {
+    public String getDescriptiveName() {
         return this.description != null ? this.description : "<anonymous Reader source>";
     }
 

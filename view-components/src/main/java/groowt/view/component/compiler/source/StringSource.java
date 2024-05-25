@@ -22,7 +22,7 @@ public class StringSource implements ComponentTemplateSource {
     }
 
     @Override
-    public String getDescription() {
+    public String getDescriptiveName() {
         return this.name != null ? this.name : "<anonymous string source>";
     }
 

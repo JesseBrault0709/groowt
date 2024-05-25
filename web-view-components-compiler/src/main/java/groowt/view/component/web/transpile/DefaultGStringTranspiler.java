@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class DefaultGStringTranspiler implements GStringTranspiler {
 
     private final PositionSetter positionSetter;

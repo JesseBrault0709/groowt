@@ -25,7 +25,7 @@ public class URLSource implements ComponentTemplateSource {
     }
 
     @Override
-    public String getDescription() {
+    public String getDescriptiveName() {
         return this.url.toString();
     }
 

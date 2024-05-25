@@ -2,6 +2,7 @@ package groowt.view.component.web.transpile;
 
 import groovy.transform.Field;
 import groowt.view.component.compiler.ComponentTemplateCompileException;
+import groowt.view.component.compiler.ComponentTemplateCompileUnit;
 import groowt.view.component.compiler.ComponentTemplateCompilerConfiguration;
 import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.ast.node.BodyNode;
@@ -10,7 +11,7 @@ import groowt.view.component.web.ast.node.PreambleNode;
 import groowt.view.component.web.compiler.MultipleWebViewComponentCompileErrorsException;
 import groowt.view.component.web.compiler.WebViewComponentTemplateCompileException;
 import groowt.view.component.web.compiler.WebViewComponentTemplateCompileUnit;
-import groowt.view.component.web.runtime.DefaultWebViewRenderContext;
+import groowt.view.component.web.transpile.BodyTranspiler.AddOrAppendCallback;
 import groowt.view.component.web.transpile.groovy.GroovyUtil;
 import groowt.view.component.web.transpile.resolve.ClassLoaderComponentClassNodeResolver;
 import org.codehaus.groovy.ast.*;
@@ -19,9 +20,8 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.control.CompilationUnit;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.ErrorCollector;
-import org.codehaus.groovy.control.SourceUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,29 +30,58 @@ import java.util.List;
 import static groowt.view.component.web.transpile.TranspilerUtil.*;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 
-/**
- * Takes a Groovy {@link CompilationUnit} in the constructor and adds a {@link SourceUnit} representing the target
- * Groovy code for the template represented by the AST passed to {@link #transpile}.
- * <p>
- * Note that while the terminology is similar, a Groovy {@link CompilationUnit} is distinct from our own
- * {@link CompilationUnitNode}.
- */
 public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultGroovyTranspiler.class);
 
     private static final ClassNode FIELD_ANNOTATION = ClassHelper.make(Field.class);
-    private static final ClassNode RENDER_CONTEXT_IMPLEMENTATION =
-            ClassHelper.make(DefaultWebViewRenderContext.class);
 
     protected TranspilerConfiguration getConfiguration(
             WebViewComponentTemplateCompileUnit compileUnit,
-            ModuleNode moduleNode,
             ClassLoader classLoader
     ) {
-        return new DefaultTranspilerConfiguration(new ClassLoaderComponentClassNodeResolver(
-                compileUnit, moduleNode, classLoader
+        return new DefaultTranspilerConfiguration(new ClassLoaderComponentClassNodeResolver(compileUnit, classLoader));
+    }
+
+    protected void addAutomaticImports(WebViewComponentModuleNode moduleNode, TranspilerConfiguration configuration) {
+        configuration.getImports().forEach(moduleNode::addImport);
+        configuration.getStaticImports().forEach(staticImport -> moduleNode.addStaticImport(
+                staticImport.getV1(), staticImport.getV2(), staticImport.getV3()
         ));
+        configuration.getStarImports().forEach(moduleNode::addStarImport);
+        configuration.getStaticStarImports().forEach(moduleNode::addStaticStarImport);
+    }
+
+    protected WebViewComponentModuleNode initModuleNode(
+            ComponentTemplateCompileUnit compileUnit,
+            WebViewComponentSourceUnit sourceUnit,
+            TranspilerConfiguration configuration
+    ) {
+        final var moduleNode = new WebViewComponentModuleNode(sourceUnit);
+        sourceUnit.setModuleNode(moduleNode);
+
+        final String defaultPackageName = compileUnit.getDefaultPackageName();
+        if (!defaultPackageName.trim().isEmpty()) {
+            moduleNode.setPackageName(defaultPackageName);
+        }
+
+        this.addAutomaticImports(moduleNode, configuration);
+        return moduleNode;
+    }
+
+    protected ClassNode initMainClassNode(
+            ComponentTemplateCompileUnit compileUnit,
+            String templateClassName,
+            WebViewComponentModuleNode moduleNode
+    ) {
+        final ClassNode mainClassNode = new ClassNode(
+                compileUnit.getDefaultPackageName() + templateClassName,
+                ACC_PUBLIC,
+                ClassHelper.OBJECT_TYPE
+        );
+        mainClassNode.addInterface(TranspilerUtil.COMPONENT_TEMPLATE);
+        moduleNode.addClass(mainClassNode);
+        return mainClassNode;
     }
 
     protected void checkPreambleClasses(String templateName, List<ClassNode> classNodes) {
@@ -72,17 +101,27 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
             String templateClassName,
             PreambleNode preambleNode,
             ClassNode mainClassNode,
-            WebViewComponentModuleNode moduleNode
+            WebViewComponentModuleNode moduleNode,
+            PositionSetter positionSetter
     ) {
         final GroovyUtil.ConvertResult convertResult = GroovyUtil.convert(
                 preambleNode.getGroovyCode().getAsValidGroovyCode()
         );
+        final ModuleNode convertModuleNode = convertResult.moduleNode();
 
-        WebViewComponentModuleNode.copyTo(convertResult.moduleNode(), moduleNode);
+        final PositionVisitor positionVisitor = new PositionVisitor(positionSetter, preambleNode);
 
+        convertModuleNode.getImports().forEach(moduleNode::addImport);
+        convertModuleNode.getStarImports().forEach(moduleNode::addStarImport);
+        convertModuleNode.getStaticImports().forEach(moduleNode::addStaticImport);
+        convertModuleNode.getStaticStarImports().forEach(moduleNode::addStaticStarImport);
+        positionVisitor.visitImports(moduleNode);
+
+        // if user supplied a package, use it
         if (convertResult.moduleNode().hasPackage()) {
             moduleNode.setPackage(convertResult.moduleNode().getPackage());
             mainClassNode.setName(moduleNode.getPackageName() + templateClassName);
+            positionVisitor.visitPackage(moduleNode.getPackage());
         }
 
         final BlockStatement preambleBlock = convertResult.blockStatement();
@@ -100,6 +139,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                     )
                     .toList();
             if (declarationsWithField.size() != preambleStatements.size()) {
+                // TODO: figure out why we have extraneous statements sometimes when it seems otherwise not
                 logger.warn(
                         "{} contains script statements which are not supported. " +
                                 "Currently, only classes, methods, and field declarations " +
@@ -110,13 +150,19 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
             }
             declarationsWithField.forEach(declaration -> {
                 declaration.setDeclaringClass(mainClassNode);
+                positionVisitor.visitDeclarationExpression(declaration);
             });
         }
 
         // move methods from script class
         final ClassNode scriptClass = convertResult.scriptClass();
         if (scriptClass != null) {
-            scriptClass.getMethods().forEach(mainClassNode::addMethod);
+            scriptClass.getMethods().stream()
+                    .filter(method -> !(method.getName().equals("main") || method.getName().equals("run")))
+                    .forEach(method -> {
+                        mainClassNode.addMethod(method);
+                        positionVisitor.visitMethod(method);
+                    });
         }
 
         // handle classes
@@ -124,62 +170,127 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         this.checkPreambleClasses(templateClassName, classNodes);
         classNodes.stream()
                 .filter(classNode -> classNode != convertResult.scriptClass())
-                .forEach(moduleNode::addClass);
+                .forEach(classNode -> {
+                    moduleNode.addClass(classNode);
+                    positionVisitor.visitClass(classNode);
+                });
     }
 
-    // Cases:
-    // - no preamble -> create our own class
-    // - some preamble, but no script -> create our own class but use imports/packageName from preamble
-    // - preamble with script -> use the script class from the converted preamble,
-    // and don't forget to call run in our render method
+    protected ExpressionStatement constructRenderContext(
+            ClassNode renderContextImplementation,
+            Variable componentContextParam,
+            Variable writerParam,
+            VariableExpression renderContextVariableExpr
+    ) {
+        final ConstructorCallExpression renderContextConstructor = new ConstructorCallExpression(
+                renderContextImplementation,
+                new ArgumentListExpression(
+                        new VariableExpression(componentContextParam),
+                        new VariableExpression(writerParam)
+                )
+        );
+        final BinaryExpression renderContextAssignExpr = new DeclarationExpression(
+                renderContextVariableExpr,
+                getAssignToken(),
+                renderContextConstructor
+        );
+        return new ExpressionStatement(renderContextAssignExpr);
+    }
+
+    protected ExpressionStatement assignComponentContextRenderContext(
+            Parameter componentContextParam,
+            VariableExpression renderContextVariableExpr
+    ) {
+        final BinaryExpression componentContextRenderContextAssign = new BinaryExpression(
+                new PropertyExpression(new VariableExpression(componentContextParam), "renderContext"),
+                getAssignToken(),
+                renderContextVariableExpr
+        );
+        return new ExpressionStatement(componentContextRenderContextAssign);
+    }
+
+    protected ExpressionStatement assignWriterRenderContext(
+            Parameter writerParam,
+            VariableExpression renderContextVariableExpr
+    ) {
+        final BinaryExpression writerRenderContextAssign = new BinaryExpression(
+                new PropertyExpression(new VariableExpression(writerParam), "renderContext"),
+                getAssignToken(),
+                renderContextVariableExpr
+        );
+        return new ExpressionStatement(writerRenderContextAssign);
+    }
+
+    protected ExpressionStatement assignWriterComponentContext(Parameter writerParam, Parameter componentContextParam) {
+        final BinaryExpression writerComponentContextAssign = new BinaryExpression(
+                new PropertyExpression(new VariableExpression(writerParam), "componentContext"),
+                getAssignToken(),
+                new VariableExpression(componentContextParam)
+        );
+        return new ExpressionStatement(writerComponentContextAssign);
+    }
+
+    protected Statement handleBody(
+            BodyNode bodyNode,
+            TranspilerConfiguration transpilerConfiguration,
+            TranspilerState state
+    ) {
+        final var appendOrAddStatementFactory = transpilerConfiguration.getAppendOrAddStatementFactory();
+        final AddOrAppendCallback callback = (source, expr) -> appendOrAddStatementFactory.addOrAppend(
+                source,
+                state,
+                action -> {
+                    if (action == AppendOrAddStatementFactory.Action.ADD) {
+                        throw new WebViewComponentBugError(new IllegalStateException(
+                                "Should not be adding from document root, only appending!"
+                        ));
+                    }
+                    return expr;
+                }
+        );
+        return transpilerConfiguration.getBodyTranspiler().transpileBody(bodyNode, callback, state);
+    }
+
     @Override
     public WebViewComponentSourceUnit transpile(
             ComponentTemplateCompilerConfiguration compilerConfiguration,
             WebViewComponentTemplateCompileUnit compileUnit,
             CompilationUnitNode compilationUnitNode,
-            String templateClassName
+            String templateClassSimpleName
     ) throws ComponentTemplateCompileException {
-        final var groovyCompilerConfiguration = compilerConfiguration.getGroovyCompilerConfiguration();
-        final var sourceUnit = new WebViewComponentSourceUnit(
-                templateClassName,
+        // transpilerConfiguration and positionSetter
+        final var transpilerConfiguration = this.getConfiguration(
+                compileUnit, compileUnit.getGroovyCompilationUnit().getClassLoader()
+        );
+        final PositionSetter positionSetter = transpilerConfiguration.getPositionSetter();
+
+        // prepare sourceUnit
+        final CompilerConfiguration groovyCompilerConfiguration =
+                compilerConfiguration.getGroovyCompilerConfiguration();
+        final WebViewComponentSourceUnit sourceUnit = new WebViewComponentSourceUnit(
+                compileUnit.getDescriptiveName(),
                 compileUnit.getGroovyReaderSource(),
                 groovyCompilerConfiguration,
                 compilerConfiguration.getGroovyClassLoader(),
                 new ErrorCollector(groovyCompilerConfiguration)
         );
 
-        final var moduleNode = new WebViewComponentModuleNode(sourceUnit);
-        sourceUnit.setModuleNode(moduleNode);
-
-        final String defaultPackageName = compileUnit.getDefaultPackageName();
-        if (!defaultPackageName.trim().isEmpty()) {
-            moduleNode.setPackageName(defaultPackageName);
-        }
-
-        moduleNode.addStarImport(GROOWT_VIEW_COMPONENT_WEB + ".lib");
-        moduleNode.addImport(COMPONENT_TEMPLATE.getNameWithoutPackage(), COMPONENT_TEMPLATE);
-        moduleNode.addImport(COMPONENT_CONTEXT_TYPE.getNameWithoutPackage(), COMPONENT_CONTEXT_TYPE);
-        moduleNode.addStarImport("groowt.view.component.runtime");
-        moduleNode.addStarImport(GROOWT_VIEW_COMPONENT_WEB + ".runtime");
-
-        final ClassNode mainClassNode = new ClassNode(
-                compileUnit.getDefaultPackageName() + templateClassName,
-                ACC_PUBLIC,
-                ClassHelper.OBJECT_TYPE
+        // prepare moduleNode
+        final WebViewComponentModuleNode moduleNode = this.initModuleNode(
+                compileUnit, sourceUnit, transpilerConfiguration
         );
-        mainClassNode.setScript(true);
-        mainClassNode.addInterface(TranspilerUtil.COMPONENT_TEMPLATE);
 
-        moduleNode.addClass(mainClassNode);
+        // prepare mainClassNode
+        final ClassNode mainClassNode = this.initMainClassNode(compileUnit, templateClassSimpleName, moduleNode);
 
-        // preamble
+        // handle preamble
         final PreambleNode preambleNode = compilationUnitNode.getPreambleNode();
         if (preambleNode != null) {
-            this.handlePreamble(templateClassName, preambleNode, mainClassNode, moduleNode);
+            this.handlePreamble(templateClassSimpleName, preambleNode, mainClassNode, moduleNode, positionSetter);
         }
 
-        // getRenderer
-        // params
+        // getRenderer method and render closure
+        // first, getRenderer params
         final Parameter componentContextParam = new Parameter(COMPONENT_CONTEXT_TYPE, COMPONENT_CONTEXT_NAME);
         final Parameter writerParam = new Parameter(COMPONENT_WRITER_TYPE, COMPONENT_WRITER_NAME);
         final VariableExpression renderContextVariable = new VariableExpression(
@@ -187,98 +298,53 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
                 WEB_VIEW_COMPONENT_RENDER_CONTEXT_TYPE
         );
 
-        // closure body
+        // returned closure body
         final BlockStatement renderBlock = new BlockStatement();
 
+        // init renderContext, componentContext, and writer properties
+        renderBlock.addStatement(this.constructRenderContext(
+                transpilerConfiguration.getRenderContextImplementation(),
+                componentContextParam,
+                writerParam,
+                renderContextVariable
+        ));
+        renderBlock.addStatement(this.assignComponentContextRenderContext(
+                componentContextParam, renderContextVariable
+        ));
+        renderBlock.addStatement(this.assignWriterRenderContext(writerParam, renderContextVariable));
+        renderBlock.addStatement(this.assignWriterComponentContext(writerParam, componentContextParam));
+
+        // init transpiler state
         final TranspilerState state = TranspilerState.withRootScope(
                 componentContextParam,
                 writerParam,
                 renderContextVariable
         );
-        renderBlock.setVariableScope(state.getCurrentScope());
+        renderBlock.setVariableScope(state.getCurrentScope()); // root scope
 
-        // init: construct RenderContext
-        final ConstructorCallExpression renderContextConstructor = new ConstructorCallExpression(
-                RENDER_CONTEXT_IMPLEMENTATION,
-                new ArgumentListExpression(
-                        new VariableExpression(componentContextParam), // component context
-                        new VariableExpression(writerParam)
-                )
-        );
-        final BinaryExpression renderContextAssignExpr = new DeclarationExpression(
-                renderContextVariable,
-                getAssignToken(),
-                renderContextConstructor
-        );
-        renderBlock.addStatement(new ExpressionStatement(renderContextAssignExpr));
-
-        // init: componentContext.renderContext = renderContext
-        final BinaryExpression componentContextRenderContextAssign = new BinaryExpression(
-                new PropertyExpression(new VariableExpression(componentContextParam), "renderContext"),
-                getAssignToken(),
-                renderContextVariable
-        );
-        renderBlock.addStatement(new ExpressionStatement(componentContextRenderContextAssign));
-
-        // init: writer.renderContext = renderContext
-        final BinaryExpression writerRenderContextAssign = new BinaryExpression(
-                new PropertyExpression(new VariableExpression(writerParam), "renderContext"),
-                getAssignToken(),
-                renderContextVariable
-        );
-        renderBlock.addStatement(new ExpressionStatement(writerRenderContextAssign));
-
-        // init: writer.componentContext = componentContext
-        final BinaryExpression writerComponentContextAssign = new BinaryExpression(
-                new PropertyExpression(new VariableExpression(writerParam), "componentContext"),
-                getAssignToken(),
-                new VariableExpression(componentContextParam)
-        );
-        renderBlock.addStatement(new ExpressionStatement(writerComponentContextAssign));
-
-        // actual rendering of body
-        final var configuration = this.getConfiguration(
-                compileUnit,
-                moduleNode,
-                compilerConfiguration.getGroovyClassLoader()
-        );
+        // body
         final BodyNode bodyNode = compilationUnitNode.getBodyNode();
         if (bodyNode != null) {
-            final var appendOrAddStatementFactory = configuration.getAppendOrAddStatementFactory();
-            renderBlock.addStatement(
-                    configuration.getBodyTranspiler()
-                            .transpileBody(
-                                    compilationUnitNode.getBodyNode(),
-                                    (source, expr) -> appendOrAddStatementFactory.addOrAppend(
-                                            source,
-                                            state,
-                                            action -> {
-                                                if (action == AppendOrAddStatementFactory.Action.ADD) {
-                                                    throw new WebViewComponentBugError(new IllegalStateException(
-                                                            "Should not be adding from document root!"
-                                                    ));
-                                                }
-                                                return expr;
-                                            }
-                                    ),
-                                    state
-                            )
-            );
+            renderBlock.addStatement(this.handleBody(bodyNode, transpilerConfiguration, state));
         }
 
+        // return null from render closure
         renderBlock.addStatement(new ReturnStatement(ConstantExpression.NULL));
 
+        // make the closure
         final ClosureExpression renderer = new ClosureExpression(
                 new Parameter[] { componentContextParam, writerParam },
                 renderBlock
         );
 
-        // getRenderer()
+        // getRenderer() return statement
         final Statement returnRendererStmt = new ReturnStatement(renderer);
 
+        // getRenderer() return type is Closure<Void>
         final var voidClosure = ClassHelper.CLOSURE_TYPE.getPlainNodeReference();
         voidClosure.setGenericsTypes(new GenericsType[] { new GenericsType(ClassHelper.void_WRAPPER_TYPE) });
 
+        // getRenderer method
         final var getRenderer = new MethodNode(
                 GET_RENDERER,
                 ACC_PUBLIC,
@@ -289,6 +355,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         );
         mainClassNode.addMethod(getRenderer);
 
+        // check for errors
         if (state.hasErrors()) {
             final List<ComponentTemplateCompileException> errors = state.getErrors();
             if (errors.size() == 1) {
@@ -298,6 +365,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
             }
         }
 
+        // return the sourceUnit for later processing
         return sourceUnit;
     }
 

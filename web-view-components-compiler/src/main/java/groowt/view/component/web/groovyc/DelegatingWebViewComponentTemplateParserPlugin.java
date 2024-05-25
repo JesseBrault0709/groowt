@@ -65,6 +65,7 @@ public class DelegatingWebViewComponentTemplateParserPlugin implements ParserPlu
         final String sourceUnitFileName = sourceUnitFullName.substring(lastSlashIndex + 1);
         if (sourceUnitFileName.endsWith(".wvc")) {
             final var compileUnit = new DefaultWebViewComponentTemplateCompileUnit(
+                    sourceUnitFileName,
                     AnonymousWebViewComponent.class,
                     ComponentTemplateSource.of(sourceUnit.getSource().getURI()),
                     "" // default package
@@ -79,13 +80,13 @@ public class DelegatingWebViewComponentTemplateParserPlugin implements ParserPlu
             }
 
             final var groovyTranspiler = new DefaultGroovyTranspiler();
-            final String nameWithoutExtension = sourceUnitFileName.substring(0, sourceUnitFileName.length() - 4);
+            final String teplateClassSimpleName = sourceUnitFileName.substring(0, sourceUnitFileName.length() - 4);
             try {
                 final SourceUnit transpiledSourceUnit = groovyTranspiler.transpile(
                         new DefaultComponentTemplateCompilerConfiguration(),
                         compileUnit,
                         cuNode,
-                        nameWithoutExtension
+                        teplateClassSimpleName
                 );
                 return transpiledSourceUnit.getAST();
             } catch (ComponentTemplateCompileException e) {

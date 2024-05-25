@@ -11,7 +11,7 @@ public interface GroovyTranspiler {
             ComponentTemplateCompilerConfiguration compilerConfiguration,
             WebViewComponentTemplateCompileUnit compileUnit,
             CompilationUnitNode compilationUnitNode,
-            String templateClassName
+            String templateClassSimpleName
     ) throws ComponentTemplateCompileException;
 
 }

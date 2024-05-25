@@ -37,7 +37,7 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
 
     public AbstractWebViewComponent(ComponentTemplateSource source) {
         this(selfClass -> new DefaultWebViewComponentTemplateCompileUnit(
-                selfClass, source, selfClass.getPackageName())
+                source.getDescriptiveName(), selfClass, source, selfClass.getPackageName())
         );
     }
 
