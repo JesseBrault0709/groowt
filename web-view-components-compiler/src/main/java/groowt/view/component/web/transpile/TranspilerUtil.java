@@ -13,6 +13,8 @@ import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 
+import static org.apache.groovy.parser.antlr4.util.StringUtils.*;
+
 public final class TranspilerUtil {
 
     public static final ClassNode COMPONENT_TEMPLATE = ClassHelper.make(ComponentTemplate.class);
@@ -39,9 +41,11 @@ public final class TranspilerUtil {
     }
 
     public static ConstantExpression getStringLiteral(String content) {
-        final var e = new ConstantExpression(content);
-        e.setNodeMetaData("_IS_STRING", true);
-        return e;
+        final var withoutCR = removeCR(content);
+        final var escaped = replaceEscapes(withoutCR, NONE_SLASHY);
+        final var expr = new ConstantExpression(escaped);
+        expr.setNodeMetaData("_IS_STRING", true);
+        return expr;
     }
 
     public static Token getAssignToken() {

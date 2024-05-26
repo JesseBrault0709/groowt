@@ -4,10 +4,5 @@ import groowt.view.component.web.ast.node.ValueNode;
 import org.codehaus.groovy.ast.expr.Expression;
 
 public interface ValueNodeTranspiler {
-
-    Expression createExpression(
-            ValueNode valueNode,
-            TranspilerState state
-    );
-
+    Expression createExpression(ValueNode valueNode, TranspilerState state);
 }

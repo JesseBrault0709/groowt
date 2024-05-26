@@ -28,7 +28,7 @@ public class DefaultTranspilerConfiguration implements TranspilerConfiguration {
                 DefaultProvider.ofLazy(BodyTranspiler.class, this::getBodyTranspiler)
         );
         this.valueNodeTranspiler = new DefaultValueNodeTranspiler(componentTranspiler);
-        this.bodyTranspiler = new DefaultBodyTranspiler(gStringTranspiler, jStringTranspiler, componentTranspiler);
+        this.bodyTranspiler = new DefaultBodyTranspiler(componentTranspiler, null); // TODO
     }
 
     @Override

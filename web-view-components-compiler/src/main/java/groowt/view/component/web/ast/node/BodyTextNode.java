@@ -29,4 +29,8 @@ public class BodyTextNode extends AbstractTreeNode implements BodyChildNode {
         super(tokenRange, extensionContainer, childrenAsNodes(checkChildren(children)));
     }
 
+    public List<BodyTextChild> getChildrenAsBodyTextChildren() {
+        return this.getChildren().stream().map(BodyTextChild.class::cast).toList();
+    }
+
 }

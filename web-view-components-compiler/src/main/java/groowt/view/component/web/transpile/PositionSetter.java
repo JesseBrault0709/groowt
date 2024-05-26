@@ -2,6 +2,7 @@ package groowt.view.component.web.transpile;
 
 import groowt.view.component.web.ast.node.Node;
 import groowt.view.component.web.util.TokenRange;
+import org.antlr.v4.runtime.Token;
 import org.codehaus.groovy.ast.ASTNode;
 
 public interface PositionSetter {
@@ -24,8 +25,17 @@ public interface PositionSetter {
      */
     void setPositionOffsetInContainer(ASTNode target, Node container);
 
+    void setPosition(ASTNode target, Token source);
+
     void setPosition(ASTNode target, TokenRange tokenRange);
     void setPosition(ASTNode target, Node source);
+
+    @Deprecated
     void setPosition(ASTNode target, Node start, Node end);
+
+    @Deprecated
     void setToStartOf(ASTNode target, Node source);
+
+    PositionSetter withOffset(int lineOffset, int columnOffset);
+
 }

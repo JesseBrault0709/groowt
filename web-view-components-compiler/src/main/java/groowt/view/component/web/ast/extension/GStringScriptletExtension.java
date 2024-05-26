@@ -6,6 +6,7 @@ import groowt.view.component.web.ast.node.Node;
 import groowt.view.component.web.util.TokenRange;
 import jakarta.inject.Inject;
 
+@Deprecated
 public non-sealed class GStringScriptletExtension extends GStringNodeExtension {
 
     @Inject

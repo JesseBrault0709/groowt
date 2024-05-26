@@ -2,50 +2,26 @@ package groowt.view.component.web.ast.node;
 
 import groowt.util.di.annotation.Given;
 import groowt.view.component.web.antlr.TokenList;
-import groowt.view.component.web.ast.extension.GroovyCodeNodeExtension;
 import groowt.view.component.web.ast.extension.NodeExtensionContainer;
 import groowt.view.component.web.util.TokenRange;
 import jakarta.inject.Inject;
-import org.antlr.v4.runtime.Token;
-
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class PlainScriptletNode extends AbstractLeafNode implements GroovyBodyNode {
 
-    private final int groovyIndex;
-    private final GroovyCodeNodeExtension groovyCode;
+    private final String groovyCode;
 
     @Inject
     public PlainScriptletNode(
             TokenList tokenList,
             NodeExtensionContainer extensionContainer,
             @Given TokenRange tokenRange,
-            @Given int groovyIndex
+            @Given String groovyCode
     ) {
         super(tokenRange, extensionContainer);
-        this.groovyIndex = groovyIndex;
-        this.groovyCode = this.createGroovyCode(tokenList);
+        this.groovyCode = groovyCode;
     }
 
-    protected GroovyCodeNodeExtension createGroovyCode(TokenList tokenList) {
-        return this.createExtension(
-                GroovyCodeNodeExtension.class,
-                TokenRange.fromIndex(tokenList, this.groovyIndex),
-                (Function<? super List<Token>, String>) this::toValidGroovyCode
-        );
-    }
-
-    protected String toValidGroovyCode(List<Token> groovyTokens) {
-        return "{ Writer out -> " + groovyTokens.stream().map(Token::getText).collect(Collectors.joining()) + " }";
-    }
-
-    public int getGroovyIndex() {
-        return this.groovyIndex;
-    }
-
-    public GroovyCodeNodeExtension getGroovyCode() {
+    public String getGroovyCode() {
         return this.groovyCode;
     }
 

@@ -1,34 +1,28 @@
 package groowt.view.component.web.ast.node;
 
 import groowt.util.di.annotation.Given;
-import groowt.view.component.web.antlr.TokenList;
-import groowt.view.component.web.ast.extension.GStringPathExtension;
 import groowt.view.component.web.ast.extension.NodeExtensionContainer;
 import groowt.view.component.web.util.TokenRange;
 import jakarta.inject.Inject;
 
+import java.util.List;
+
 public class DollarReferenceNode extends AbstractLeafNode implements GroovyBodyNode {
 
-    private final int groovyTokenIndex;
+    private final List<String> parts;
 
     @Inject
     public DollarReferenceNode(
-            TokenList tokenList,
             NodeExtensionContainer extensionContainer,
             @Given TokenRange tokenRange,
-            @Given int groovyTokenIndex
+            List<String> parts
     ) {
         super(tokenRange, extensionContainer);
-        this.groovyTokenIndex = groovyTokenIndex;
-        this.createGStringPath(tokenList);
+        this.parts = parts;
     }
 
-    protected void createGStringPath(TokenList tokenList) {
-        this.createExtension(GStringPathExtension.class, TokenRange.fromIndex(tokenList, this.groovyTokenIndex));
-    }
-
-    public GStringPathExtension getGStringPath() {
-        return this.getExtension(GStringPathExtension.class);
+    public List<String> getParts() {
+        return this.parts;
     }
 
 }

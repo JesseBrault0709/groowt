@@ -1,33 +1,26 @@
 package groowt.view.component.web.ast.node;
 
 import groowt.util.di.annotation.Given;
-import groowt.view.component.web.antlr.TokenList;
-import groowt.view.component.web.ast.extension.GStringScriptletExtension;
 import groowt.view.component.web.ast.extension.NodeExtensionContainer;
 import groowt.view.component.web.util.TokenRange;
 import jakarta.inject.Inject;
 
 public class DollarScriptletNode extends AbstractLeafNode implements GroovyBodyNode {
 
-    private final GStringScriptletExtension gStringScriptlet;
+    private final String groovyCode;
 
     @Inject
     public DollarScriptletNode(
-            TokenList tokenList,
             NodeExtensionContainer extensionContainer,
             @Given TokenRange tokenRange,
-            @Given int groovyTokenIndex
+            @Given String groovyCode
     ) {
         super(tokenRange, extensionContainer);
-        this.gStringScriptlet = this.createGStringScriptlet(tokenList, groovyTokenIndex);
+        this.groovyCode = groovyCode;
     }
 
-    protected GStringScriptletExtension createGStringScriptlet(TokenList tokenList, int groovyTokenIndex) {
-        return this.createExtension(GStringScriptletExtension.class, TokenRange.fromIndex(tokenList, groovyTokenIndex));
-    }
-
-    public GStringScriptletExtension getGStringScriptlet() {
-        return this.gStringScriptlet;
+    public String getGroovyCode() {
+        return this.groovyCode;
     }
 
 }

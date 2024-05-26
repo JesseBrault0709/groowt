@@ -3,18 +3,35 @@ package groowt.view.component.web.transpile;
 import groowt.view.component.web.ast.node.Node;
 import groowt.view.component.web.util.SourcePosition;
 import groowt.view.component.web.util.TokenRange;
+import org.antlr.v4.runtime.Token;
 import org.codehaus.groovy.ast.ASTNode;
+
+import static groowt.view.component.web.util.SourcePosition.fromEndOfToken;
+import static groowt.view.component.web.util.SourcePosition.fromStartOfToken;
 
 public class SimplePositionSetter implements PositionSetter {
 
-    protected void set(ASTNode target, int startLine, int startColumn, int endLine, int endColumn) {
-        target.setLineNumber(startLine);
-        target.setColumnNumber(startColumn);
-        target.setLastLineNumber(endLine);
-        target.setLastColumnNumber(endColumn);
+    private final int lineOffset;
+    private final int columnOffset;
+
+    public SimplePositionSetter(int lineOffset, int columnOffset) {
+        this.lineOffset = lineOffset;
+        this.columnOffset = columnOffset;
     }
 
-    protected void set(ASTNode target, SourcePosition start, SourcePosition end) {
+    public SimplePositionSetter() {
+        this.lineOffset = 0;
+        this.columnOffset = 0;
+    }
+
+    protected void set(ASTNode target, int startLine, int startColumn, int endLine, int endColumn) {
+        target.setLineNumber(startLine + this.lineOffset);
+        target.setColumnNumber(startColumn + this.columnOffset);
+        target.setLastLineNumber(endLine + this.lineOffset);
+        target.setLastColumnNumber(endColumn + this.columnOffset);
+    }
+
+    protected final void set(ASTNode target, SourcePosition start, SourcePosition end) {
         this.set(target, start.line(), start.column(), end.line(), end.column());
     }
 
@@ -37,6 +54,11 @@ public class SimplePositionSetter implements PositionSetter {
     }
 
     @Override
+    public void setPosition(ASTNode target, Token source) {
+        this.set(target, fromStartOfToken(source), fromEndOfToken(source));
+    }
+
+    @Override
     public void setPosition(ASTNode target, TokenRange tokenRange) {
         this.set(target, tokenRange.getStartPosition(), tokenRange.getEndPosition());
     }
@@ -49,17 +71,19 @@ public class SimplePositionSetter implements PositionSetter {
     @Override
     public void setPosition(ASTNode target, Node start, Node end) {
         final var startPosition = start.getTokenRange().getStartPosition();
-        target.setLineNumber(startPosition.line());
-        target.setColumnNumber(startPosition.column());
         final var endPosition = end.getTokenRange().getEndPosition();
-        target.setLastLineNumber(endPosition.line());
-        target.setLastColumnNumber(endPosition.column());
+        this.set(target, startPosition, endPosition);
     }
 
     @Override
     public void setToStartOf(ASTNode target, Node source) {
         final var tokenRange = source.getTokenRange();
         this.set(target, tokenRange.getStartPosition(), tokenRange.getStartPosition());
+    }
+
+    @Override
+    public PositionSetter withOffset(int lineOffset, int columnOffset) {
+        return new SimplePositionSetter(lineOffset, columnOffset);
     }
 
 }

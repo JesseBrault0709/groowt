@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.Token;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Deprecated
 public abstract sealed class GStringNodeExtension implements NodeExtension
         permits GStringPathExtension, GStringScriptletExtension {
 

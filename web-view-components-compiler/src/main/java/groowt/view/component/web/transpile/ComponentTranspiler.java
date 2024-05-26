@@ -6,8 +6,5 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import java.util.List;
 
 public interface ComponentTranspiler {
-    List<Statement> createComponentStatements(
-            ComponentNode componentNode,
-            TranspilerState state
-    );
+    List<Statement> createComponentStatements(ComponentNode componentNode, TranspilerState state);
 }

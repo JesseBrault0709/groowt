@@ -3,12 +3,11 @@ package groowt.view.component.web.transpile;
 import groowt.view.component.web.ast.node.JStringBodyTextNode;
 import groowt.view.component.web.ast.node.JStringValueNode;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 
 import static org.apache.groovy.parser.antlr4.util.StringUtils.*;
 
-@Singleton
+@Deprecated
 public class DefaultJStringTranspiler implements JStringTranspiler {
 
     private final PositionSetter positionSetter;

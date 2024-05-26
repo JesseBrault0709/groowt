@@ -80,15 +80,25 @@ public abstract class NodeFactoryTests {
     }
 
     @Test
-    public void questionTagNode(@Mock QuestionTagChild child, @Mock TreeNode childAsNode) {
+    public void questionTagNode(
+            @Mock Token open,
+            @Mock Token close,
+            @Mock QuestionTagChild child,
+            @Mock TreeNode childAsNode
+    ) {
         when(child.asNode()).thenReturn(childAsNode);
-        assertNotNull(this.nodeFactory.questionTagNode(this.getTokenRange(), List.of(child)));
+        assertNotNull(this.nodeFactory.questionTagNode(this.getTokenRange(), open, close, List.of(child)));
     }
 
     @Test
-    public void htmlCommentNode(@Mock HtmlCommentChild child, @Mock TreeNode childAsNode) {
+    public void htmlCommentNode(
+            @Mock Token open,
+            @Mock Token close,
+            @Mock HtmlCommentChild child,
+            @Mock TreeNode childAsNode
+    ) {
         when(child.asNode()).thenReturn(childAsNode);
-        assertNotNull(this.nodeFactory.htmlCommentNode(this.getTokenRange(), List.of(child)));
+        assertNotNull(this.nodeFactory.htmlCommentNode(this.getTokenRange(), open, close, List.of(child)));
     }
 
     @Test
@@ -218,7 +228,7 @@ public abstract class NodeFactoryTests {
 
     @Test
     public void dollarScriptletNode() {
-        assertNotNull(this.nodeFactory.dollarScriptletNode(this.getTokenRange(), 0));
+        assertNotNull(this.nodeFactory.dollarScriptletNode(this.getTokenRange(), ""));
     }
 
     @Test

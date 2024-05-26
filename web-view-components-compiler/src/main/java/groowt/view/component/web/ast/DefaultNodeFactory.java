@@ -7,6 +7,7 @@ import groowt.view.component.web.antlr.TokenList;
 import groowt.view.component.web.ast.extension.*;
 import groowt.view.component.web.ast.node.*;
 import groowt.view.component.web.util.TokenRange;
+import org.antlr.v4.runtime.Token;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -109,13 +110,23 @@ public class DefaultNodeFactory implements NodeFactory {
     }
 
     @Override
-    public QuestionNode questionTagNode(TokenRange tokenRange, List<? extends QuestionTagChild> children) {
-        return this.objectFactory.get(QuestionNode.class, tokenRange, children);
+    public QuestionNode questionTagNode(
+            TokenRange tokenRange,
+            Token openToken,
+            Token closeToken,
+            List<? extends QuestionTagChild> children
+    ) {
+        return this.objectFactory.get(QuestionNode.class, tokenRange, openToken, closeToken, children);
     }
 
     @Override
-    public HtmlCommentNode htmlCommentNode(TokenRange tokenRange, List<? extends HtmlCommentChild> children) {
-        return this.objectFactory.get(HtmlCommentNode.class, tokenRange, children);
+    public HtmlCommentNode htmlCommentNode(
+            TokenRange tokenRange,
+            Token openToken,
+            Token closeToken,
+            List<? extends HtmlCommentChild> children
+    ) {
+        return this.objectFactory.get(HtmlCommentNode.class, tokenRange, openToken, closeToken, children);
     }
 
     @Override
@@ -209,8 +220,8 @@ public class DefaultNodeFactory implements NodeFactory {
     }
 
     @Override
-    public EqualsScriptletNode equalsScriptletNode(TokenRange tokenRange, int groovyIndex) {
-        return this.objectFactory.get(EqualsScriptletNode.class, tokenRange, groovyIndex);
+    public EqualsScriptletNode equalsScriptletNode(TokenRange tokenRange, String groovyCode) {
+        return this.objectFactory.get(EqualsScriptletNode.class, tokenRange, groovyCode);
     }
 
     @Override
@@ -219,8 +230,8 @@ public class DefaultNodeFactory implements NodeFactory {
     }
 
     @Override
-    public DollarScriptletNode dollarScriptletNode(TokenRange tokenRange, int groovyIndex) {
-        return this.objectFactory.get(DollarScriptletNode.class, tokenRange, groovyIndex);
+    public DollarScriptletNode dollarScriptletNode(TokenRange tokenRange, String groovyCode) {
+        return this.objectFactory.get(DollarScriptletNode.class, tokenRange, groovyCode);
     }
 
     @Override

@@ -6,6 +6,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 
 import java.util.function.Function;
 
+@Deprecated
 public interface AppendOrAddStatementFactory {
 
     enum Action {

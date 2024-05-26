@@ -135,7 +135,12 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
                 children.add((QuestionTagChild) childResult);
             }
         }
-        return this.nodeFactory.questionTagNode(this.getTokenRange(ctx), children);
+        return this.nodeFactory.questionTagNode(
+                this.getTokenRange(ctx),
+                ctx.QuestionTagOpen().getSymbol(),
+                ctx.QuestionTagClose().getSymbol(),
+                children
+        );
     }
 
     @Override
@@ -147,7 +152,12 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
                 children.add((HtmlCommentChild) childResult);
             }
         }
-        return this.nodeFactory.htmlCommentNode(this.getTokenRange(ctx), children);
+        return this.nodeFactory.htmlCommentNode(
+                this.getTokenRange(ctx),
+                ctx.HtmlCommentOpen().getSymbol(),
+                ctx.HtmlCommentClose().getSymbol(),
+                children
+        );
     }
 
     @Override
@@ -340,7 +350,7 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
         if (groovyCode != null) {
             return this.nodeFactory.equalsScriptletNode(
                     this.getTokenRange(ctx),
-                    ctx.GroovyCode().getSymbol().getTokenIndex()
+                    ctx.GroovyCode().getSymbol().getText()
             );
         } else {
             return null;
@@ -363,7 +373,7 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
         if (groovyCode != null) {
             return this.nodeFactory.dollarScriptletNode(
                     this.getTokenRange(ctx),
-                    groovyCode.getSymbol().getTokenIndex()
+                    groovyCode.getSymbol().getText()
             );
         } else {
             return null;

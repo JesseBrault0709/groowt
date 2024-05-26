@@ -2,6 +2,7 @@ package groowt.view.component.web.ast;
 
 import groowt.view.component.web.ast.node.*;
 import groowt.view.component.web.util.TokenRange;
+import org.antlr.v4.runtime.Token;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -20,9 +21,19 @@ public interface NodeFactory {
 
     BodyTextNode bodyTextNode(TokenRange tokenRange, List<? extends BodyTextChild> children);
 
-    QuestionNode questionTagNode(TokenRange tokenRange, List<? extends QuestionTagChild> children);
+    QuestionNode questionTagNode(
+            TokenRange tokenRange,
+            Token openToken,
+            Token closeToken,
+            List<? extends QuestionTagChild> children
+    );
 
-    HtmlCommentNode htmlCommentNode(TokenRange tokenRange, List<? extends HtmlCommentChild> children);
+    HtmlCommentNode htmlCommentNode(
+            TokenRange tokenRange,
+            Token openToken,
+            Token closeToken,
+            List<? extends HtmlCommentChild> children
+    );
 
     TextNode textNode(TokenRange tokenRange, String content);
 
@@ -63,11 +74,11 @@ public interface NodeFactory {
 
     ComponentValueNode componentValueNode(TokenRange tokenRange, ComponentNode componentNode);
 
-    EqualsScriptletNode equalsScriptletNode(TokenRange tokenRange, int groovyIndex);
+    EqualsScriptletNode equalsScriptletNode(TokenRange tokenRange, String groovyCode);
 
     PlainScriptletNode plainScriptletNode(TokenRange tokenRange, int groovyIndex);
 
-    DollarScriptletNode dollarScriptletNode(TokenRange tokenRange, int groovyIndex);
+    DollarScriptletNode dollarScriptletNode(TokenRange tokenRange, String groovyCode);
 
     DollarReferenceNode dollarReferenceNode(TokenRange tokenRange, int groovyIndex);
 
