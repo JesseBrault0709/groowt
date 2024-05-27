@@ -19,22 +19,6 @@ class SimpleWebViewComponentTests extends AbstractWebViewComponentTests {
     }
 
     @Test
-    void closureWithPropertyExpressionEvaluatesToValue() {
-        this.doTest(
-                '''
-                ---
-                import groovy.transform.Field
-                
-                @Field
-                Map greetings = [hello: 'Hello!']
-                ---
-                <Echo greeting={greetings.hello}>$greeting</Echo>
-                '''.stripIndent().trim(),
-                'Hello!'
-        )
-    }
-
-    @Test
     void closureWithMethodCallIsClosure() {
         this.doTest(
                 '''
@@ -43,7 +27,7 @@ class SimpleWebViewComponentTests extends AbstractWebViewComponentTests {
                     input.capitalize()
                 }
                 ---
-                <Echo subHelper={ helper('lowercase') }>${ -> subHelper.call() }</Echo>
+                <Echo subHelper={ -> helper('lowercase') }>${ -> subHelper.call() }</Echo>
                 '''.stripIndent().trim(), 'Lowercase'
         )
     }

@@ -123,32 +123,11 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
         final BlockStatement preambleBlock = convertResult.blockStatement();
         if (preambleBlock != null) {
-            // Fields
-            final List<Statement> preambleStatements = preambleBlock.getStatements();
-            final List<DeclarationExpression> declarationsWithField = preambleStatements.stream()
-                    .filter(statement -> statement instanceof ExpressionStatement)
-                    .map(ExpressionStatement.class::cast)
-                    .map(ExpressionStatement::getExpression)
-                    .filter(expression -> expression instanceof DeclarationExpression)
-                    .map(DeclarationExpression.class::cast)
-                    .filter(declarationExpression ->
-                            !declarationExpression.getAnnotations(FIELD_ANNOTATION).isEmpty()
-                    )
-                    .toList();
-            if (declarationsWithField.size() != preambleStatements.size()) {
-                // TODO: figure out why we have extraneous statements sometimes when it seems otherwise not
-                logger.warn(
-                        "{} contains script statements which are not supported. " +
-                                "Currently, only classes, methods, and field declarations " +
-                                "(marked with @groovy.transform.Field) " +
-                                "are supported. The rest will be ignored.",
-                        templateClassName
-                );
-            }
-            declarationsWithField.forEach(declaration -> {
-                declaration.setDeclaringClass(mainClassNode);
-                positionVisitor.visitDeclarationExpression(declaration);
-            });
+            logger.warn(
+                    "{} contains script statements which are not supported. Currently, only classes and"
+                            + " methods are supported. The rest will be ignored.",
+                    templateClassName
+            );
         }
 
         // move methods from script class

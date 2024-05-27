@@ -1,6 +1,7 @@
 package groowt.view.component.web.lib
 
 import groowt.view.View
+import groowt.view.component.runtime.ComponentWriter
 import groowt.view.component.runtime.DefaultComponentWriter
 
 class Echo extends DelegatingWebViewComponent {
@@ -17,7 +18,16 @@ class Echo extends DelegatingWebViewComponent {
             return super.getProperty(propertyName)
         } catch (MissingPropertyException missingPropertyException) {
             if (this.attr.containsKey(propertyName)) {
-                return this.attr[propertyName]
+                def value = this.attr[propertyName]
+                if (value instanceof Closure) {
+                    if (value.maximumNumberOfParameters == 0) {
+                        return value
+                    } else {
+                        return value()
+                    }
+                } else {
+                    return value
+                }
             } else {
                 throw missingPropertyException
             }
@@ -26,12 +36,20 @@ class Echo extends DelegatingWebViewComponent {
 
     @Override
     protected View getDelegate() {
-        return {
-            def componentWriter = new DefaultComponentWriter(it)
+        return { Writer w ->
+            def componentWriter = new DefaultComponentWriter(w)
             componentWriter.setComponentContext(this.context)
-            componentWriter.setRenderContext(this.context.renderContext) // hacky
+            componentWriter.setRenderContext(this.context.renderContext)
             this.children.each {
-                componentWriter << it
+                if (it instanceof Closure) {
+                    if (it.maximumNumberOfParameters == 1 && ComponentWriter.isAssignableFrom(it.parameterTypes[0])) {
+                        it(componentWriter)
+                    } else {
+                        componentWriter << it()
+                    }
+                } else {
+                    componentWriter << it
+                }
             }
         }
     }

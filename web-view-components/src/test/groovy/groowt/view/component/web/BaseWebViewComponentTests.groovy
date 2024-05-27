@@ -25,19 +25,6 @@ class BaseWebViewComponentTests extends AbstractWebViewComponentTests {
     }
 
     @Test
-    void withPreambleImport() {
-        this.doTest('''
-            ---
-            import groovy.transform.Field
-            
-            @Field
-            String greeting = 'Hello, World!'
-            ---
-            $greeting
-            '''.stripIndent().trim(), "Hello, World!")
-    }
-
-    @Test
     void nestedGreeter() {
         def context = this.context() {
             configureRootScope(WebViewComponentScope) {
