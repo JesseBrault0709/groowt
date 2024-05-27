@@ -3,7 +3,6 @@ package groowt.view.component.web.transpile;
 import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.ast.node.*;
 import groowt.view.component.web.transpile.groovy.GroovyUtil;
-import jakarta.inject.Inject;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -16,7 +15,6 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
     private final PositionSetter positionSetter;
     private final LeftShiftFactory leftShiftFactory;
 
-    @Inject
     public DefaultGroovyBodyNodeTranspiler(PositionSetter positionSetter, LeftShiftFactory leftShiftFactory) {
         this.positionSetter = positionSetter;
         this.leftShiftFactory = leftShiftFactory;
@@ -58,7 +56,7 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
             );
             callExpr = new MethodCallExpression(cl, "call", argsList);
         }
-        return this.leftShiftFactory.create(callExpr);
+        return this.leftShiftFactory.create(state, callExpr);
     }
 
     protected Statement handlePlainScriptlet(PlainScriptletNode plainScriptletNode, TranspilerState state) {
@@ -76,7 +74,7 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
         return new ExpressionStatement(callExpr);
     }
 
-    protected Statement handleDollarScriptlet(DollarScriptletNode dollarScriptletNode) {
+    protected Statement handleDollarScriptlet(DollarScriptletNode dollarScriptletNode, TranspilerState state) {
         final ClosureExpression cl = this.convertToClosure(dollarScriptletNode, dollarScriptletNode.getGroovyCode());
         final Expression toLeftShift;
         if (cl.getParameters() == null) {
@@ -89,10 +87,10 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
                 toLeftShift = cl;
             }
         }
-        return this.leftShiftFactory.create(toLeftShift);
+        return this.leftShiftFactory.create(state, toLeftShift);
     }
 
-    protected Statement handleDollarReference(DollarReferenceNode dollarReferenceNode) {
+    protected Statement handleDollarReference(DollarReferenceNode dollarReferenceNode, TranspilerState state) {
         VariableExpression root = null;
         PropertyExpression propertyExpr = null;
         for (final String part : dollarReferenceNode.getParts()) {
@@ -107,10 +105,10 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
         final var positionVisitor = new PositionVisitor(this.positionSetter, dollarReferenceNode);
         if (propertyExpr != null) {
             propertyExpr.visit(positionVisitor);
-            return this.leftShiftFactory.create(propertyExpr);
+            return this.leftShiftFactory.create(state, propertyExpr);
         } else if (root != null) {
             root.visit(positionVisitor);
-            return this.leftShiftFactory.create(root);
+            return this.leftShiftFactory.create(state, root);
         } else {
             throw new WebViewComponentBugError("Did not expect root to be null.");
         }
@@ -121,8 +119,8 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
         return switch (groovyBodyNode) {
             case EqualsScriptletNode equalsScriptletNode -> this.handleEqualsScriptlet(equalsScriptletNode, state);
             case PlainScriptletNode plainScriptletNode -> this.handlePlainScriptlet(plainScriptletNode, state);
-            case DollarScriptletNode dollarScriptletNode -> this.handleDollarScriptlet(dollarScriptletNode);
-            case DollarReferenceNode dollarReferenceNode -> this.handleDollarReference(dollarReferenceNode);
+            case DollarScriptletNode dollarScriptletNode -> this.handleDollarScriptlet(dollarScriptletNode, state);
+            case DollarReferenceNode dollarReferenceNode -> this.handleDollarReference(dollarReferenceNode, state);
             default -> throw new WebViewComponentBugError(new UnsupportedOperationException(
                     "GroovyBodyNode of type " + groovyBodyNode.getClass().getName() + " is not supported."
             ));

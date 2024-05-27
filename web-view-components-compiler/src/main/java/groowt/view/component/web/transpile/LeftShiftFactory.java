@@ -4,5 +4,5 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
 
 public interface LeftShiftFactory {
-    Statement create(Expression rightSide);
+    Statement create(TranspilerState state, Expression rightSide);
 }

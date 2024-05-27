@@ -223,7 +223,7 @@ public abstract class NodeFactoryTests {
 
     @Test
     public void plainScriptletNode() {
-        assertNotNull(this.nodeFactory.plainScriptletNode(this.getTokenRange(), 0));
+        assertNotNull(this.nodeFactory.plainScriptletNode(this.getTokenRange(), ""));
     }
 
     @Test
@@ -233,7 +233,7 @@ public abstract class NodeFactoryTests {
 
     @Test
     public void dollarReferenceNode() {
-        assertNotNull(this.nodeFactory.dollarReferenceNode(this.getTokenRange(), 0));
+        assertNotNull(this.nodeFactory.dollarReferenceNode(this.getTokenRange(), List.of("test")));
     }
 
 }

@@ -1,6 +1,5 @@
 package groowt.view.component.web.transpile;
 
-import groowt.util.fp.provider.Provider;
 import groowt.view.component.context.ComponentResolveException;
 import groowt.view.component.runtime.ComponentCreateException;
 import groowt.view.component.web.WebViewComponentBugError;
@@ -29,37 +28,25 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     private static final Pattern isFqn = Pattern.compile("^(\\p{Ll}.+\\.)+\\p{Lu}.+$");
     private static final Pattern isWithPackage = Pattern.compile("^\\p{Ll}.+\\.");
 
-    private final Provider<AppendOrAddStatementFactory> appendOrAddStatementFactoryProvider;
-    private final Provider<ComponentClassNodeResolver> componentClassNodeResolverProvider;
-    private final Provider<ValueNodeTranspiler> valueNodeTranspilerProvider;
-    private final Provider<BodyTranspiler> bodyTranspilerProvider;
+    private LeftShiftFactory leftShiftFactory;
+    private ValueNodeTranspiler valueNodeTranspiler;
+    private BodyTranspiler bodyTranspiler;
+    private ComponentClassNodeResolver componentClassNodeResolver;
 
-    public DefaultComponentTranspiler(
-            Provider<AppendOrAddStatementFactory> appendOrAddStatementFactoryProvider,
-            Provider<ComponentClassNodeResolver> componentClassNodeResolverProvider,
-            Provider<ValueNodeTranspiler> valueNodeTranspilerProvider,
-            Provider<BodyTranspiler> bodyTranspilerProvider
-    ) {
-        this.appendOrAddStatementFactoryProvider = appendOrAddStatementFactoryProvider;
-        this.componentClassNodeResolverProvider = componentClassNodeResolverProvider;
-        this.valueNodeTranspilerProvider = valueNodeTranspilerProvider;
-        this.bodyTranspilerProvider = bodyTranspilerProvider;
+    public void setLeftShiftFactory(LeftShiftFactory leftShiftFactory) {
+        this.leftShiftFactory = leftShiftFactory;
     }
 
-    protected ValueNodeTranspiler getValueNodeTranspiler() {
-        return this.valueNodeTranspilerProvider.get();
+    public void setValueNodeTranspiler(ValueNodeTranspiler valueNodeTranspiler) {
+        this.valueNodeTranspiler = valueNodeTranspiler;
     }
 
-    protected BodyTranspiler getBodyTranspiler() {
-        return this.bodyTranspilerProvider.get();
+    public void setBodyTranspiler(BodyTranspiler bodyTranspiler) {
+        this.bodyTranspiler = bodyTranspiler;
     }
 
-    protected AppendOrAddStatementFactory getAppendOrAddStatementFactory() {
-        return this.appendOrAddStatementFactoryProvider.get();
-    }
-
-    protected ComponentClassNodeResolver getComponentClassNodeResolver() {
-        return this.componentClassNodeResolverProvider.get();
+    public void setComponentClassNodeResolver(ComponentClassNodeResolver componentClassNodeResolver) {
+        this.componentClassNodeResolver = componentClassNodeResolver;
     }
 
     /* UTIL */
@@ -104,7 +91,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
                     // we need to resolve it
                     final var isWithPackageMatcher = isWithPackage.matcher(identifier);
                     if (isWithPackageMatcher.matches()) {
-                        final var resolveResult = this.getComponentClassNodeResolver().getClassForFqn(identifier);
+                        final var resolveResult = this.componentClassNodeResolver.getClassForFqn(identifier);
                         if (resolveResult.isLeft()) {
                             final var error = resolveResult.getLeft();
                             error.setNode(componentNode.getArgs().getType());
@@ -117,7 +104,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
                         }
                     } else {
                         final var resolveResult =
-                                this.getComponentClassNodeResolver().getClassForNameWithoutPackage(identifier);
+                                this.componentClassNodeResolver.getClassForNameWithoutPackage(identifier);
                         if (resolveResult.isLeft()) {
                             final var error = resolveResult.getLeft();
                             error.setNode(componentNode.getArgs().getType());
@@ -260,7 +247,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
         final Expression valueExpr = switch (attrNode) {
             case BooleanValueAttrNode ignored -> ConstantExpression.PRIM_TRUE;
             case KeyValueAttrNode keyValueAttrNode ->
-                    this.getValueNodeTranspiler().createExpression(keyValueAttrNode.getValueNode(), state);
+                    this.valueNodeTranspiler.createExpression(keyValueAttrNode.getValueNode(), state);
         };
         return new MapEntryExpression(keyExpr, valueExpr);
     }
@@ -328,11 +315,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
         scope.putDeclaredVariable(childListParam);
         state.pushChildList(childListParam);
 
-        final BlockStatement bodyStatements = this.getBodyTranspiler().transpileBody(
-                bodyNode,
-                (sourceNode, expr) -> this.getChildListAdd(childListParam, expr),
-                state
-        );
+        final BlockStatement bodyStatements = this.bodyTranspiler.transpileBody(bodyNode, state);
 
         // clean up
         state.popChildList();
@@ -491,11 +474,7 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
             // Create
             final List<Statement> createStatements = this.getTypedCreateStatements(typedComponentNode, state);
             // Append/Add
-            final Statement addOrAppend = this.getAppendOrAddStatementFactory().addOrAppend(
-                    componentNode,
-                    state,
-                    (VariableExpression) state.getCurrentComponent()
-            );
+            final Statement leftShift = this.leftShiftFactory.create(state, state.getCurrentComponent());
 
             // cleanup
             state.popResolved();
@@ -504,17 +483,16 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
             final List<Statement> allStatements = new ArrayList<>();
             allStatements.addAll(resolveStatements);
             allStatements.addAll(createStatements);
-            allStatements.add(addOrAppend);
+            allStatements.add(leftShift);
 
             return allStatements;
         } else if (componentNode instanceof FragmentComponentNode fragmentComponentNode) {
             // Create and add all at once
-            final Statement addOrAppend = this.getAppendOrAddStatementFactory().addOrAppend(
-                    componentNode,
+            final Statement leftShift = this.leftShiftFactory.create(
                     state,
                     this.getFragmentCreateExpression(fragmentComponentNode, state)
             );
-            return List.of(addOrAppend);
+            return List.of(leftShift);
         } else {
             throw new WebViewComponentBugError(new IllegalArgumentException(
                     "Cannot handle a ComponentNode not of type TypedComponentNode or FragmentComponentNode."

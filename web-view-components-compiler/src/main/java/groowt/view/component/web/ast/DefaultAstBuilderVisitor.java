@@ -361,7 +361,7 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
     public @Nullable Node visitPlainScriptlet(WebViewComponentsParser.PlainScriptletContext ctx) {
         final TerminalNode groovyCode = ctx.GroovyCode();
         if (groovyCode != null) {
-            return this.nodeFactory.plainScriptletNode(this.getTokenRange(ctx), groovyCode.getSymbol().getTokenIndex());
+            return this.nodeFactory.plainScriptletNode(this.getTokenRange(ctx), groovyCode.getSymbol().getText());
         } else {
             return null;
         }
@@ -381,16 +381,15 @@ public class DefaultAstBuilderVisitor extends WebViewComponentsParserBaseVisitor
     }
 
     @Override
-    public @Nullable Node visitDollarReference(WebViewComponentsParser.DollarReferenceContext ctx) {
-        final TerminalNode groovyCode = ctx.GroovyCode();
-        if (groovyCode != null) {
-            return this.nodeFactory.dollarReferenceNode(
-                    this.getTokenRange(ctx),
-                    groovyCode.getSymbol().getTokenIndex()
-            );
+    public Node visitDollarReference(WebViewComponentsParser.DollarReferenceContext ctx) {
+        final String groovyCode = ctx.GroovyCode().getText();
+        final List<String> parts = new ArrayList<>();
+        if (groovyCode.contains(".")) {
+            parts.addAll(List.of(groovyCode.split("\\.")));
         } else {
-            return null;
+            parts.add(groovyCode);
         }
+        return this.nodeFactory.dollarReferenceNode(this.getTokenRange(ctx), parts);
     }
 
     @Override

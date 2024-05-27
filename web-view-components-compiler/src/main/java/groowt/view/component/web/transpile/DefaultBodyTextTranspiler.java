@@ -33,16 +33,16 @@ public class DefaultBodyTextTranspiler implements BodyTextTranspiler {
         this.includeComments = includeComments;
     }
 
-    protected Statement handleStringLiteral(Token source) {
+    protected Statement handleStringLiteral(TranspilerState state, Token source) {
         final ConstantExpression literal = getStringLiteral(source.getText());
         this.positionSetter.setPosition(literal, source);
-        return this.leftShiftFactory.create(literal);
+        return this.leftShiftFactory.create(state, literal);
     }
 
-    protected Statement handleStringLiteral(Node source, String content) {
+    protected Statement handleStringLiteral(TranspilerState state, Node source, String content) {
         final ConstantExpression literal = getStringLiteral(content);
         this.positionSetter.setPosition(literal, source);
-        return this.leftShiftFactory.create(literal);
+        return this.leftShiftFactory.create(state, literal);
     }
 
     protected List<Statement> handleHtmlCommentChild(HtmlCommentChild child, TranspilerState state) {
@@ -67,23 +67,23 @@ public class DefaultBodyTextTranspiler implements BodyTextTranspiler {
         final List<Statement> result = new ArrayList<>();
         switch (child) {
             case QuestionNode questionNode -> {
-                result.add(this.handleStringLiteral(questionNode.getOpenToken()));
+                result.add(this.handleStringLiteral(state, questionNode.getOpenToken()));
                 questionNode.getChildrenAsQuestionTagChildren().stream()
                         .map(questionChild -> this.handleQuestionTagChild(questionChild, state))
                         .forEach(result::addAll);
-                result.add(this.handleStringLiteral(questionNode.getCloseToken()));
+                result.add(this.handleStringLiteral(state, questionNode.getCloseToken()));
             }
             case HtmlCommentNode commentNode -> {
                 if (this.includeComments) {
-                    result.add(this.handleStringLiteral(commentNode.getOpenToken()));
+                    result.add(this.handleStringLiteral(state, commentNode.getOpenToken()));
                     commentNode.getChildrenAsHtmlCommentChildren().stream()
                             .map(commentChild -> this.handleHtmlCommentChild(commentChild, state))
                             .forEach(result::addAll);
-                    result.add(this.handleStringLiteral(commentNode.getCloseToken()));
+                    result.add(this.handleStringLiteral(state, commentNode.getCloseToken()));
                 }
             }
             case TextNode textNode -> {
-                result.add(this.handleStringLiteral(textNode, textNode.getContent()));
+                result.add(this.handleStringLiteral(state, textNode, textNode.getContent()));
             }
             case GroovyBodyNode groovyBodyNode -> {
                 result.add(this.groovyBodyNodeTranspiler.createGroovyBodyNodeStatements(groovyBodyNode, state));

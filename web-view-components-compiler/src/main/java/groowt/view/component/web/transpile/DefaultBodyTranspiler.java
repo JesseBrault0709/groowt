@@ -18,11 +18,7 @@ public class DefaultBodyTranspiler implements BodyTranspiler {
     }
 
     @Override
-    public BlockStatement transpileBody(
-            BodyNode bodyNode,
-            AddOrAppendCallback addOrAppendCallback,
-            TranspilerState state
-    ) {
+    public BlockStatement transpileBody(BodyNode bodyNode, TranspilerState state) {
         final BlockStatement block = new BlockStatement();
         block.setVariableScope(state.pushScope());
         for (final Node child : bodyNode.getChildren()) {

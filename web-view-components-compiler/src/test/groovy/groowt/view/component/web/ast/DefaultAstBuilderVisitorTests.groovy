@@ -6,13 +6,12 @@ import groowt.view.component.web.antlr.TokenList
 import groowt.view.component.web.antlr.WebViewComponentsLexer
 import groowt.view.component.web.antlr.WebViewComponentsParser
 import groowt.view.component.web.antlr.WebViewComponentsTokenStream
-import groowt.view.component.web.ast.node.*
+import groowt.view.component.web.ast.node.Node
 import org.antlr.v4.runtime.CharStreams
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
 
 import static groowt.view.component.web.antlr.WebViewComponentsParser.CompilationUnitContext
-import static org.junit.jupiter.api.Assertions.*
+import static org.junit.jupiter.api.Assertions.assertInstanceOf
+import static org.junit.jupiter.api.Assertions.assertNotNull
 
 class DefaultAstBuilderVisitorTests {
 
@@ -50,32 +49,6 @@ class DefaultAstBuilderVisitorTests {
         def nodeFactory = new DefaultNodeFactory(tokenList)
         def visitor = new DefaultAstBuilderVisitor(nodeFactory)
         return new Tuple2<>(cu.accept(visitor), tokenList)
-    }
-
-    @Test
-    @Disabled('Move to file tests.')
-    void helloTarget() {
-        def (node, tokenList) = this.doBuild('Hello, $target!')
-        assertNodeWith(CompilationUnitNode, node) {
-            assertNull(preambleNode)
-            bodyNode.with {
-                assertEquals(1, childrenSize)
-                assertNodeWith(GStringBodyTextNode, children.first) {
-                    assertEquals(3, childrenSize)
-                    assertNodeWith(JStringBodyTextNode, it[0]) {
-                        assertEquals('Hello, ', it.getText(tokenList))
-                        assertEquals('Hello, ', it.content)
-                    }
-                    assertNodeWith(DollarReferenceNode, it[1]) {
-                        assertEquals('$target', it.getText(tokenList))
-                        assertEquals('$target', it.GStringPath.asValidEmbeddableCode)
-                    }
-                    assertNodeWith(JStringBodyTextNode, it[2]) {
-                        assertEquals('!', it.content)
-                    }
-                }
-            }
-        }
     }
 
 }

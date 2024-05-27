@@ -225,8 +225,8 @@ public class DefaultNodeFactory implements NodeFactory {
     }
 
     @Override
-    public PlainScriptletNode plainScriptletNode(TokenRange tokenRange, int groovyIndex) {
-        return this.objectFactory.get(PlainScriptletNode.class, tokenRange, groovyIndex);
+    public PlainScriptletNode plainScriptletNode(TokenRange tokenRange, String groovyCode) {
+        return this.objectFactory.get(PlainScriptletNode.class, tokenRange, groovyCode);
     }
 
     @Override
@@ -235,8 +235,8 @@ public class DefaultNodeFactory implements NodeFactory {
     }
 
     @Override
-    public DollarReferenceNode dollarReferenceNode(TokenRange tokenRange, int groovyIndex) {
-        return this.objectFactory.get(DollarReferenceNode.class, tokenRange, groovyIndex);
+    public DollarReferenceNode dollarReferenceNode(TokenRange tokenRange, List<String> parts) {
+        return this.objectFactory.get(DollarReferenceNode.class, tokenRange, parts);
     }
 
 }

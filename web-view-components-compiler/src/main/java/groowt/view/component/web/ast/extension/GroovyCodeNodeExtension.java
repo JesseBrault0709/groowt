@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+@Deprecated
 public class GroovyCodeNodeExtension implements NodeExtension {
 
     private final Node self;

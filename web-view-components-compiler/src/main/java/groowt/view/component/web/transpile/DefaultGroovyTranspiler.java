@@ -4,14 +4,12 @@ import groovy.transform.Field;
 import groowt.view.component.compiler.ComponentTemplateCompileException;
 import groowt.view.component.compiler.ComponentTemplateCompileUnit;
 import groowt.view.component.compiler.ComponentTemplateCompilerConfiguration;
-import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.ast.node.BodyNode;
 import groowt.view.component.web.ast.node.CompilationUnitNode;
 import groowt.view.component.web.ast.node.PreambleNode;
 import groowt.view.component.web.compiler.MultipleWebViewComponentCompileErrorsException;
 import groowt.view.component.web.compiler.WebViewComponentTemplateCompileException;
 import groowt.view.component.web.compiler.WebViewComponentTemplateCompileUnit;
-import groowt.view.component.web.transpile.BodyTranspiler.AddOrAppendCallback;
 import groowt.view.component.web.transpile.groovy.GroovyUtil;
 import groowt.view.component.web.transpile.resolve.ClassLoaderComponentClassNodeResolver;
 import org.codehaus.groovy.ast.*;
@@ -37,10 +35,9 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
     private static final ClassNode FIELD_ANNOTATION = ClassHelper.make(Field.class);
 
     protected TranspilerConfiguration getConfiguration(
-            WebViewComponentTemplateCompileUnit compileUnit,
-            ClassLoader classLoader
+            ClassLoaderComponentClassNodeResolver classLoaderComponentClassNodeResolver
     ) {
-        return new DefaultTranspilerConfiguration(new ClassLoaderComponentClassNodeResolver(compileUnit, classLoader));
+        return SimpleTranspilerConfiguration.withDefaults(classLoaderComponentClassNodeResolver);
     }
 
     protected void addAutomaticImports(WebViewComponentModuleNode moduleNode, TranspilerConfiguration configuration) {
@@ -235,20 +232,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
             TranspilerConfiguration transpilerConfiguration,
             TranspilerState state
     ) {
-        final var appendOrAddStatementFactory = transpilerConfiguration.getAppendOrAddStatementFactory();
-        final AddOrAppendCallback callback = (source, expr) -> appendOrAddStatementFactory.addOrAppend(
-                source,
-                state,
-                action -> {
-                    if (action == AppendOrAddStatementFactory.Action.ADD) {
-                        throw new WebViewComponentBugError(new IllegalStateException(
-                                "Should not be adding from document root, only appending!"
-                        ));
-                    }
-                    return expr;
-                }
-        );
-        return transpilerConfiguration.getBodyTranspiler().transpileBody(bodyNode, callback, state);
+        return transpilerConfiguration.getBodyTranspiler().transpileBody(bodyNode, state);
     }
 
     @Override
@@ -258,10 +242,12 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
             CompilationUnitNode compilationUnitNode,
             String templateClassSimpleName
     ) throws ComponentTemplateCompileException {
-        // transpilerConfiguration and positionSetter
-        final var transpilerConfiguration = this.getConfiguration(
-                compileUnit, compileUnit.getGroovyCompilationUnit().getClassLoader()
+        // resolver, transpilerConfiguration, and positionSetter
+        final ClassLoaderComponentClassNodeResolver resolver = new ClassLoaderComponentClassNodeResolver(
+                compileUnit,
+                compileUnit.getGroovyCompilationUnit().getClassLoader()
         );
+        final var transpilerConfiguration = this.getConfiguration(resolver);
         final PositionSetter positionSetter = transpilerConfiguration.getPositionSetter();
 
         // prepare sourceUnit
@@ -279,6 +265,9 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         final WebViewComponentModuleNode moduleNode = this.initModuleNode(
                 compileUnit, sourceUnit, transpilerConfiguration
         );
+
+        // set resolver's moduleNode
+        resolver.setModuleNode(moduleNode);
 
         // prepare mainClassNode
         final ClassNode mainClassNode = this.initMainClassNode(compileUnit, templateClassSimpleName, moduleNode);

@@ -9,7 +9,6 @@ import java.util.Set;
 public interface TranspilerConfiguration {
     PositionSetter getPositionSetter();
     BodyTranspiler getBodyTranspiler();
-    AppendOrAddStatementFactory getAppendOrAddStatementFactory();
     Map<String, ClassNode> getImports();
     Set<String> getStarImports();
     Set<Tuple3<ClassNode, String, String>> getStaticImports();

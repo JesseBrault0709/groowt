@@ -1,6 +1,5 @@
 package groowt.view.component.web.transpile;
 
-import groowt.view.component.web.WebViewComponentBugError;
 import groowt.view.component.web.ast.node.*;
 import groowt.view.component.web.transpile.groovy.GroovyUtil;
 import groowt.view.component.web.transpile.groovy.GroovyUtil.ConvertResult;
@@ -12,49 +11,39 @@ import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-
 import static groowt.view.component.web.transpile.TranspilerUtil.getStringLiteral;
 
-// TODO: set positions
 public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
 
     private final ComponentTranspiler componentTranspiler;
+    private final PositionSetter positionSetter;
 
-    public DefaultValueNodeTranspiler(ComponentTranspiler componentTranspiler) {
+    public DefaultValueNodeTranspiler(ComponentTranspiler componentTranspiler, PositionSetter positionSetter) {
         this.componentTranspiler = componentTranspiler;
+        this.positionSetter = positionSetter;
     }
 
-    // TODO: positions
     protected Expression handleClosureNode(ClosureValueNode closureValueNode) {
         final var rawCode = closureValueNode.getGroovyCode().getAsValidGroovyCode();
         final ClosureExpression convertedClosure = GroovyUtil.getClosure(rawCode);
+
+        final PositionVisitor positionVisitor = new PositionVisitor(
+                this.positionSetter.withOffset(0, -10),
+                closureValueNode
+        );
+        convertedClosure.visit(positionVisitor);
+
         final Statement closureCode = convertedClosure.getCode();
-        if (closureCode instanceof BlockStatement blockStatement) {
-            final List<Statement> statements = blockStatement.getStatements();
-            if (statements.isEmpty()) {
-                throw new WebViewComponentBugError(new IllegalArgumentException(
-                        "Did not expect ClosureValueNode to produce no statements."
-                ));
-            } else if (statements.size() == 1) {
-                final Statement statement = statements.getFirst();
-                if (statement instanceof ExpressionStatement expressionStatement) {
-                    final Expression expression = expressionStatement.getExpression();
-                    return switch (expression) {
-                        case ConstantExpression ignored -> expression;
-                        case VariableExpression ignored -> expression;
-                        case PropertyExpression ignored -> expression;
-                        default -> convertedClosure;
-                    };
-                } else {
-                    throw new IllegalArgumentException("A component closure value must produce a value.");
-                }
-            } else {
-                return convertedClosure;
-            }
-        } else {
-            return convertedClosure;
+        if (closureCode instanceof ExpressionStatement expressionStatement) {
+            final Expression expression = expressionStatement.getExpression();
+            return switch (expression) {
+                case ConstantExpression ignored -> expression;
+                case VariableExpression ignored -> expression;
+                case PropertyExpression ignored -> expression;
+                default -> convertedClosure;
+            };
         }
+        return convertedClosure;
     }
 
     private Expression gStringValue(GStringValueNode gStringValueNode) {
@@ -65,16 +54,27 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
             throw new IllegalStateException("block statement is null or empty");
         }
         final ExpressionStatement exprStmt = (ExpressionStatement) blockStatement.getStatements().getFirst();
-        // TODO: set pos
+
+        final PositionVisitor positionVisitor = new PositionVisitor(
+                this.positionSetter.withOffset(0, -1),
+                gStringValueNode
+        );
+        exprStmt.visit(positionVisitor);
+
         return exprStmt.getExpression();
     }
 
     private ConstantExpression jStringValue(JStringValueNode jStringValueNode) {
-        return getStringLiteral(jStringValueNode.getContent()); // TODO: set pos
+        final ConstantExpression literal = getStringLiteral(jStringValueNode.getContent());
+        this.positionSetter.setPosition(literal, jStringValueNode);
+        return literal;
     }
 
     private ClosureExpression emptyClosureValue(EmptyClosureValueNode emptyClosureValueNode) {
-        return new ClosureExpression(Parameter.EMPTY_ARRAY, EmptyStatement.INSTANCE); // TODO: set pos
+        final ClosureExpression cl = new ClosureExpression(Parameter.EMPTY_ARRAY, EmptyStatement.INSTANCE);
+        final PositionVisitor positionVisitor = new PositionVisitor(this.positionSetter, emptyClosureValueNode);
+        cl.visit(positionVisitor);
+        return cl;
     }
 
     private ClosureExpression componentValue(ComponentValueNode componentValueNode, TranspilerState state) {
@@ -84,7 +84,7 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
                         componentValueNode.getComponentNode(),
                         state
                 ), state.getCurrentScope())
-        ); // TODO: set pos
+        );
     }
 
     @Override

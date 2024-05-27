@@ -76,10 +76,10 @@ public interface NodeFactory {
 
     EqualsScriptletNode equalsScriptletNode(TokenRange tokenRange, String groovyCode);
 
-    PlainScriptletNode plainScriptletNode(TokenRange tokenRange, int groovyIndex);
+    PlainScriptletNode plainScriptletNode(TokenRange tokenRange, String groovyCode);
 
     DollarScriptletNode dollarScriptletNode(TokenRange tokenRange, String groovyCode);
 
-    DollarReferenceNode dollarReferenceNode(TokenRange tokenRange, int groovyIndex);
+    DollarReferenceNode dollarReferenceNode(TokenRange tokenRange, List<String> parts);
 
 }
