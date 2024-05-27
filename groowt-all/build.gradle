@@ -10,6 +10,7 @@ dependencies {
     api project(':web-view-components')
     api project(':di')
     api project(':extensible')
+    api project(':fp')
 }
 
 publishing {
