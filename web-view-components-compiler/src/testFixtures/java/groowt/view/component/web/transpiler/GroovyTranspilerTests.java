@@ -89,4 +89,14 @@ public abstract class GroovyTranspilerTests {
         this.doTranspile("<GroovyTranspilerTests.Greeter target='World' />");
     }
 
+    @Test
+    public void withPackageInPreamble() {
+        this.doTranspile("""
+                ---
+                package test
+                ---
+                Hello, World!
+                """.stripIndent().trim());
+    }
+
 }

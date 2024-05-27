@@ -1,6 +1,5 @@
 package groowt.view.component.web.transpile;
 
-import groovy.transform.Field;
 import groowt.view.component.compiler.ComponentTemplateCompileException;
 import groowt.view.component.compiler.ComponentTemplateCompileUnit;
 import groowt.view.component.compiler.ComponentTemplateCompilerConfiguration;
@@ -31,8 +30,6 @@ import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 public class DefaultGroovyTranspiler implements GroovyTranspiler {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultGroovyTranspiler.class);
-
-    private static final ClassNode FIELD_ANNOTATION = ClassHelper.make(Field.class);
 
     protected TranspilerConfiguration getConfiguration(
             ClassLoaderComponentClassNodeResolver classLoaderComponentClassNodeResolver
@@ -122,7 +119,10 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         }
 
         final BlockStatement preambleBlock = convertResult.blockStatement();
-        if (preambleBlock != null) {
+        if (!(preambleBlock == null
+                || preambleBlock.isEmpty()
+                || preambleBlock.getStatements().getFirst() instanceof ReturnStatement)
+        ) {
             logger.warn(
                     "{} contains script statements which are not supported. Currently, only classes and"
                             + " methods are supported. The rest will be ignored.",
