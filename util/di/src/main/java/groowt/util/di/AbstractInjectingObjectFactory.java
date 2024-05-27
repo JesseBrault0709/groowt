@@ -5,6 +5,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static groowt.util.di.ObjectFactoryUtil.toTypes;
 
@@ -18,6 +20,89 @@ public abstract class AbstractInjectingObjectFactory implements ObjectFactory {
             Constructor<T> constructor,
             Class<?>[] paramTypes
     ) {}
+
+    protected record Resolved(Class<?> type, Object object) {}
+
+    private static final class DeferredSetters {
+
+        private final Class<?> forType;
+        private final List<Consumer<Object>> actions = new ArrayList<>();
+
+        public DeferredSetters(Class<?> forType) {
+            this.forType = forType;
+        }
+
+        public Class<?> getForType() {
+            return this.forType;
+        }
+
+        public List<Consumer<Object>> getActions() {
+            return this.actions;
+        }
+
+    }
+
+    protected static class CreateContext {
+
+        private final Deque<Class<?>> constructionStack = new LinkedList<>();
+        private final Deque<DeferredSetters> deferredSettersStack = new LinkedList<>();
+        private final List<Resolved> allResolved = new ArrayList<>();
+
+        public CreateContext(Class<?> targetType) {
+            this.pushConstruction(targetType);
+        }
+
+        public void checkForCircularDependency(Class<?> typeToConstruct) {
+            if (constructionStack.contains(typeToConstruct)) {
+                throw new IllegalStateException(
+                        "Detected a circular constructor dependency for " + typeToConstruct.getName()
+                                + " . Please use setter methods instead. Current construction stack: "
+                                + constructionStack.stream()
+                                        .map(Class::getName)
+                                        .collect(Collectors.joining(", "))
+                );
+            }
+        }
+
+        public void pushConstruction(Class<?> type) {
+            this.constructionStack.push(type);
+            this.deferredSettersStack.push(new DeferredSetters(type));
+        }
+
+        public void popConstruction() {
+            this.constructionStack.pop();
+            this.deferredSettersStack.pop();
+        }
+
+        public boolean containsConstruction(Class<?> type) {
+            return this.constructionStack.contains(type);
+        }
+
+        public void addDeferredSetterAction(Class<?> forType, Consumer<Object> action) {
+            boolean found = false;
+            for (final DeferredSetters deferredSetters : this.deferredSettersStack) {
+                if (deferredSetters.getForType().equals(forType)) {
+                    found = true;
+                    deferredSetters.getActions().add(action);
+                    break;
+                }
+            }
+            if (!found) {
+                throw new IllegalArgumentException(
+                        "There is no construction for type " + forType.getName() + " which should be deferred."
+                );
+            }
+        }
+
+        public List<Consumer<Object>> getDeferredSetterActions() {
+            return this.deferredSettersStack.getFirst().getActions();
+        }
+
+        public List<Resolved> getAllResolved() {
+            return this.allResolved;
+        }
+
+    }
 
     private final Map<Class<?>, Constructor<?>[]> cachedAllConstructors = new HashMap<>();
     private final Collection<CachedInjectConstructor<?>> cachedInjectConstructors = new ArrayList<>();
@@ -82,13 +167,14 @@ public abstract class AbstractInjectingObjectFactory implements ObjectFactory {
     }
 
     /**
-     * @implNote If overridden, please cache any found non-inject constructors using {@link #putCachedNonInjectConstructor}.
+     * @implNote If overridden, please cache any found non-inject constructors using
+     *   {@link #putCachedNonInjectConstructor}.
      *
-     * @param clazz the {@link Class} in which to search for a constructor which does not have an <code>{@literal @}Inject</code>
-     *              annotation
+     * @param clazz the {@link Class} in which to search for a constructor which does
+     *              not have an <code>{@literal @}Inject</code> annotation.
      * @param constructorArgs the given constructor args
-     * @return the found non-inject constructor appropriate for the given constructor args, or {@code null} if no
-     * such constructor exists
+     * @return the found non-inject constructor appropriate for the given constructor args,
+     * or {@code null} if no such constructor exists
      * @param <T> the type
      */
     @SuppressWarnings("unchecked")
@@ -156,42 +242,104 @@ public abstract class AbstractInjectingObjectFactory implements ObjectFactory {
     protected Parameter getCachedInjectParameter(Method setter) {
         return this.cachedSetterParameters.computeIfAbsent(setter, s -> {
             if (s.getParameterCount() != 1) {
-                throw new IllegalArgumentException("Setter " + s.getName() + " has a parameter count other than one (1)!");
+                throw new IllegalArgumentException(
+                        "Setter " + s.getName() + " has a parameter count other than one (1)!"
+                );
             }
             return s.getParameters()[0];
         });
     }
 
-    protected void injectSetter(Object target, Method setter) {
-        try {
-            setter.invoke(target, this.getSetterInjectArg(target.getClass(), setter, this.getCachedInjectParameter(setter)));
-        } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+    private @Nullable Object findInContext(CreateContext context, Class<?> type) {
+        for (final Resolved resolved : context.getAllResolved()) {
+            if (type.isAssignableFrom(resolved.type)) {
+                return resolved.object;
+            }
+        }
+        return null;
+    }
+
+    protected void injectSetter(CreateContext context, Object target, Method setter) {
+        final Parameter injectParam = this.getCachedInjectParameter(setter);
+        final Class<?> typeToInject = injectParam.getType();
+        final @Nullable Object fromContext = this.findInContext(context, typeToInject);
+
+        final Consumer<Object> setterAction = arg -> {
+            try {
+                setter.invoke(target, arg);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        };
+
+        if (context.containsConstruction(typeToInject)) {
+            context.addDeferredSetterAction(typeToInject, setterAction);
+        } else {
+            final Object arg;
+            if (fromContext != null) {
+                arg = fromContext;
+            } else {
+                arg = this.getSetterInjectArg(context, target.getClass(), setter, injectParam);
+                context.getAllResolved().add(new Resolved(typeToInject, arg));
+            }
+            setterAction.accept(arg);
         }
     }
 
-    protected void injectSetters(Object target) {
-        this.getCachedSettersFor(target).forEach(setter -> this.injectSetter(target, setter));
+    protected void injectSetters(CreateContext context, Object target) {
+        this.getCachedSettersFor(target).forEach(setter -> this.injectSetter(context, target, setter));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <T> T createInstance(Class<T> clazz, Object... constructorArgs) {
-        final Constructor<T> constructor = this.findConstructor(clazz, constructorArgs);
-        final Object[] allArgs = this.createArgs(constructor, constructorArgs);
+    public <T> T createInstance(Class<T> type, Object... constructorArgs) {
+        final Constructor<T> constructor = this.findConstructor(type, constructorArgs);
+        final CreateContext context = new CreateContext(type);
+        final Object[] allArgs = this.createArgs(context, constructor, constructorArgs);
         try {
             final T instance = constructor.newInstance(allArgs);
-            this.injectSetters(instance);
+            context.getAllResolved().add(new Resolved(type, instance));
+            this.injectSetters(context, instance);
+            final List<Consumer<Object>> deferredSetterActions = context.getDeferredSetterActions();
+            context.popConstruction();
+            deferredSetterActions.forEach(setterAction -> setterAction.accept(instance));
             return instance;
         } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
             throw new RuntimeException(e); // In the future, we might have an option to ignore exceptions
         }
     }
 
-    protected abstract Object[] createArgs(Constructor<?> constructor, Object[] constructorArgs);
+    protected <T> T createInstance(CreateContext context, Class<T> type, Object... givenArgs) {
+        final Constructor<T> constructor = this.findConstructor(type, givenArgs);
+        context.checkForCircularDependency(type);
+        context.pushConstruction(type);
+        final Object[] allArgs = this.createArgs(context, constructor, givenArgs);
+        try {
+            final T instance = constructor.newInstance(allArgs);
+            context.getAllResolved().add(new Resolved(type, instance));
+            this.injectSetters(context, instance);
+            final List<Consumer<Object>> deferredSetterActions = context.getDeferredSetterActions();
+            context.popConstruction();
+            deferredSetterActions.forEach(setterAction -> setterAction.accept(instance));
+            return instance;
+        } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
+            throw new RuntimeException("e");
+        }
+    }
 
-    protected abstract Object getSetterInjectArg(Class<?> targetType, Method setter, Parameter toInject);
+    protected abstract Object[] createArgs(
+            CreateContext context,
+            Constructor<?> constructor,
+            Object[] constructorArgs
+    );
+
+    protected abstract Object getSetterInjectArg(
+            CreateContext context,
+            Class<?> targetType,
+            Method setter,
+            Parameter toInject
+    );
 
 }

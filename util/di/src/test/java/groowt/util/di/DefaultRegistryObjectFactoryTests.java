@@ -166,4 +166,51 @@ public class DefaultRegistryObjectFactoryTests {
         assertEquals("Hello, World!", greeter.greet());
     }
 
+    public static final class GreeterDependency {
+
+        private GreeterDependencyUser greeter;
+
+        @Inject
+        public void setGreeter(GreeterDependencyUser greeter) {
+            this.greeter = greeter;
+        }
+
+        public String filterGreeting() {
+            return this.greeter.getGreeting().toUpperCase();
+        }
+
+    }
+
+    public static final class GreeterDependencyUser implements Greeter {
+
+        private final GreeterDependency greeterDependency;
+
+        @Inject
+        public GreeterDependencyUser(GreeterDependency greeterDependency) {
+            this.greeterDependency = greeterDependency;
+        }
+
+        @Override
+        public String greet() {
+            return this.greeterDependency.filterGreeting();
+        }
+
+        public String getGreeting() {
+            return "hello, world!";
+        }
+
+    }
+
+    @Test
+    public void injectedDeferred() {
+        final var b = DefaultRegistryObjectFactory.Builder.withDefaults();
+        b.configureRegistry(r -> {
+            r.bind(GreeterDependencyUser.class, toSelf());
+            r.bind(GreeterDependency.class, toSelf());
+        });
+        final var f = b.build();
+        final var g = f.get(GreeterDependencyUser.class);
+        assertEquals("HELLO, WORLD!", g.greet());
+    }
+
 }

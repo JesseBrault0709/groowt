@@ -3,8 +3,6 @@ package groowt.util.di;
 import groowt.util.di.filters.FilterHandler;
 import groowt.util.di.filters.IterableFilterHandler;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -20,7 +18,8 @@ import static groowt.util.di.RegistryObjectFactoryUtil.*;
 
 public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory {
 
-    public static final class Builder extends AbstractRegistryObjectFactory.AbstractBuilder<DefaultRegistryObjectFactory> {
+    public static final class Builder
+            extends AbstractRegistryObjectFactory.AbstractBuilder<DefaultRegistryObjectFactory> {
 
         /**
          * Creates a {@code Builder} initialized with a {@link DefaultRegistry}, which is in-turn configured with a
@@ -74,7 +73,6 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
     }
 
     private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
-    private static final Logger logger = LoggerFactory.getLogger(DefaultRegistryObjectFactory.class); // leave it for the future!
 
     private final Collection<FilterHandler<?, ?>> filterHandlers;
     private final Collection<IterableFilterHandler<?, ?>> iterableFilterHandlers;
@@ -107,7 +105,9 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
     @SuppressWarnings("unchecked")
     protected final @Nullable Object tryQualifiers(Parameter parameter) {
         final Class<?> paramType = parameter.getType();
-        final List<Annotation> qualifiers = RegistryObjectFactoryUtil.getQualifierAnnotations(parameter.getAnnotations());
+        final List<Annotation> qualifiers = RegistryObjectFactoryUtil.getQualifierAnnotations(
+                parameter.getAnnotations()
+        );
         if (qualifiers.size() > 1) {
             throw new RuntimeException("Parameter " + parameter + " cannot have more than one Qualifier annotation.");
         } else if (qualifiers.size() == 1) {
@@ -115,7 +115,9 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
             @SuppressWarnings("rawtypes")
             final QualifierHandler handler = this.getInSelfOrParent(
                     f -> f.findQualifierHandler(qualifier.annotationType()),
-                    () -> new RuntimeException("There is no configured QualifierHandler for " + qualifier.annotationType().getName())
+                    () -> new RuntimeException("There is no configured QualifierHandler for "
+                            + qualifier.annotationType().getName()
+                    )
             );
             final Binding<?> binding = handler.handle(qualifier, paramType);
             if (binding != null) {
@@ -165,21 +167,23 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
         }
     }
 
-    protected final Object resolveInjectedArg(Parameter parameter) {
+    protected final Object resolveInjectedArg(CreateContext context, Parameter parameter) {
         final Object qualifierProvidedArg = this.tryQualifiers(parameter);
         if (qualifierProvidedArg != null) {
             this.checkFilters(parameter, qualifierProvidedArg);
+            context.getAllResolved().add(new Resolved(parameter.getType(), qualifierProvidedArg));
             return qualifierProvidedArg;
         } else {
-            final Object created = this.get(parameter.getType());
+            final Object created = this.get(context, parameter.getType());
             this.checkFilters(parameter, created);
+            context.getAllResolved().add(new Resolved(parameter.getType(), created));
             return created;
         }
     }
 
-    protected final void resolveInjectedArgs(Object[] dest, Parameter[] params) {
+    protected final void resolveInjectedArgs(CreateContext context, Object[] dest, Parameter[] params) {
         for (int i = 0; i < params.length; i++) {
-            dest[i] = this.resolveInjectedArg(params[i]);
+            dest[i] = this.resolveInjectedArg(context, params[i]);
         }
     }
 
@@ -194,7 +198,7 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
 
     // TODO: when there is a null arg, we lose the type. Therefore this algorithm breaks. Fix this.
     @Override
-    protected Object[] createArgs(Constructor<?> constructor, Object[] givenArgs) {
+    protected Object[] createArgs(CreateContext context, Constructor<?> constructor, Object[] givenArgs) {
         final Class<?>[] paramTypes = constructor.getParameterTypes();
 
         // check no arg
@@ -218,7 +222,7 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
 
         if (givenArgs.length == 0) {
             // if no given args, then they are all injected
-            this.resolveInjectedArgs(resolvedArgs, allParams);
+            this.resolveInjectedArgs(context, resolvedArgs, allParams);
         } else if (givenArgs.length == paramTypes.length) {
             // all are given
             this.resolveGivenArgs(resolvedArgs, allParams, givenArgs, 0);
@@ -234,17 +238,23 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
             final Parameter[] givenParams = new Parameter[allParams.length - firstGivenIndex];
 
             System.arraycopy(allParams, 0, injectedParams, 0, injectedParams.length);
-            System.arraycopy(allParams, firstGivenIndex, givenParams, 0, allParams.length - firstGivenIndex);
+            System.arraycopy(
+                    allParams, firstGivenIndex, givenParams, 0, allParams.length - firstGivenIndex
+            );
 
-            this.resolveInjectedArgs(resolvedArgs, injectedParams);
+            this.resolveInjectedArgs(context, resolvedArgs, injectedParams);
             this.resolveGivenArgs(resolvedArgs, givenParams, givenArgs, firstGivenIndex);
         }
 
         return resolvedArgs;
     }
 
-    @SuppressWarnings("unchecked")
     private <T> T handleBinding(Binding<T> binding, Object[] constructorArgs) {
+        return this.handleBinding(binding, null, constructorArgs);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T handleBinding(Binding<T> binding, @Nullable CreateContext context, Object[] constructorArgs) {
         return switch (binding) {
             case ClassBinding<T>(Class<T> ignored, Class<? extends T> to) -> {
                 final Annotation scopeAnnotation = getScopeAnnotation(to);
@@ -253,12 +263,20 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
                     @SuppressWarnings("rawtypes")
                     final ScopeHandler scopeHandler = this.getInSelfOrParent(
                             f -> f.findScopeHandler(scopeClass),
-                            () -> new RuntimeException("There is no configured ScopeHandler for " + scopeClass.getName())
+                            () -> new RuntimeException(
+                                    "There is no configured ScopeHandler for " + scopeClass.getName()
+                            )
                     );
-                    final Binding<T> scopedBinding = scopeHandler.onScopedDependencyRequest(scopeAnnotation, to, this);
+                    final Binding<T> scopedBinding = scopeHandler.onScopedDependencyRequest(
+                            scopeAnnotation, to, this
+                    );
                     yield this.handleBinding(scopedBinding, constructorArgs);
                 } else {
-                    yield this.createInstance(to, constructorArgs);
+                    if (context != null) {
+                        yield this.createInstance(context, to, constructorArgs);
+                    } else {
+                        yield this.createInstance(to, constructorArgs);
+                    }
                 }
             }
             case ProviderBinding<T> providerBinding -> providerBinding.provider().get();
@@ -276,8 +294,8 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
     }
 
     @Override
-    protected Object getSetterInjectArg(Class<?> targetType, Method setter, Parameter toInject) {
-        return this.resolveInjectedArg(toInject);
+    protected Object getSetterInjectArg(CreateContext context, Class<?> targetType, Method setter, Parameter toInject) {
+        return this.resolveInjectedArg(context, toInject);
     }
 
     /**
@@ -293,7 +311,24 @@ public class DefaultRegistryObjectFactory extends AbstractRegistryObjectFactory 
         if (parentResult != null) {
             return parentResult;
         } else {
-            throw new RuntimeException("No bindings for " + clazz + " with args " + Arrays.toString(constructorArgs) + ".");
+            throw new RuntimeException(
+                    "No bindings for " + clazz + " with args " + Arrays.toString(constructorArgs) + "."
+            );
+        }
+    }
+
+    protected <T> T get(CreateContext context, Class<T> type) {
+        final Binding<T> binding = this.searchRegistry(type);
+        if (binding != null) {
+            return this.handleBinding(binding, context, EMPTY_OBJECT_ARRAY);
+        }
+        final T parentResult = this.tryParent(type, EMPTY_OBJECT_ARRAY);
+        if (parentResult != null) {
+            return parentResult;
+        } else {
+            throw new RuntimeException(
+                    "No bindings for " + type + " with args " + Arrays.toString(EMPTY_OBJECT_ARRAY) + "."
+            );
         }
     }
 

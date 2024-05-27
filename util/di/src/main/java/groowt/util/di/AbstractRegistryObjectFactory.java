@@ -14,7 +14,8 @@ import java.util.function.Supplier;
 
 import static groowt.util.di.RegistryObjectFactoryUtil.orElseSupply;
 
-public abstract class AbstractRegistryObjectFactory extends AbstractInjectingObjectFactory implements RegistryObjectFactory {
+public abstract class AbstractRegistryObjectFactory extends AbstractInjectingObjectFactory
+        implements RegistryObjectFactory {
 
     public static abstract class AbstractBuilder<T extends DefaultRegistryObjectFactory> implements Builder<T> {
 
