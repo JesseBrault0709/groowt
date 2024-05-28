@@ -41,6 +41,7 @@ public class DefaultNodeFactory implements NodeFactory {
             ClosureValueNode.class,
             ComponentValueNode.class,
             PlainScriptletNode.class,
+            EqualsScriptletNode.class,
             DollarScriptletNode.class,
             DollarReferenceNode.class
     );

@@ -62,6 +62,7 @@ class ConvertToGroovy implements Callable<Integer> {
             def name = target.name.takeBefore('.wvc')
             try {
                 def compileUnit = new DefaultWebViewComponentTemplateCompileUnit(
+                        target.toString(),
                         AnonymousWebViewComponent,
                         ComponentTemplateSource.of(target),
                         AnonymousWebViewComponent.packageName
