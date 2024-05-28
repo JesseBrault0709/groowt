@@ -7,10 +7,10 @@ import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.TokenSource
 
 open class MergedGroovyCodeToken(
-    private val originals: List<Token>, private
-    val index: Int, private
-    val tokenSource: TokenSource, private
-    val inputStream: CharStream
+    private val originals: List<Token>,
+    private val index: Int,
+    private val tokenSource: TokenSource,
+    private val inputStream: CharStream
 ) : Token {
 
     private val myText: String by lazy { this.originals.joinToString("", transform = Token::getText) }
