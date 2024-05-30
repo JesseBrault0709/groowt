@@ -7,3 +7,4 @@
     - di
     - extensible
     - fp
+- [ ] di bug: @Singleton toSelf() causes stack overflow
