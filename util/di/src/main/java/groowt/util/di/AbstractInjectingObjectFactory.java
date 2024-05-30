@@ -166,6 +166,18 @@ public abstract class AbstractInjectingObjectFactory implements ObjectFactory {
         return null;
     }
 
+    private static boolean areArgsAssignable(Class<?>[] paramTypes, Object[] givenArgs) {
+        if (paramTypes.length != givenArgs.length) {
+            return false;
+        }
+        for (int i = 0; i < paramTypes.length; i++) {
+            if (!paramTypes[i].isInstance(givenArgs[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * @implNote If overridden, please cache any found non-inject constructors using
      *   {@link #putCachedNonInjectConstructor}.
@@ -187,7 +199,7 @@ public abstract class AbstractInjectingObjectFactory implements ObjectFactory {
 
         final Constructor<?>[] constructors = this.cachedAllConstructors.computeIfAbsent(clazz, Class::getConstructors);
         for (Constructor<?> constructor : constructors) {
-            if (Arrays.equals(constructor.getParameterTypes(), types)) {
+            if (areArgsAssignable(constructor.getParameterTypes(), constructorArgs)) {
                 final Constructor<T> found = (Constructor<T>) constructor;
                 this.putCachedNonInjectConstructor(new CachedNonInjectConstructor<>(clazz, found, types));
                 return found;

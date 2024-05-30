@@ -213,4 +213,41 @@ public class DefaultRegistryObjectFactoryTests {
         assertEquals("HELLO, WORLD!", g.greet());
     }
 
+    public static final class NoInjectGreeter implements Greeter {
+
+        private final String greeting;
+
+        public NoInjectGreeter(String greeting) {
+            this.greeting = greeting;
+        }
+
+        @Override
+        public String greet() {
+            return this.greeting;
+        }
+
+    }
+
+    @Test
+    public void noInjectFoundViaGet() {
+        final var b = DefaultRegistryObjectFactory.Builder.withDefaults();
+        b.configureRegistry(r -> {
+            r.bind(NoInjectGreeter.class, toSelf());
+        });
+        final var f = b.build();
+        final var g = f.get(NoInjectGreeter.class, "Given Greeting");
+        assertEquals("Given Greeting", g.greet());
+    }
+
+    @Test
+    public void noInjectFindViaCreate() {
+        final var b = DefaultRegistryObjectFactory.Builder.withDefaults();
+        b.configureRegistry(r -> {
+            r.bind(NoInjectGreeter.class, toSelf());
+        });
+        final var f = b.build();
+        final var g = f.createInstance(NoInjectGreeter.class, "Given Greeting");
+        assertEquals("Given Greeting", g.greet());
+    }
+
 }
