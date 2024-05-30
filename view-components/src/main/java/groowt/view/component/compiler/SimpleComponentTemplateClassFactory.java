@@ -1,5 +1,6 @@
 package groowt.view.component.compiler;
 
+import groovy.lang.GroovyClassLoader;
 import groowt.view.component.ComponentTemplate;
 import groowt.view.component.compiler.util.GroovyClassWriter;
 import groowt.view.component.compiler.util.SimpleGroovyClassWriter;
@@ -7,8 +8,6 @@ import groowt.view.component.compiler.util.SimpleGroovyClassWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,6 +20,10 @@ public final class SimpleComponentTemplateClassFactory implements ComponentTempl
     private final GroovyClassWriter groovyClassWriter;
 
     public SimpleComponentTemplateClassFactory() {
+        this(new GroovyClassLoader());
+    }
+
+    public SimpleComponentTemplateClassFactory(GroovyClassLoader groovyClassLoader) {
         this.groovyClassWriter = new SimpleGroovyClassWriter();
         try {
             this.tempClassesDir = Files.createTempDirectory("view-component-classes-").toFile();
@@ -28,11 +31,8 @@ public final class SimpleComponentTemplateClassFactory implements ComponentTempl
             throw new RuntimeException(e);
         }
         try {
-            this.classLoader = new URLClassLoader(
-                    "SimpleComponentTemplateClassFactoryClassLoader",
-                    new URL[] { this.tempClassesDir.toURI().toURL() },
-                    this.getClass().getClassLoader()
-            );
+            groovyClassLoader.addURL(this.tempClassesDir.toURI().toURL());
+            this.classLoader = groovyClassLoader;
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
