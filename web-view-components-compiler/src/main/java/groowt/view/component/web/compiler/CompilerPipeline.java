@@ -6,10 +6,6 @@ import groowt.view.component.web.antlr.*;
 import groowt.view.component.web.ast.DefaultAstBuilder;
 import groowt.view.component.web.ast.DefaultNodeFactory;
 import groowt.view.component.web.ast.node.CompilationUnitNode;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Tree;
 
 import java.io.IOException;
 import java.util.List;
@@ -18,43 +14,22 @@ public final class CompilerPipeline {
 
     private static WebViewComponentTemplateCompileException getException(
             WebViewComponentTemplateCompileUnit compileUnit,
-            TerminalNode terminalNode
+            LexerError lexerError
     ) {
-        final Token offending = terminalNode.getSymbol();
-        final var exception = new WebViewComponentTemplateCompileException(
-                compileUnit, "Invalid token '" + TokenUtil.excerptToken(offending) + "'."
+        final String formatted = LexerErrorKt.formatLexerError(lexerError);
+        return new WebViewComponentTemplateCompileException(
+                compileUnit, formatted
         );
-        exception.setTerminalNode(terminalNode);
-        return exception;
     }
 
     private static WebViewComponentTemplateCompileException getException(
             WebViewComponentTemplateCompileUnit compileUnit,
-            ParserRuleContext parserRuleContext
+            ParserError parserError
     ) {
-        final var exception = new WebViewComponentTemplateCompileException(
-                compileUnit,
-                "Parser error: " + parserRuleContext.exception.getMessage(),
-                parserRuleContext.exception
+        final String formatted = ParserErrorKt.formatParserError(parserError);
+        return new WebViewComponentTemplateCompileException(
+                compileUnit, formatted
         );
-        exception.setParserRuleContext(parserRuleContext);
-        return exception;
-    }
-
-    private static WebViewComponentTemplateCompileException getException(
-            WebViewComponentTemplateCompileUnit compileUnit,
-            Tree tree
-    ) {
-        if (tree instanceof ParserRuleContext parserRuleContext) {
-            return getException(compileUnit, parserRuleContext);
-        } else if (tree instanceof TerminalNode terminalNode) {
-            return getException(compileUnit, terminalNode);
-        } else {
-            return new WebViewComponentTemplateCompileException(
-                    compileUnit,
-                    "Error at parser/lexer node " + tree.toString()
-            );
-        }
     }
 
     private static WebViewComponentTemplateCompileException getException(
@@ -78,19 +53,34 @@ public final class CompilerPipeline {
             throw new RuntimeException(e);
         }
 
-        // check for parser/lexer errors
-        final var parseErrors = AntlrUtil.findErrorNodes(parseResult.getCompilationUnitContext());
-        if (!parseErrors.isEmpty()) {
-            if (parseErrors.getErrorCount() == 1) {
-                final var errorNode = parseErrors.getAll().getFirst();
-                throw getException(compileUnit, errorNode);
+        // check for lexer/parser errors
+        final var lexerErrors = parseResult.getLexerErrors();
+        final var parserErrors = parseResult.getParserErrors();
+
+        if (!lexerErrors.isEmpty()) {
+            if (lexerErrors.size() == 1) {
+                throw getException(compileUnit, lexerErrors.getFirst());
             } else {
-                final var errorExceptions = parseErrors.getAll().stream()
-                        .map(errorNode -> getException(compileUnit, errorNode))
+                final var exceptions = lexerErrors.stream()
+                        .map(error -> getException(compileUnit, error))
                         .toList();
                 throw new MultipleWebViewComponentCompileErrorsException(
                         compileUnit,
-                        errorExceptions
+                        exceptions
+                );
+            }
+        }
+
+        if (!parserErrors.isEmpty()) {
+            if (parserErrors.size() == 1) {
+                throw getException(compileUnit, parserErrors.getFirst());
+            } else {
+                final var exceptions = parserErrors.stream()
+                        .map(error -> getException(compileUnit, error))
+                        .toList();
+                throw new MultipleWebViewComponentCompileErrorsException(
+                        compileUnit,
+                        exceptions
                 );
             }
         }

@@ -13,7 +13,7 @@ preamble
     ;
 
 body
-    :   bodyText? ( component bodyText? )+ | bodyText
+    :   ( component | bodyText )+
     ;
 
 bodyText
