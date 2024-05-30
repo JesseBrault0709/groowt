@@ -55,7 +55,7 @@ public class DefaultWebViewComponentTemplateCompileUnit extends AbstractComponen
     @Override
     public ComponentTemplateCompileResult compile(ComponentTemplateCompilerConfiguration configuration)
             throws ComponentTemplateCompileException {
-        final WebViewComponentTemplateCompiler compiler = WebViewComponentTemplateCompiler.get();
+        final WebViewComponentTemplateCompiler compiler = WebViewComponentTemplateCompiler.get(configuration);
         return compiler.compile(this);
     }
 
