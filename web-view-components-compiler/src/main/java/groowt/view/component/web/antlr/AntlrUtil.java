@@ -57,9 +57,11 @@ public final class AntlrUtil {
                 if (parserRuleContext.exception != null) {
                     parseErrorCollector.addNodeWithRecognitionException(parserRuleContext);
                 }
-                parserRuleContext.children.forEach(child -> {
-                    findErrorNodes(child, parseErrorCollector);
-                });
+                if (parserRuleContext.children != null) {
+                    parserRuleContext.children.forEach(child -> {
+                        findErrorNodes(child, parseErrorCollector);
+                    });
+                }
             }
             case ErrorNode errorNode -> parseErrorCollector.addErrorNode(errorNode);
             default -> {} // ignore
