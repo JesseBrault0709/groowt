@@ -45,4 +45,15 @@ class BaseWebViewComponentTests extends AbstractWebViewComponentTests {
         this.doTest('<BaseWebViewComponentTests.UsingGreeter />', 'Hello, World!', context)
     }
 
+    @Test
+    void closureValueAttrReducedToExpr() {
+        def context = this.context {
+            configureRootScope(WebViewComponentScope) {
+                addWithAttr(Greeter)
+                addWithNoArgConstructor(UsingGreeter)
+            }
+        }
+        this.doTest('<BaseWebViewComponentTests.Greeter target={"World"} />', 'Hello, World!', context)
+    }
+
 }

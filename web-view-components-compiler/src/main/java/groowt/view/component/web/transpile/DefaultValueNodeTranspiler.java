@@ -8,7 +8,6 @@ import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
 import org.jetbrains.annotations.Nullable;
 
 import static groowt.view.component.web.transpile.TranspilerUtil.getStringLiteral;
@@ -33,8 +32,9 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
         );
         convertedClosure.visit(positionVisitor);
 
-        final Statement closureCode = convertedClosure.getCode();
-        if (closureCode instanceof ExpressionStatement expressionStatement) {
+        final BlockStatement closureCode = (BlockStatement) convertedClosure.getCode();
+        if (!closureCode.isEmpty()
+                && closureCode.getStatements().getFirst() instanceof ExpressionStatement expressionStatement) {
             final Expression expression = expressionStatement.getExpression();
             return switch (expression) {
                 case ConstantExpression ignored -> expression;
