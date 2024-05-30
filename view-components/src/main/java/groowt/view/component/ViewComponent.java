@@ -5,6 +5,9 @@ import groowt.view.component.context.ComponentContext;
 
 public interface ViewComponent extends View {
 
+    ComponentTemplate getComponentTemplate();
+    void setComponentTemplate(ComponentTemplate componentTemplate);
+
     /**
      * <em>Note:</em> compiled templates are required to automatically
      * call this method after the component is constructed. One

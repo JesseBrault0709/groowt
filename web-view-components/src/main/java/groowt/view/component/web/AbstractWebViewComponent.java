@@ -89,7 +89,7 @@ public abstract class AbstractWebViewComponent extends AbstractViewComponent imp
     @Override
     public void renderTo(Writer out) throws IOException {
         final ComponentWriter webWriter = new DefaultComponentWriter(out);
-        final Closure<?> renderer = this.getTemplate().getRenderer();
+        final Closure<?> renderer = this.getComponentTemplate().getRenderer();
         renderer.setDelegate(this);
         renderer.setResolveStrategy(Closure.DELEGATE_FIRST);
         this.beforeRender();

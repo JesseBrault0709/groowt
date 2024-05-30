@@ -21,19 +21,17 @@ public abstract class AbstractViewComponent implements ViewComponent {
         }
     }
 
-    private final ComponentTemplate template;
+    private ComponentTemplate componentTemplate;
     private ComponentContext context;
 
-    public AbstractViewComponent() {
-        this.template = null;
-    }
+    public AbstractViewComponent() {}
 
-    public AbstractViewComponent(ComponentTemplate template) {
-        this.template = template;
+    public AbstractViewComponent(ComponentTemplate componentTemplate) {
+        this.componentTemplate = componentTemplate;
     }
 
     public AbstractViewComponent(Class<? extends ComponentTemplate> templateClass) {
-        this.template = instantiateTemplate(templateClass);
+        this.componentTemplate = instantiateTemplate(templateClass);
     }
 
     public AbstractViewComponent(
@@ -46,7 +44,17 @@ public abstract class AbstractViewComponent implements ViewComponent {
             throw new RuntimeException(e);
         }
         final var templateClass = templateClassFactory.getTemplateClass(compileResult);
-        this.template = instantiateTemplate(templateClass);
+        this.componentTemplate = instantiateTemplate(templateClass);
+    }
+
+    @Override
+    public ComponentTemplate getComponentTemplate() {
+        return this.componentTemplate;
+    }
+
+    @Override
+    public void setComponentTemplate(ComponentTemplate componentTemplate) {
+        this.componentTemplate = componentTemplate;
     }
 
     @Override
@@ -57,10 +65,6 @@ public abstract class AbstractViewComponent implements ViewComponent {
     @Override
     public ComponentContext getContext() {
         return Objects.requireNonNull(this.context);
-    }
-
-    protected ComponentTemplate getTemplate() {
-        return Objects.requireNonNull(template);
     }
 
     protected void beforeRender() {}
@@ -76,7 +80,7 @@ public abstract class AbstractViewComponent implements ViewComponent {
      */
     @Override
     public void renderTo(Writer out) throws IOException {
-        final Closure<?> closure = this.getTemplate().getRenderer();
+        final Closure<?> closure = this.getComponentTemplate().getRenderer();
         closure.setDelegate(this);
         closure.setResolveStrategy(Closure.DELEGATE_FIRST);
         this.beforeRender();

@@ -1,5 +1,6 @@
 package groowt.view.component.web.compiler;
 
+import groowt.view.component.ComponentTemplate;
 import groowt.view.component.context.ComponentContext;
 import groowt.view.component.runtime.ComponentWriter;
 import groowt.view.component.web.WebViewComponent;
@@ -10,6 +11,16 @@ import java.util.List;
 
 @ApiStatus.Internal
 public final class AnonymousWebViewComponent implements WebViewComponent {
+
+    @Override
+    public ComponentTemplate getComponentTemplate() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setComponentTemplate(ComponentTemplate componentTemplate) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void setContext(ComponentContext context) {
