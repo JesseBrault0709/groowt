@@ -8,3 +8,5 @@
     - extensible
     - fp
 - [ ] di bug: @Singleton toSelf() causes stack overflow
+- [ ] figure out how to make the GroovyClassLoader consistent between the groovy compiler configuration and the wvc
+  compiler configuration.

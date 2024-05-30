@@ -224,7 +224,7 @@ public class DefaultGroovyTranspiler implements GroovyTranspiler {
         // resolver, transpilerConfiguration, and positionSetter
         final ClassLoaderComponentClassNodeResolver resolver = new ClassLoaderComponentClassNodeResolver(
                 compileUnit,
-                compileUnit.getGroovyCompilationUnit().getClassLoader()
+                compilerConfiguration.getGroovyClassLoader()
         );
         final var transpilerConfiguration = this.getConfiguration(resolver);
         final PositionSetter positionSetter = transpilerConfiguration.getPositionSetter();
