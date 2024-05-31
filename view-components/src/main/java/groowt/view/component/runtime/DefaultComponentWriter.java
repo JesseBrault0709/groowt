@@ -4,6 +4,7 @@ import groovy.lang.GString;
 import groowt.view.component.ComponentRenderException;
 import groowt.view.component.ViewComponent;
 import groowt.view.component.context.ComponentContext;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -15,8 +16,15 @@ public class DefaultComponentWriter implements ComponentWriter {
     private RenderContext renderContext;
     private ComponentContext componentContext;
 
+    @ApiStatus.Internal
     public DefaultComponentWriter(Writer delegate) {
         this.delegate = delegate;
+    }
+
+    public DefaultComponentWriter(Writer delegate, RenderContext renderContext, ComponentContext componentContext) {
+        this.delegate = delegate;
+        this.renderContext = renderContext;
+        this.componentContext = componentContext;
     }
 
     protected RenderContext getRenderContext() {
