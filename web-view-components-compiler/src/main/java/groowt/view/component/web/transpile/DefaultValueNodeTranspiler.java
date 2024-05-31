@@ -82,7 +82,8 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
                 Parameter.EMPTY_ARRAY,
                 new BlockStatement(this.componentTranspiler.createComponentStatements(
                         componentValueNode.getComponentNode(),
-                        state
+                        state,
+                        true
                 ), state.getCurrentScope())
         );
     }

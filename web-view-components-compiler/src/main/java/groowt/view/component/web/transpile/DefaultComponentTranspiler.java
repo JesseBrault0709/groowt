@@ -467,37 +467,53 @@ public class DefaultComponentTranspiler implements ComponentTranspiler {
     /* MAIN */
 
     @Override
-    public List<Statement> createComponentStatements(ComponentNode componentNode, TranspilerState state) {
+    public List<Statement> createComponentStatements(
+            ComponentNode componentNode,
+            TranspilerState state,
+            boolean isAttrComponent
+    ) {
         if (componentNode instanceof TypedComponentNode typedComponentNode) {
+            final List<Statement> allStatements = new ArrayList<>();
+
             // Resolve
             final List<Statement> resolveStatements = this.getResolveStatements(typedComponentNode, state);
+            allStatements.addAll(resolveStatements);
             // Create
             final List<Statement> createStatements = this.getTypedCreateStatements(typedComponentNode, state);
-            // Append/Add
-            final Statement leftShift = this.leftShiftFactory.create(state, state.getCurrentComponent());
+            allStatements.addAll(createStatements);
+            // return OR leftShift
+            if (isAttrComponent) {
+                final ReturnStatement returnStatement = new ReturnStatement(state.getCurrentComponent());
+                allStatements.add(returnStatement);
+            } else {
+                final Statement leftShift = this.leftShiftFactory.create(state, state.getCurrentComponent());
+                allStatements.add(leftShift);
+            }
 
             // cleanup
             state.popResolved();
             state.popComponent();
 
-            final List<Statement> allStatements = new ArrayList<>();
-            allStatements.addAll(resolveStatements);
-            allStatements.addAll(createStatements);
-            allStatements.add(leftShift);
-
             return allStatements;
         } else if (componentNode instanceof FragmentComponentNode fragmentComponentNode) {
-            // Create and add all at once
-            final Statement leftShift = this.leftShiftFactory.create(
-                    state,
-                    this.getFragmentCreateExpression(fragmentComponentNode, state)
-            );
-            return List.of(leftShift);
+            final Expression fragmentCreate = this.getFragmentCreateExpression(fragmentComponentNode, state);
+            if (isAttrComponent) {
+                final ReturnStatement returnStatement = new ReturnStatement(fragmentCreate);
+                return List.of(returnStatement);
+            } else {
+                final Statement leftShift = this.leftShiftFactory.create(state, fragmentCreate);
+                return List.of(leftShift);
+            }
         } else {
             throw new WebViewComponentBugError(new IllegalArgumentException(
                     "Cannot handle a ComponentNode not of type TypedComponentNode or FragmentComponentNode."
             ));
         }
+    }
+
+    @Override
+    public List<Statement> createComponentStatements(ComponentNode componentNode, TranspilerState state) {
+        return this.createComponentStatements(componentNode, state, false);
     }
 
 }
