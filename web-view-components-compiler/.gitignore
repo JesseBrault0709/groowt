@@ -1,4 +1,5 @@
 bin
 groovyc-out
 groovy-wvc-out
-dump*
+dump.txt
+dump.wvc
