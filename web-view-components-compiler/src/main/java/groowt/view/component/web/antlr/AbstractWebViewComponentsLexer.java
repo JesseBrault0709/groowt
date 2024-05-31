@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,7 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
     private boolean canPreamble = true;
     private boolean inPreamble;
     private boolean inConstructor;
-    private Deque<AtomicBoolean> attrComponentFinishedStack = new LinkedList<>();
+    private Deque<AtomicInteger> attrComponentCountStack = new LinkedList<>();
 
 
     public AbstractWebViewComponentsLexer(CharStream input) {
@@ -119,12 +120,12 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.inConstructor = inConstructor;
     }
 
-    public Deque<AtomicBoolean> getAttrComponentFinishedStack() {
-        return this.attrComponentFinishedStack;
+    public Deque<AtomicInteger> getAttrComponentCountStack() {
+        return this.attrComponentCountStack;
     }
 
-    public void setAttrComponentFinishedStack(Deque<AtomicBoolean> attrComponentFinishedStack) {
-        this.attrComponentFinishedStack = attrComponentFinishedStack;
+    public void setAttrComponentCountStack(Deque<AtomicInteger> attrComponentCountStack) {
+        this.attrComponentCountStack = attrComponentCountStack;
     }
 
     @Override
@@ -134,7 +135,7 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.canPreamble = true;
         this.inPreamble = false;
         this.inConstructor = false;
-        this.attrComponentFinishedStack = new LinkedList<>();
+        this.attrComponentCountStack = new LinkedList<>();
         super.reset();
     }
 
@@ -217,28 +218,42 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.inConstructor = false;
     }
 
-    protected void enterAttrComponent() {
-        this.attrComponentFinishedStack.push(new AtomicBoolean());
-    }
+    protected abstract boolean inAttrComponent();
 
-    protected void exitAttrComponent() {
-        final AtomicBoolean attrComponentFinished = this.attrComponentFinishedStack.peek();
-        if (attrComponentFinished == null) {
-            throw new WebViewComponentBugError(new IllegalStateException());
-        }
-        attrComponentFinished.set(true);
-    }
-
-    protected boolean attrComponentFinished() {
-        final AtomicBoolean attrComponentFinished = this.attrComponentFinishedStack.peek();
-        if (attrComponentFinished == null) {
-            throw new WebViewComponentBugError(new IllegalStateException());
-        }
-        return attrComponentFinished.get();
+    protected void pushAttrComponent() {
+        this.attrComponentCountStack.push(new AtomicInteger());
     }
 
     protected void popAttrComponent() {
-        this.attrComponentFinishedStack.pop();
+        try {
+            this.attrComponentCountStack.pop();
+        } catch (NoSuchElementException e) {
+            throw new WebViewComponentBugError("attrComponentCountStack was empty.", e);
+        }
+    }
+
+    protected boolean isAttrComponentFinished() {
+        final AtomicInteger attrComponentFinished = this.attrComponentCountStack.peek();
+        if (attrComponentFinished == null) {
+            throw new WebViewComponentBugError(new IllegalStateException());
+        }
+        return attrComponentFinished.get() == 0;
+    }
+
+    protected void enterAttrComponent() {
+        final AtomicInteger attrComponentCount = this.attrComponentCountStack.peek();
+        if (attrComponentCount == null) {
+            throw new WebViewComponentBugError(new IllegalStateException("attrComponentCountStack is empty."));
+        }
+        attrComponentCount.incrementAndGet();
+    }
+
+    protected void exitAttrComponent() {
+        final AtomicInteger attrComponentCount = this.attrComponentCountStack.peek();
+        if (attrComponentCount == null) {
+            throw new WebViewComponentBugError(new IllegalStateException("attrComponentCountStack is empty."));
+        }
+        attrComponentCount.decrementAndGet();
     }
 
     protected String getNextCharsAsString(int numberOfChars) {

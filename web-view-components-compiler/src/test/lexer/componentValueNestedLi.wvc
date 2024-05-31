@@ -1,0 +1,1 @@
+<Each items={menuItems} transform={<li><a href={it.path}>$it.name</a></li>} />

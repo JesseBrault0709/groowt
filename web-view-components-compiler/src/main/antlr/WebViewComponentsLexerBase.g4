@@ -110,7 +110,8 @@ channels {
         this.pushMode(GROOVY_CODE);
     }
 
-    private boolean inAttrComponent() {
+    @Override
+    protected boolean inAttrComponent() {
         return this.peekMode(1) == COMPONENT_ATTR_VALUE;
     }
 
@@ -269,7 +270,7 @@ mode IN_TAG;
 ComponentClose
     :   GT
         {
-            if (this.inAttrComponent() && this.attrComponentFinished()) {
+            if (this.inAttrComponent() && this.isAttrComponentFinished()) {
                 this.popMode();
                 this.popMode();
             } else {
@@ -283,7 +284,7 @@ ComponentSelfClose
         {
             if (this.inAttrComponent()) {
                 this.exitAttrComponent();
-                if (this.attrComponentFinished()) {
+                if (this.isAttrComponentFinished()) {
                     this.popMode();
                     this.popMode();
                 }
@@ -338,7 +339,7 @@ ClosureAttrValueStart
 ComponentAttrValueStart
     :   LEFT_CURLY InTagNlws? { this.isNext('<') }?
         {
-            this.enterAttrComponent();
+            this.pushAttrComponent();
             this.pushMode(COMPONENT_ATTR_VALUE);
         }
     ;
@@ -359,7 +360,10 @@ TagError
 mode COMPONENT_ATTR_VALUE;
 
 AttrComponentOpen
-    :   LT { !isAnyOf(this.getNextChar(), '/', '>') }? -> type(ComponentOpen), pushMode(TAG_START)
+    :   LT { !isAnyOf(this.getNextChar(), '/', '>') }?
+        {
+            this.enterAttrComponent();
+        } -> type(ComponentOpen), pushMode(TAG_START)
     ;
 
 AttrClosingComponentOpen
@@ -370,7 +374,10 @@ AttrClosingComponentOpen
     ;
 
 AttrFragmentOpen
-    :   LT GT -> type(FragmentOpen)
+    :   LT GT
+        {
+            this.enterAttrComponent();
+        } -> type(FragmentOpen)
     ;
 
 AttrFragmentClose

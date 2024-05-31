@@ -39,6 +39,7 @@ public class DefaultNodeFactory implements NodeFactory {
             GStringValueNode.class,
             JStringValueNode.class,
             ClosureValueNode.class,
+            EmptyClosureValueNode.class,
             ComponentValueNode.class,
             PlainScriptletNode.class,
             EqualsScriptletNode.class,
