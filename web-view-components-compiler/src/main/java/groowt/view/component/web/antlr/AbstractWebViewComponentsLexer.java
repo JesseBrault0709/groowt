@@ -1,6 +1,7 @@
 package groowt.view.component.web.antlr;
 
 import groovyjarjarantlr4.runtime.Token;
+import groowt.view.component.web.WebViewComponentBugError;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.atn.ATN;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,6 +59,8 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
     private boolean canPreamble = true;
     private boolean inPreamble;
     private boolean inConstructor;
+    private Deque<AtomicBoolean> attrComponentFinishedStack = new LinkedList<>();
+
 
     public AbstractWebViewComponentsLexer(CharStream input) {
         super(input);
@@ -115,6 +119,14 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.inConstructor = inConstructor;
     }
 
+    public Deque<AtomicBoolean> getAttrComponentFinishedStack() {
+        return this.attrComponentFinishedStack;
+    }
+
+    public void setAttrComponentFinishedStack(Deque<AtomicBoolean> attrComponentFinishedStack) {
+        this.attrComponentFinishedStack = attrComponentFinishedStack;
+    }
+
     @Override
     public void reset() {
         this.curlies.clear();
@@ -122,6 +134,7 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.canPreamble = true;
         this.inPreamble = false;
         this.inConstructor = false;
+        this.attrComponentFinishedStack = new LinkedList<>();
         super.reset();
     }
 
@@ -204,6 +217,30 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
         this.inConstructor = false;
     }
 
+    protected void enterAttrComponent() {
+        this.attrComponentFinishedStack.push(new AtomicBoolean());
+    }
+
+    protected void exitAttrComponent() {
+        final AtomicBoolean attrComponentFinished = this.attrComponentFinishedStack.peek();
+        if (attrComponentFinished == null) {
+            throw new WebViewComponentBugError(new IllegalStateException());
+        }
+        attrComponentFinished.set(true);
+    }
+
+    protected boolean attrComponentFinished() {
+        final AtomicBoolean attrComponentFinished = this.attrComponentFinishedStack.peek();
+        if (attrComponentFinished == null) {
+            throw new WebViewComponentBugError(new IllegalStateException());
+        }
+        return attrComponentFinished.get();
+    }
+
+    protected void popAttrComponent() {
+        this.attrComponentFinishedStack.pop();
+    }
+
     protected String getNextCharsAsString(int numberOfChars) {
         final var b = new StringBuilder();
         for (int i = 1; i <= numberOfChars; i++) {
@@ -222,6 +259,10 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
 
     protected int getNextChar() {
         return this._input.LA(1);
+    }
+
+    protected boolean isPrevious(char test) {
+        return this._input.LA(-2) == test;
     }
 
     protected boolean isNext(char test) {

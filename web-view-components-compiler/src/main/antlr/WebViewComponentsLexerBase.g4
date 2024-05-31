@@ -23,6 +23,7 @@ channels {
 
 @header {
     import java.util.Set;
+    import groowt.view.component.web.WebViewComponentBugError;
     import static groowt.view.component.web.antlr.LexerSemanticPredicates.*;
 }
 
@@ -107,6 +108,10 @@ channels {
     protected void enterConstructor() {
         super.enterConstructor(); // setup state
         this.pushMode(GROOVY_CODE);
+    }
+
+    private boolean inAttrComponent() {
+        return this.peekMode(1) == COMPONENT_ATTR_VALUE;
     }
 
 }
@@ -262,11 +267,30 @@ TagStartError
 mode IN_TAG;
 
 ComponentClose
-    :   GT -> popMode
+    :   GT
+        {
+            if (this.inAttrComponent() && this.attrComponentFinished()) {
+                this.popMode();
+                this.popMode();
+            } else {
+                this.popMode();
+            }
+        }
     ;
 
 ComponentSelfClose
-    :   FS GT -> popMode
+    :   FS GT
+        {
+            if (this.inAttrComponent()) {
+                this.exitAttrComponent();
+                if (this.attrComponentFinished()) {
+                    this.popMode();
+                    this.popMode();
+                }
+            } else {
+                this.popMode();
+            }
+        }
     ;
 
 ConstructorOpen
@@ -313,10 +337,14 @@ ClosureAttrValueStart
 
 ComponentAttrValueStart
     :   LEFT_CURLY InTagNlws? { this.isNext('<') }?
+        {
+            this.enterAttrComponent();
+            this.pushMode(COMPONENT_ATTR_VALUE);
+        }
     ;
 
 ComponentAttrValueEnd
-    :   GT RIGHT_CURLY
+    :   InTagNlws? RIGHT_CURLY { this.popAttrComponent(); }
     ;
 
 InTagNlws
@@ -325,6 +353,85 @@ InTagNlws
 
 TagError
     :   . -> channel(ERROR)
+    ;
+
+// ----------------------------------------
+mode COMPONENT_ATTR_VALUE;
+
+AttrComponentOpen
+    :   LT { !isAnyOf(this.getNextChar(), '/', '>') }? -> type(ComponentOpen), pushMode(TAG_START)
+    ;
+
+AttrClosingComponentOpen
+    :   LT FS { !this.isNext('>') }?
+        {
+            this.exitAttrComponent();
+        } -> type(ClosingComponentOpen), pushMode(TAG_START)
+    ;
+
+AttrFragmentOpen
+    :   LT GT -> type(FragmentOpen)
+    ;
+
+AttrFragmentClose
+    :   LT FS GT {
+            this.exitAttrComponent();
+        } -> type(FragmentClose), popMode
+    ;
+
+AttrEqualsScriptletOpen
+    :   LT PERCENT EQ -> type(EqualsScriptletOpen), pushMode(GROOVY_CODE)
+    ;
+
+AttrPlainScriptletOpen
+    :   LT PERCENT -> type(PlainScriptletOpen), pushMode(GROOVY_CODE)
+    ;
+
+AttrDollarScriptletOpen
+    :   DOLLAR LEFT_CURLY {
+            this.curlies.push(() -> {
+                this.setType(DollarScriptletClose);
+                this.popMode();
+            });
+            this.curlies.increment();
+            this.setType(DollarScriptletOpen);
+            this.pushMode(GROOVY_CODE);
+        }
+    ;
+
+AttrDollarReferenceStart
+    :   DOLLAR { isGStringIdentifierStartChar(this.getNextChar()) }?
+        -> type(DollarReferenceStart), pushMode(IN_G_STRING_PATH)
+    ;
+
+AttrQuestionTagOpen
+    :   LT QUESTION -> type(QuestionTagOpen)
+    ;
+
+AttrQuestionTagClose
+    :   QUESTION GT -> type(QuestionTagClose)
+    ;
+
+AttrHtmlCommentOpen
+    :   LT BANG TWO_DASH -> type(HtmlCommentOpen)
+    ;
+
+AttrHtmlCommentClose
+    :   TWO_DASH GT -> type(HtmlCommentClose)
+    ;
+
+AttrRawText
+    :   (   ~[-<$?]
+        |   MINUS { !this.isNext("->") }?
+        |   LT { canFollowLessThan(this.getNextCharAsString()) }?
+        |   LT BANG { !this.isNext("--") }?
+        |   DOLLAR { !(this.isNext('{') || isIdentifierStartChar(this.getNextChar())) }?
+        |   QUESTION { !this.isNext('>') }?
+        )+ -> type(RawText)
+    ;
+
+AttrError
+    :   .   -> type(ErrorChar), channel(ERROR)
     ;
 
 // ----------------------------------------
@@ -542,8 +649,11 @@ GStringPathEnd
                         yield new StringContinueEndSpec();
                     }
                 }
+                case COMPONENT_ATTR_VALUE -> new StringContinueEndSpec();
                 case MAIN -> new StringContinueEndSpec();
-                default -> throw new IllegalStateException("not a valid gString context: " + this.getModeName(this.peekMode(1)));
+                default -> throw new IllegalStateException(
+                    "not a valid gStringPath context: " + this.getModeName(this.peekMode(1))
+                );
             };
             switch (endSpec) {
                 case StringContinueEndSpec ignored -> {
