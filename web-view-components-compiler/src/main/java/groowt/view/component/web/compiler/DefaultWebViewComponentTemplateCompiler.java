@@ -57,6 +57,11 @@ public class DefaultWebViewComponentTemplateCompiler
         );
         compileUnit.getGroovyCompilationUnit().addSource(sourceUnit);
 
+        // set the groovy compile unit's class loader to the configuration's classloader.
+        compileUnit.getGroovyCompilationUnit().setClassLoader(
+                this.configuration.getGroovyClassLoader()
+        );
+
         // compile groovy
         try {
             compileUnit.getGroovyCompilationUnit().compile(this.configuration.getToCompilePhase().getPhaseNumber());
