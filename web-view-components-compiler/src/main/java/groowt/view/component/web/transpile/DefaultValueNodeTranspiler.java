@@ -4,7 +4,9 @@ import groowt.view.component.web.ast.node.*;
 import groowt.view.component.web.transpile.groovy.GroovyUtil;
 import groowt.view.component.web.transpile.groovy.GroovyUtil.ConvertResult;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
@@ -35,13 +37,7 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
         final BlockStatement closureCode = (BlockStatement) convertedClosure.getCode();
         if (!closureCode.isEmpty()
                 && closureCode.getStatements().getFirst() instanceof ExpressionStatement expressionStatement) {
-            final Expression expression = expressionStatement.getExpression();
-            return switch (expression) {
-                case ConstantExpression ignored -> expression;
-                case VariableExpression ignored -> expression;
-                case PropertyExpression ignored -> expression;
-                default -> convertedClosure;
-            };
+            return expressionStatement.getExpression();
         }
         return convertedClosure;
     }
