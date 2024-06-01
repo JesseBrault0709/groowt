@@ -27,7 +27,7 @@ class SimpleWebViewComponentTests extends AbstractWebViewComponentTests {
                     input.capitalize()
                 }
                 ---
-                <Echo subHelper={ -> helper('lowercase') }>${ -> subHelper.call() }</Echo>
+                <Echo subHelper={-> helper('lowercase')}>${subHelper.call()}</Echo>
                 '''.stripIndent().trim(), 'Lowercase'
         )
     }

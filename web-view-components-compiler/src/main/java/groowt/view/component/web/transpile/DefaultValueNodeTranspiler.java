@@ -37,10 +37,13 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
         );
         convertedClosure.visit(positionVisitor);
 
-        final BlockStatement closureCode = (BlockStatement) convertedClosure.getCode();
-        final List<Statement> statements = closureCode.getStatements();
-        if (statements.size() == 1 && statements.getFirst() instanceof ExpressionStatement expressionStatement) {
-            return expressionStatement.getExpression();
+        final @Nullable Parameter[] closureParams = convertedClosure.getParameters();
+        if (closureParams != null && closureParams.length == 0) {
+            final BlockStatement closureCode = (BlockStatement) convertedClosure.getCode();
+            final List<Statement> statements = closureCode.getStatements();
+            if (statements.size() == 1 && statements.getFirst() instanceof ExpressionStatement expressionStatement) {
+                return expressionStatement.getExpression();
+            }
         }
         return convertedClosure;
     }

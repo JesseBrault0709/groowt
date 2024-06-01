@@ -77,7 +77,7 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
     protected Statement handleDollarScriptlet(DollarScriptletNode dollarScriptletNode, TranspilerState state) {
         final ClosureExpression cl = this.convertToClosure(dollarScriptletNode, dollarScriptletNode.getGroovyCode());
         final Expression toLeftShift;
-        if (cl.getParameters() == null) {
+        if (cl.getParameters() == null || cl.getParameters().length > 0) {
             toLeftShift = cl;
         } else {
             final BlockStatement blockStatement = (BlockStatement) cl.getCode();
