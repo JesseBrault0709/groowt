@@ -10,7 +10,10 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.EmptyStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 import static groowt.view.component.web.transpile.TranspilerUtil.getStringLiteral;
 
@@ -35,8 +38,8 @@ public class DefaultValueNodeTranspiler implements ValueNodeTranspiler {
         convertedClosure.visit(positionVisitor);
 
         final BlockStatement closureCode = (BlockStatement) convertedClosure.getCode();
-        if (!closureCode.isEmpty()
-                && closureCode.getStatements().getFirst() instanceof ExpressionStatement expressionStatement) {
+        final List<Statement> statements = closureCode.getStatements();
+        if (statements.size() == 1 && statements.getFirst() instanceof ExpressionStatement expressionStatement) {
             return expressionStatement.getExpression();
         }
         return convertedClosure;

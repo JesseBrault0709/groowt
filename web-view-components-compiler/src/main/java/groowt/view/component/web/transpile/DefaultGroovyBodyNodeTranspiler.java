@@ -80,8 +80,9 @@ public class DefaultGroovyBodyNodeTranspiler implements GroovyBodyNodeTranspiler
         if (cl.getParameters() == null) {
             toLeftShift = cl;
         } else {
-            final Statement stmt = cl.getCode();
-            if (stmt instanceof ExpressionStatement exprStmt) {
+            final BlockStatement blockStatement = (BlockStatement) cl.getCode();
+            final List<Statement> statements = blockStatement.getStatements();
+            if (statements.size() == 1 && statements.getFirst() instanceof ExpressionStatement exprStmt) {
                 toLeftShift = exprStmt.getExpression();
             } else {
                 toLeftShift = cl;
