@@ -69,4 +69,9 @@ class IntrinsicHtml extends DelegatingWebViewComponent implements WithHtml {
         }
     }
 
+    @Override
+    String toString() {
+        "IntrinsicHtml(${this.name})"
+    }
+
 }
