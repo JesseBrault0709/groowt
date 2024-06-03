@@ -337,7 +337,7 @@ public abstract class AbstractInjectingObjectFactory implements ObjectFactory {
             deferredSetterActions.forEach(setterAction -> setterAction.accept(instance));
             return instance;
         } catch (InvocationTargetException | IllegalAccessException | InstantiationException e) {
-            throw new RuntimeException("e");
+            throw new RuntimeException(e);
         }
     }
 
