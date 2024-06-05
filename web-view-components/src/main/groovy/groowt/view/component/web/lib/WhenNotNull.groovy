@@ -10,7 +10,7 @@ class WhenNotNull extends DelegatingWebViewComponent {
 
     WhenNotNull(Map attr) {
         this.item = attr.item
-        this.render = attr.render
+        this.render = attr.render ?: Closure.IDENTITY
     }
 
     @Override
