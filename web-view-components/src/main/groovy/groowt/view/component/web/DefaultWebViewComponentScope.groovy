@@ -1,10 +1,7 @@
 package groowt.view.component.web
 
 import groowt.view.component.context.DefaultComponentScope
-import groowt.view.component.web.lib.Each
-import groowt.view.component.web.lib.Echo
-import groowt.view.component.web.lib.IntrinsicHtml
-import groowt.view.component.web.lib.WhenNotNull
+import groowt.view.component.web.lib.*
 import org.codehaus.groovy.runtime.InvokerHelper
 
 import static WebViewComponentFactories.withAttr
@@ -15,6 +12,7 @@ class DefaultWebViewComponentScope extends DefaultComponentScope implements WebV
         new DefaultWebViewComponentScope().tap {
             addWithAttr(Echo)
             addWithAttr(Each)
+            addWithAttr(WhenNotEmpty)
             addWithAttr(WhenNotNull)
         }
     }
