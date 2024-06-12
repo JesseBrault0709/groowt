@@ -15,8 +15,7 @@
 ## 0.1.1
 - [x] `Switch` and `Case` components
 - [x] Fix bug with multiline nested component attributes.
-- [ ] `Each` with `Map`
-- [ ] `Each` with children in addition to `render`
+- [x] `Each` with `Map`
 - [ ] `WhenNotEmpty` with `Map`
 
 ## 0.1.0

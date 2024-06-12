@@ -17,4 +17,12 @@ class EachTests extends AbstractWebViewComponentTests {
         )
     }
 
+    @Test
+    void simpleMap() {
+        this.doTest(
+                '<Each items={[a: 0, b: 1]} transform={<p>$it.key: $it.value</p>} />',
+                '<p>a: 0</p><p>b: 1</p>'
+        )
+    }
+
 }
