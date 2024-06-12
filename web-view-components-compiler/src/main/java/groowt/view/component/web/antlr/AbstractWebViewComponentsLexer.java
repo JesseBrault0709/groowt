@@ -235,7 +235,7 @@ public abstract class AbstractWebViewComponentsLexer extends Lexer {
     protected boolean isAttrComponentFinished() {
         final AtomicInteger attrComponentFinished = this.attrComponentCountStack.peek();
         if (attrComponentFinished == null) {
-            throw new WebViewComponentBugError(new IllegalStateException());
+            throw new WebViewComponentBugError(new IllegalStateException("attrComponentCountStack is empty."));
         }
         return attrComponentFinished.get() == 0;
     }

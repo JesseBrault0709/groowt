@@ -285,12 +285,10 @@ ComponentSelfClose
             if (this.inAttrComponent()) {
                 this.exitAttrComponent();
                 if (this.isAttrComponentFinished()) {
-                    this.popMode();
-                    this.popMode();
+                    this.popMode(); // Do it two times total
                 }
-            } else {
-                this.popMode();
             }
+            this.popMode();
         }
     ;
 
