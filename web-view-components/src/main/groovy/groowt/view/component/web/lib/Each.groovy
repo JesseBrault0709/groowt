@@ -18,11 +18,7 @@ class Each extends DelegatingWebViewComponent {
     protected View getDelegate() {
         return { Writer w ->
             def cw = new DefaultComponentWriter(w, this.context.renderContext, this.context)
-            if (items instanceof Collection) {
-                items.each {
-                    cw << (transform ? transform(it) : it)
-                }
-            } else if (items instanceof Map) {
+            if (items instanceof Collection || items instanceof Map) {
                 items.each {
                     cw << (transform ? transform(it) : it)
                 }
