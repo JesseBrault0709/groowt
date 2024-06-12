@@ -24,6 +24,10 @@ For example:
 
 ## 0.1.2
 - [ ] di bug: @Singleton toSelf() causes stack overflow
+- [ ] `Outlet` component for rendering children like so:
+```
+<Outlet children={children} />
+```
 
 ## 0.1.1
 - [x] `Switch` and `Case` components
