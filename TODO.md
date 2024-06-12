@@ -15,6 +15,9 @@
 ## 0.1.1
 - [ ] `Switch` and `Case` components
 - [ ] Fix bug with multiline nested component attributes.
+- [ ] `Each` with `Map`
+- [ ] `Each` with children in addition to `render`
+- [ ] `WhenNotEmpty` with `Map`
 
 ## 0.1.0
 - [x] figure out how to make the GroovyClassLoader consistent between the groovy compiler configuration and the wvc
