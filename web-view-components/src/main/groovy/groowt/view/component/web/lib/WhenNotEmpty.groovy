@@ -5,7 +5,7 @@ import groowt.view.component.runtime.DefaultComponentWriter
 
 class WhenNotEmpty extends DelegatingWebViewComponent {
 
-    private final Collection items
+    private final Object items
 
     WhenNotEmpty(Map attr) {
         items = attr.items
@@ -14,7 +14,7 @@ class WhenNotEmpty extends DelegatingWebViewComponent {
     @Override
     protected View getDelegate() {
         return { Writer w ->
-            if (!items.empty) {
+            if (items instanceof Collection && !items.empty || items instanceof Map && !items.isEmpty()) {
                 def cw = new DefaultComponentWriter(w, context.renderContext, context)
                 children.each { cw << it }
             }
