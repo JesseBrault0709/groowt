@@ -10,8 +10,11 @@ class DefaultWebViewComponentScope extends DefaultComponentScope implements WebV
 
     static DefaultWebViewComponentScope getDefaultRootScope() {
         new DefaultWebViewComponentScope().tap {
-            addWithAttr(Echo)
+            addWithAttr(Case)
+            addWithAttr(DefaultCase)
             addWithAttr(Each)
+            addWithAttr(Echo)
+            addWithAttr(Switch)
             addWithAttr(WhenNotEmpty)
             addWithAttr(WhenNotNull)
         }

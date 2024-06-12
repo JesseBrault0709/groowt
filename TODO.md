@@ -13,7 +13,7 @@
 - [ ] di bug: @Singleton toSelf() causes stack overflow
 
 ## 0.1.1
-- [ ] `Switch` and `Case` components
+- [x] `Switch` and `Case` components
 - [x] Fix bug with multiline nested component attributes.
 - [ ] `Each` with `Map`
 - [ ] `Each` with children in addition to `render`
