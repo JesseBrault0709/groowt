@@ -14,6 +14,8 @@ class DefaultWebViewComponentScope extends DefaultComponentScope implements WebV
             addWithAttr(DefaultCase)
             addWithAttr(Each)
             addWithAttr(Echo)
+            addWithAttr(Outlet)
+            addWithAttr(Render)
             addWithAttr(Switch)
             addWithAttr(WhenNotEmpty)
             addWithAttr(WhenNotNull)

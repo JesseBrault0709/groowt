@@ -22,12 +22,17 @@ For example:
     - fp
 - [ ] Remove gradle plugins and whatnot until we actually build the whole framework
 
-## 0.1.2
+## 0.1.3
+- [ ] refactor tools/gradle start scripts to use dist instead of custom bin script
+  - [ ] have custom bin/* scripts which point to dist(s) for convenience
 - [ ] di bug: @Singleton toSelf() causes stack overflow
-- [ ] `Outlet` component for rendering children like so:
+
+## 0.1.2
+- [x] `Outlet` component for rendering children like so:
 ```
 <Outlet children={children} />
 ```
+- [x] `Render` component
 - [x] `data-` attributes need to function correctly (really any attribute with hyphen).
 
 ## 0.1.1
