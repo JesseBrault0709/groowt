@@ -1,0 +1,7 @@
+0: ComponentOpen[1,1](<)
+1: StringIdentifier[1,2](test)
+2: Nlws[1,6]( )
+3: AttributeIdentifier[1,7](test-attr)
+4: Nlws[1,16]( )
+5: ComponentSelfClose[1,17](/>)
+6: RawText[1,19](\n)

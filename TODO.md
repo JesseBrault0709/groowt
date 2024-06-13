@@ -28,6 +28,7 @@ For example:
 ```
 <Outlet children={children} />
 ```
+- [x] `data-` attributes need to function correctly (really any attribute with hyphen).
 
 ## 0.1.1
 - [x] `Switch` and `Case` components

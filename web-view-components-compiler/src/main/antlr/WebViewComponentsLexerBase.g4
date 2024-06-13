@@ -307,7 +307,7 @@ AttributeIdentifierStartChar
 
 fragment
 AttributeIdentifierChar
-    :   [\p{L}_$0-9]
+    :   [-\p{L}_$0-9]
     ;
 
 Equals
