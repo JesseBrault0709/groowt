@@ -26,6 +26,8 @@ For example:
 - [ ] refactor tools/gradle start scripts to use dist instead of custom bin script
   - [ ] have custom bin/* scripts which point to dist(s) for convenience
 - [ ] di bug: @Singleton toSelf() causes stack overflow
+- [ ] `OutletContainer` trait or interface for components which can contain an `<Outlet />` child.
+- [ ] `Context` should have methods for simply finding an ancestor of a certain type without the need for a predicate.
 
 ## 0.1.2
 - [x] `Outlet` component for rendering children like so:
