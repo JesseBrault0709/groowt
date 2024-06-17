@@ -21,6 +21,7 @@ For example:
     - extensible
     - fp
 - [ ] Remove gradle plugins and whatnot until we actually build the whole framework
+- [ ] Get rid of wvc compiler dependency on di
 
 ## 0.1.3
 - [ ] refactor tools/gradle start scripts to use dist instead of custom bin script
