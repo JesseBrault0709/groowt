@@ -22,7 +22,7 @@ groovy-console = { module = 'org.apache.groovy:groovy-console', version.ref = 'g
 groovy-templates = { module = 'org.apache.groovy:groovy-templates', version.ref = 'groovy' }
 jakarta-inject = 'jakarta.inject:jakarta.inject-api:2.0.1'
 jansi = 'org.fusesource.jansi:jansi:2.4.1'
-jbarchiva = 'com.jessebrault.jbarchiva:jbarchiva:0.2.1'
+jbarchiva = 'com.jessebrault.jbarchiva:jbarchiva:0.2.2'
 jetbrains-anotations = 'org.jetbrains:annotations:24.1.0'
 junit-jupiter-api = { module = 'org.junit.jupiter:junit-jupiter-api', version.ref = 'junit' }
 kotlin-stdlib = { module = 'org.jetbrains.kotlin:kotlin-stdlib', version.ref = 'kotlin' }
